@@ -366,7 +366,10 @@ export type Database = {
           guest_email: string
           id: string
           idempotency_key: string
+          is_test: boolean
           last_error: string | null
+          net: number | null
+          next_attempt_at: string | null
           plan_id: string | null
           plan_snapshot: Json | null
           status: Database["public"]["Enums"]["order_status"]
@@ -374,6 +377,7 @@ export type Database = {
           tax: number
           updated_at: string
           user_id: string | null
+          withdrawal_consent_at: string | null
         }
         Insert: {
           amount: number
@@ -383,7 +387,10 @@ export type Database = {
           guest_email: string
           id?: string
           idempotency_key?: string
+          is_test?: boolean
           last_error?: string | null
+          net?: number | null
+          next_attempt_at?: string | null
           plan_id?: string | null
           plan_snapshot?: Json | null
           status?: Database["public"]["Enums"]["order_status"]
@@ -391,6 +398,7 @@ export type Database = {
           tax?: number
           updated_at?: string
           user_id?: string | null
+          withdrawal_consent_at?: string | null
         }
         Update: {
           amount?: number
@@ -400,7 +408,10 @@ export type Database = {
           guest_email?: string
           id?: string
           idempotency_key?: string
+          is_test?: boolean
           last_error?: string | null
+          net?: number | null
+          next_attempt_at?: string | null
           plan_id?: string | null
           plan_snapshot?: Json | null
           status?: Database["public"]["Enums"]["order_status"]
@@ -408,6 +419,7 @@ export type Database = {
           tax?: number
           updated_at?: string
           user_id?: string | null
+          withdrawal_consent_at?: string | null
         }
         Relationships: [
           {
@@ -740,6 +752,36 @@ export type Database = {
       }
     }
     Functions: {
+      claim_order_for_fulfillment: {
+        Args: { _max_attempts: number; _order_id: string }
+        Returns: {
+          amount: number
+          created_at: string
+          currency: string
+          fulfillment_attempts: number
+          guest_email: string
+          id: string
+          idempotency_key: string
+          is_test: boolean
+          last_error: string | null
+          net: number | null
+          next_attempt_at: string | null
+          plan_id: string | null
+          plan_snapshot: Json | null
+          status: Database["public"]["Enums"]["order_status"]
+          stripe_payment_intent_id: string | null
+          tax: number
+          updated_at: string
+          user_id: string | null
+          withdrawal_consent_at: string | null
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "orders"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
