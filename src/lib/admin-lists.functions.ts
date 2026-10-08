@@ -55,7 +55,22 @@ export const adminList = createServerFn({ method: "GET" })
         if (filter === "unlimited" || filter === "data") s = s.eq("type", filter);
         if (q) s = s.ilike("provider_plan_id", like(q));
         const r = await s;
-        rows = (r.data ?? []).map((p): Row => ({ ...p, destination: (p.destination as { name_de?: string } | null)?.name_de ?? "" }));
+        const { loadFx } = await import("./fx.server");
+        const { computeMargin, parseFeeSettings, parseMinNet } = await import("./pricing");
+        const [fx, { data: st }] = await Promise.all([loadFx(db), db.from("app_settings").select("key,value").in("key", ["stripe_fees", "min_net_result", "vat_rate"])]);
+        const val = (k: string) => st?.find((x) => x.key === k)?.value;
+        const fees = parseFeeSettings(val("stripe_fees")), minNet = parseMinNet(val("min_net_result"));
+        const vatN = Number(val("vat_rate")), vat = Number.isFinite(vatN) && vatN > 0 ? vatN : 0.19;
+        rows = (r.data ?? []).map((p): Row => {
+          const base: Row = { ...p, destination: (p.destination as { name_de?: string } | null)?.name_de ?? "" } as Row;
+          const cur = p.cost_currency.toUpperCase();
+          const rate = cur === "EUR" ? 1 : fx.lookup(cur, "EUR");
+          const gross = Number(p.sell_price);
+          if (rate == null || !(gross > 0)) return { ...base, fx_rate: rate, cost_eur: rate == null ? null : Math.round(Number(p.cost_price) * rate * 100) / 100 };
+          const net = Math.round((gross / (1 + vat)) * 100) / 100;
+          const m = computeMargin(Number(p.cost_price) * rate, net, gross, fees, minNet);
+          return { ...base, fx_rate: rate, cost_eur: m.costEur, net, vat: Math.round((gross - net) * 100) / 100, fee: m.fee, result: m.result, result_pct: m.resultPercent, below_min: m.belowMin };
+        });
         count = r.count ?? 0;
         break;
       }

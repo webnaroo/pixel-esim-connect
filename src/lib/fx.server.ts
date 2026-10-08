@@ -57,17 +57,25 @@ export async function refreshRates(trigger: "cron" | "manual", actorId: string |
   const prevRows = (prev ?? []).map((r) => ({ ...r, rate: Number(r.rate) })) as FxRow[];
   const stored: { currency: string; rate: number; status: string }[] = [];
   const missing: string[] = [];
+  const unchanged: string[] = [];
   for (const c of currencies) {
     const eurTo = res.quotes.eurTo[c];
     if (!eurTo) { missing.push(c); continue; }
     const rate = Number(invertEurRate(eurTo).toFixed(8));
+    // Same rate + same publication date as the newest fetched row → only bump "last checked", no new history entry.
+    const { data: last } = await db.from("fx_rates").select("id,rate,published_at").eq("from_currency", c).eq("to_currency", "EUR").neq("source", "manual").order("fetched_at", { ascending: false }).limit(1).maybeSingle();
+    if (last && Number(last.rate) === rate && last.published_at === res.quotes.date) {
+      await db.from("fx_rates").update({ last_checked_at: new Date().toISOString() }).eq("id", last.id);
+      unchanged.push(c);
+      continue;
+    }
     const status = decideNewRate(lastAutoRate(prevRows, c), rate) === "accept" ? "active" : "pending_review";
     await db.from("fx_rates").insert({ from_currency: c, to_currency: "EUR", rate, source_rate: eurTo, source: res.source, status, published_at: res.quotes.date, valid_from: new Date().toISOString(), fetched_at: new Date().toISOString() });
     stored.push({ currency: c, rate, status });
   }
-  await db.from("audit_log").insert({ actor_id: actorId, action: "fx_fetch", entity: "fx_rates", meta: { trigger, source: res.source, published_at: res.quotes.date, stored, missing } as never });
+  await db.from("audit_log").insert({ actor_id: actorId, action: "fx_fetch", entity: "fx_rates", meta: { trigger, source: res.source, published_at: res.quotes.date, stored, missing, unchanged } as never });
   const reprice = stored.some((s) => s.status === "active") ? await repricePlans(actorId) : null;
-  return { ok: true as const, source: res.source, publishedAt: res.quotes.date, stored, missing, reprice };
+  return { ok: true as const, source: res.source, publishedAt: res.quotes.date, stored, missing, unchanged, reprice };
 }
 
 /** Recompute prices with the current effective rate; only moves > 0.5 % change the shown price. No valid rate → plan hidden. */
