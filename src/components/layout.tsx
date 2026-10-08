@@ -75,6 +75,7 @@ export function Header() {
             <UserCircle size={20} aria-hidden />
             {user ? "Konto" : "Anmelden"}
           </Link>
+          {user && <SignOutButton className="hidden h-10 items-center gap-2 rounded-md px-3 text-[15px] font-medium text-ink-muted hover:bg-muted hover:text-ink lg:inline-flex" />}
           <button aria-label="Suche öffnen" onClick={() => setMobileSearch((v) => !v)} className="flex size-12 items-center justify-center rounded-md text-ink lg:hidden">
             <MagnifyingGlass size={22} />
           </button>
