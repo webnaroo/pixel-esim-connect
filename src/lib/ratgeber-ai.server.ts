@@ -11,7 +11,7 @@ import { computeScore, DEFAULT_WORDLIST } from "./ratgeber-score";
 
 const jsonError = (message: string, status: number) => Response.json({ message }, { status, headers: { "Cache-Control": "no-store" } });
 
-export async function handleRatgeberAi(request: Request, config: { apiKey?: string; dbUrl?: string; publicKey?: string }) {
+export async function handleRatgeberAi(request: Request, config: { apiKey: string | undefined; dbUrl: string | undefined; publicKey: string | undefined }) {
   if (!config.dbUrl || !config.publicKey) return jsonError("Anmeldung nicht verfügbar.", 503);
   const auth = request.headers.get("Authorization");
   if (!auth?.startsWith("Bearer ")) return jsonError("Anmeldung erforderlich.", 401);

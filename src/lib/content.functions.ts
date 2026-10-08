@@ -185,7 +185,7 @@ async function loadWordlist(db: Awaited<ReturnType<typeof admin>>) {
   const { data } = await db.from("app_settings").select("value").eq("key", "blog_wordlist").maybeSingle();
   return Array.isArray(data?.value) ? (data.value as string[]) : DEFAULT_WORDLIST;
 }
-type PostRow = Record<string, unknown> & { id: string; slug: string; title: string; status: string; published_at: string | null; updated_at: string };
+type PostRow = { [k: string]: any } & { id: string; slug: string; title: string; status: string; published_at: string | null; updated_at: string };
 function toScoreInput(p: PostRow) {
   return {
     title: p.title, slug: p.slug, focus_keyword: p.focus_keyword as string | null, meta_title: p.meta_title as string | null, meta_description: p.meta_description as string | null,
