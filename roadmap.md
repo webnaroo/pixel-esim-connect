@@ -5,4 +5,5 @@
 - [x] Live status on order page, usage display in account
 - [x] Unlimited wording: throttle_claim + admin review
 - [x] Stage D: account, legal pages, FAQ/blog admin, admin lists, SEO
-- [ ] Real email sending (blocked: sender domain from user)
+- [x] Managed email infrastructure and branded confirmation preview
+- [ ] Real order email sending (blocked: sender-domain DNS verification; order triggers still need wiring)

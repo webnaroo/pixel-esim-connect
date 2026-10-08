@@ -2,8 +2,10 @@ import { createStart, createCsrfMiddleware, createMiddleware } from "@tanstack/r
 
 import { renderErrorPage } from "./lib/error-page";
 import { attachSupabaseAuth } from "@/integrations/supabase/auth-attacher";
+import { getRequest } from "@tanstack/react-start/server";
 
 const errorMiddleware = createMiddleware().server(async ({ next }) => {
+  if (new URL(getRequest().url).pathname.startsWith("/lovable/")) return next();
   try {
     return await next();
   } catch (error) {
@@ -22,7 +24,7 @@ const errorMiddleware = createMiddleware().server(async ({ next }) => {
 // file opts out, so re-add it explicitly to keep server functions protected
 // from cross-site requests.
 const csrfMiddleware = createCsrfMiddleware({
-  filter: (ctx) => ctx.handlerType === "serverFn",
+  filter: (ctx) => !new URL(getRequest().url).pathname.startsWith("/lovable/") && ctx.handlerType === "serverFn",
 });
 
 export const startInstance = createStart(() => ({

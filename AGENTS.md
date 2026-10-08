@@ -25,6 +25,7 @@
 - Legal pages live in legal_pages and render only when published (RLS); company data comes from app_settings.company_info via placeholders in src/lib/legal.ts — never hardcode or invent legal/company data.
 - FAQ texts may state prices, coverage or throttling only through DB placeholders (src/lib/faq-rules.ts, checked on save; unfillable entries are hidden) — keeps public claims tied to real data.
 - Customer emails go only through src/lib/email.server.ts and only with a verified sender domain (email-rules.ts); otherwise orders get email_status pending_domain — no mail from an unverified domain.
+- Managed email templates and synchronous transport live in src/lib/email-templates; /lovable/* routes authenticate themselves and bypass app redirects and CSRF checks — dashboard previews must remain accessible without opening a public send endpoint.
 - Account deletion anonymises orders (kept for tax) and clears eSIM installation data before deleting the login (src/lib/anonymize.ts) — GDPR without losing bookkeeping records.
 - Admin list views (admin-lists.functions.ts) never select activation code, LPA or QR columns — installation data is visible only to the owner via getMyInstallData.
 - Exchange rates are fetched only from official ECB data (ECB XML, Frankfurter as ECB-based fallback; never scraping) by src/lib/fx.server.ts; every price calculation uses loadFx().lookup, whose rules (review threshold, max age, manual override, buffer) are pure functions in src/lib/fx.ts with tests — one source of truth for "no rate, no price".
