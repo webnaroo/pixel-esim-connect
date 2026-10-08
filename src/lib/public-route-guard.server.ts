@@ -4,7 +4,8 @@
 
 export type GuardOptions = {
   name: string; // bucket prefix, e.g. "stripe-webhook"
-  secretEnv: string; // env var holding the secret; missing => 503, never bypassed
+  secretEnv?: string; // env var holding the secret; missing => 503, never bypassed
+  secretDb?: string; // or: name in public.internal_secrets (server-only table), used by scheduled jobs
   auth: { kind: "hmac-sha256"; header: string; prefix?: string } | { kind: "bearer" } | { kind: "stripe"; toleranceSeconds?: number };
   limit?: { windowSeconds: number; max: number };
 };
@@ -60,7 +61,11 @@ export async function guardPublicRoute(request: Request, opts: GuardOptions): Pr
   if (error) return deny(503, "unavailable");
   if (!allowed) return deny(429, "too many requests");
 
-  const secret = process.env[opts.secretEnv];
+  let secret: string | undefined = opts.secretEnv ? process.env[opts.secretEnv] : undefined;
+  if (opts.secretDb) {
+    const { data } = await supabaseAdmin.from("internal_secrets").select("value").eq("name", opts.secretDb).maybeSingle();
+    secret = data?.value;
+  }
   if (!secret) return deny(503, "not configured");
   const rawBody = await request.text();
   if (rawBody.length > 1_000_000) return deny(413, "payload too large");

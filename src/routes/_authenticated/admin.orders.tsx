@@ -21,7 +21,7 @@ function AdminOrders() {
   const [busy, setBusy] = useState<string | null>(null);
   if (q.error) throw q.error;
   const orders = q.data ?? [];
-  const failed = orders.filter((o) => o.status === "fulfillment_failed");
+  const failed = orders.filter((o) => o.status === "fulfillment_failed" || o.status === "payment_mismatch");
 
   const doRefund = async (id: string) => {
     if (!confirm("Diese Bestellung wirklich erstatten?")) return;
@@ -35,7 +35,7 @@ function AdminOrders() {
     <div className="space-y-6">
       {failed.length > 0 && (
         <div role="alert" className="rounded-lg border border-line border-l-4 border-l-warning bg-surface p-4 text-sm">
-          {failed.length} Bestellung(en) konnten nach 3 Versuchen nicht ausgeliefert werden. Bitte prüfen und erstatten.
+          {failed.length} Bestellung(en) brauchen deine Prüfung: Auslieferung nach allen Versuchen fehlgeschlagen oder gezahlter Betrag weicht ab. Bitte prüfen und erstatten.
         </div>
       )}
       {msg && <ErrorBox message={msg} />}
@@ -54,13 +54,13 @@ function AdminOrders() {
                   <td className="p-3">{o.guest_email}</td>
                   <td className="p-3 tabular">{formatPrice(Number(o.amount), o.currency)}</td>
                   <td className="p-3">
-                    <Chip tone={o.status === "fulfilled" ? "active" : o.status === "fulfillment_failed" ? "warning" : "default"}>{o.status}</Chip>
+                    <Chip tone={o.status === "fulfilled" ? "active" : o.status === "fulfillment_failed" || o.status === "payment_mismatch" ? "warning" : "default"}>{o.status}</Chip>
                     {o.is_test && <span className="ml-2 text-xs text-ink-muted">Test</span>}
                     {o.last_error && <div className="mt-1 text-xs text-ink-muted">{o.last_error}</div>}
                   </td>
                   <td className="p-3">{o.fulfillment_attempts}</td>
                   <td className="p-3 text-right">
-                    {(o.status === "fulfillment_failed" || o.status === "paid") && (
+                    {["fulfillment_failed", "payment_mismatch", "paid", "fulfilling"].includes(o.status) && (
                       <Button variant="secondary" className="h-10!" loading={busy === o.id} onClick={() => doRefund(o.id)}>Erstatten</Button>
                     )}
                   </td>
