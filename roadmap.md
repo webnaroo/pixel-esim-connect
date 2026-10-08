@@ -1,7 +1,7 @@
 # Roadmap
 - [x] GlobeSIM SEO audit: metadata, canonical URLs, sitemap/crawlers, 17 sitemap pages and 133 passing tests
 - [ ] SEO launch verification (blocked: publication for Google Search Console and final scanner verification)
-- [ ] Comparison claim validation (blocked: authoritative confirmation of 250+ destinations, 24/7 support, 5G and refund promises)
+- [x] Comparison claim validation: user confirms all statements checked; preserve content and report any concrete concerns before changes
 - [x] Homepage: uploaded airport banner and four benefit icons with reference-style text
 - [ ] Stage C rest: fixture plans (preview only), Stripe payment form in browser, published-build check for test data
 - [x] eSIMerge sandbox connection, mapping, order/polling, sandbox guard, sync, docs
