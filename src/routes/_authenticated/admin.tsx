@@ -1,7 +1,13 @@
-import { createFileRoute, Link, Outlet, type ErrorComponentProps } from "@tanstack/react-router";
+import { createFileRoute, Link, Outlet, redirect, type ErrorComponentProps } from "@tanstack/react-router";
 import { SiteLayout } from "@/components/layout";
+import { getMyRole } from "@/lib/account.functions";
 
 export const Route = createFileRoute("/_authenticated/admin")({
+  // Server-side role check on every admin navigation — only admins may enter.
+  beforeLoad: async () => {
+    const { isAdmin } = await getMyRole();
+    if (!isAdmin) throw redirect({ to: "/account" });
+  },
   head: () => ({
     meta: [
       { title: "Admin | GlobeSIM" },
