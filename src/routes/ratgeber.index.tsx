@@ -54,7 +54,7 @@ function RatgeberIndex() {
               <ul className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
                 {list.map((p) => (
                   <li key={p.slug} className="min-w-0 overflow-hidden rounded-[14px] border border-line">
-                    <Link to="/ratgeber/$slug" params={{ slug: p.slug }} className="block h-full hover:bg-surface-muted">
+                    <Link to="/ratgeber/$slug" params={{ slug: p.slug }} className="block h-full hover:border-primary">
                       {p.cover && <img src={p.cover} alt={p.coverAlt ?? ""} className="aspect-[16/9] w-full object-cover" loading="lazy" width={800} height={450} />}
                       <div className="p-4">
                         <p className="text-lg font-semibold text-ink [overflow-wrap:anywhere]">{p.title}</p>
