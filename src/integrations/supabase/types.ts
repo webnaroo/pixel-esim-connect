@@ -357,6 +357,24 @@ export type Database = {
         }
         Relationships: []
       }
+      internal_secrets: {
+        Row: {
+          created_at: string
+          name: string
+          value: string
+        }
+        Insert: {
+          created_at?: string
+          name: string
+          value: string
+        }
+        Update: {
+          created_at?: string
+          name?: string
+          value?: string
+        }
+        Relationships: []
+      }
       orders: {
         Row: {
           amount: number
@@ -373,7 +391,9 @@ export type Database = {
           plan_id: string | null
           plan_snapshot: Json | null
           status: Database["public"]["Enums"]["order_status"]
+          stripe_env: string | null
           stripe_payment_intent_id: string | null
+          stripe_session_id: string | null
           tax: number
           updated_at: string
           user_id: string | null
@@ -394,7 +414,9 @@ export type Database = {
           plan_id?: string | null
           plan_snapshot?: Json | null
           status?: Database["public"]["Enums"]["order_status"]
+          stripe_env?: string | null
           stripe_payment_intent_id?: string | null
+          stripe_session_id?: string | null
           tax?: number
           updated_at?: string
           user_id?: string | null
@@ -415,7 +437,9 @@ export type Database = {
           plan_id?: string | null
           plan_snapshot?: Json | null
           status?: Database["public"]["Enums"]["order_status"]
+          stripe_env?: string | null
           stripe_payment_intent_id?: string | null
+          stripe_session_id?: string | null
           tax?: number
           updated_at?: string
           user_id?: string | null
@@ -769,7 +793,9 @@ export type Database = {
           plan_id: string | null
           plan_snapshot: Json | null
           status: Database["public"]["Enums"]["order_status"]
+          stripe_env: string | null
           stripe_payment_intent_id: string | null
+          stripe_session_id: string | null
           tax: number
           updated_at: string
           user_id: string | null
@@ -805,6 +831,7 @@ export type Database = {
         | "fulfillment_failed"
         | "refunded"
         | "cancelled"
+        | "payment_mismatch"
       plan_type: "data" | "unlimited"
       webhook_source: "stripe" | "provider"
     }
@@ -944,6 +971,7 @@ export const Constants = {
         "fulfillment_failed",
         "refunded",
         "cancelled",
+        "payment_mismatch",
       ],
       plan_type: ["data", "unlimited"],
       webhook_source: ["stripe", "provider"],
