@@ -227,6 +227,7 @@ function Compatibility() {
             </div>
           </div>
           <p className="mt-6 text-sm text-ink-muted">Wichtig: Das Gerät darf keine Netzsperre (SIM-Lock) haben. Schnellcheck: Wähle *#06# – wird eine EID angezeigt, unterstützt dein Gerät eSIM.</p>
+          <CompatCheck className="mt-5" />
         </div>
       </div>
     </section>
