@@ -1,4 +1,7 @@
 # Roadmap
+- [ ] Reusable admin SEO AI analysis with saved prioritized recommendations
+- [ ] Public canonical/structured-data audit test and persisted results
+- [ ] Admin SEO change history with affected pages
 - [x] GlobeSIM SEO audit: metadata, canonical URLs, sitemap/crawlers, 17 sitemap pages and 133 passing tests
 - [ ] SEO launch verification (blocked: publication for Google Search Console and final scanner verification)
 - [x] Comparison claim validation: user confirms all statements checked; preserve content and report any concrete concerns before changes
