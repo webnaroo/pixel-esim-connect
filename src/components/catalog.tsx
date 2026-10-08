@@ -11,12 +11,12 @@ export function DestinationRow({ d }: { d: { type: string; slug: string; name: s
     <Link
       to={isCountry ? "/countries/$slug" : "/regions/$slug"}
       params={{ slug: d.slug }}
-      className="flex min-h-16 items-center gap-4 rounded-lg border border-line bg-surface px-4 py-3 transition-colors duration-150 hover:border-line-strong"
+      className="flex min-h-16 min-w-0 items-center gap-3 rounded-lg border border-line bg-surface px-4 py-3 transition-colors duration-150 hover:border-line-strong sm:gap-4"
     >
       <Flag code={isCountry ? d.flagCode : null} size={32} />
-      <span className="flex-1 truncate text-base font-medium text-ink">{d.name}</span>
-      {d.fromPrice != null && <span className="tabular text-sm font-semibold text-ink">ab {formatPrice(d.fromPrice)}</span>}
-      <CaretRight aria-hidden size={18} className="text-ink-muted" />
+      <span className="min-w-0 flex-1 truncate text-base font-medium text-ink">{d.name}</span>
+      {d.fromPrice != null && <span className="shrink-0 whitespace-nowrap tabular text-sm font-semibold text-ink">ab {formatPrice(d.fromPrice)}</span>}
+      <CaretRight aria-hidden size={18} className="shrink-0 text-ink-muted" />
     </Link>
   );
 }

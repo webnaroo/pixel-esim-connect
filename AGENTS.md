@@ -34,4 +34,5 @@
 - Homepage hero crop stays mobile-scoped; country photo tiles work at all sizes; prices stay catalog-backed — consistent imagery, no invented offers.
 - Public page identities and structured data use the shared SEO helpers with leaf-only canonical links; the sitemap uses the same public origin, paginated RLS-limited reads and fails with 503 on source errors — prevents preview URLs, duplicate schemas and incomplete crawler inventories.
 - SEO AI streams through an admin-verified route with durable access blocks; admin history stores analyses, audits and content-trigger/manual changes — no private report leaks or false application claims.
-- Public SEO tests and admin audits share one sitemap-driven HTML validator — every public inventory page receives canonical and JSON-LD checks.
+- Public SEO tests and admin audits share a sitemap-driven HTML validator — checks canonical and JSON-LD on every public page.
+- Shared Markdown wraps long links and words — prevents horizontal page overflow.

@@ -161,7 +161,7 @@ function HowItWorks() {
   ];
   return (
     <section className="border-y border-line bg-surface" aria-labelledby="how-h">
-      <div className="container-page grid gap-12 py-16 lg:grid-cols-2 lg:items-center lg:py-24">
+      <div className="container-page grid gap-8 py-10 sm:gap-12 sm:py-16 lg:grid-cols-2 lg:items-center lg:py-24">
         <div>
           <h2 id="how-h">So funktioniert's</h2>
           <ol className="mt-8 space-y-6">
@@ -235,7 +235,7 @@ function HomeFaq() {
   const { data: faqs = [] } = useSuspenseQuery(faqsQuery());
   if (!faqs.length) return null;
   return (
-    <section className="container-page max-w-3xl py-16 lg:py-24" aria-labelledby="faq-h">
+    <section className="container-page max-w-3xl py-10 sm:py-16 lg:py-24" aria-labelledby="faq-h">
       <h2 id="faq-h">Häufige Fragen</h2>
       <Accordion type="single" collapsible className="mt-6">
         {faqs.slice(0, 6).map((f) => (

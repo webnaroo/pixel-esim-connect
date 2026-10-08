@@ -55,7 +55,7 @@ export function Header() {
 
   return (
     <header className="sticky top-0 z-30 border-b border-line bg-paper">
-      <div className="container-page flex h-14 items-center gap-6 lg:h-16">
+      <div className="container-page flex h-14 items-center gap-3 lg:h-16 xl:gap-6">
         <Wordmark />
         <nav aria-label="Hauptnavigation" className="hidden items-center gap-1 lg:flex">
           {NAV.map((n) => (
@@ -64,10 +64,10 @@ export function Header() {
             </Link>
           ))}
         </nav>
-        <div className="ml-auto hidden w-72 lg:block" data-header-search>
+        <div className="ml-auto hidden min-w-0 flex-1 lg:block" data-header-search>
           {showHeaderSearch && <SearchBox size="sm" />}
         </div>
-        <div className="ml-auto flex items-center gap-1 lg:ml-0">
+        <div className="ml-auto flex shrink-0 items-center gap-1 lg:ml-0">
           <Link
             to={user ? "/account" : "/login"}
             className="hidden h-10 items-center gap-2 rounded-md px-3 text-[15px] font-medium text-ink hover:bg-muted lg:inline-flex"
@@ -84,14 +84,14 @@ export function Header() {
         </div>
       </div>
       {mobileSearch && (
-        <div className="container-page pb-3 lg:hidden">
+        <div className="container-page py-3 lg:hidden">
           <SearchBox size="sm" autoFocus />
         </div>
       )}
 
       {menu && (
-        <div className="fixed inset-0 z-50 flex flex-col bg-paper animate-in fade-in duration-150 lg:hidden" role="dialog" aria-modal="true" aria-label="Menü">
-          <div className="container-page flex h-14 items-center justify-between border-b border-line">
+        <div className="fixed inset-0 z-50 flex flex-col overflow-y-auto bg-paper animate-in fade-in duration-150 lg:hidden" role="dialog" aria-modal="true" aria-label="Menü">
+          <div className="container-page flex h-14 shrink-0 items-center justify-between border-b border-line">
             <Wordmark />
             <button aria-label="Menü schließen" onClick={() => setMenu(false)} className="flex size-12 items-center justify-center rounded-md text-ink">
               <X size={24} />
@@ -116,8 +116,8 @@ export function Header() {
 export function Footer() {
   const { user } = useAuth();
   return (
-    <footer className="mt-24 border-t border-line">
-      <div className="container-page grid gap-10 py-12 sm:grid-cols-2 lg:grid-cols-5">
+    <footer className="mt-12 border-t border-line sm:mt-24">
+      <div className="container-page grid gap-8 py-10 sm:grid-cols-2 sm:gap-10 sm:py-12 lg:grid-cols-5">
         <div>
           <Wordmark />
           <p className="mt-3 max-w-xs text-sm text-ink-muted">eSIM für deine Reise. Online, sobald du landest.</p>
