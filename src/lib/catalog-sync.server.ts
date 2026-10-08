@@ -52,7 +52,7 @@ export async function runCatalogSync(trigger: "cron" | "manual"): Promise<SyncSu
     const [{ data: dests }, { data: rules }, { data: fxRows }, { data: vatRow }, { data: existing }] = await Promise.all([
       db.from("destinations").select("id,type,slug,iso_code,provider_ref"),
       db.from("pricing_rules").select("id,scope,scope_ref,type,value,rounding,priority"),
-      db.from("fx_rates").select("from_currency,to_currency,rate,valid_from").lte("valid_from", new Date().toISOString()).order("valid_from", { ascending: false }),
+      import("./fx.server").then(({ loadFx }) => loadFx(db)).then((fx) => ({ data: fx })),
       db.from("app_settings").select("value").eq("key", "vat_rate").maybeSingle(),
       db.from("plans").select("provider_plan_id,destination_id").eq("provider", "esimerge"),
     ]);
@@ -63,10 +63,8 @@ export async function runCatalogSync(trigger: "cron" | "manual"): Promise<SyncSu
       (dests ?? []).filter((d) => d.type === "region").map((d) => [String((d.provider_ref as { code?: string } | null)?.code ?? d.iso_code ?? d.slug).toUpperCase(), d]),
     );
     const globalDest = (dests ?? []).find((d) => d.type === "global");
-    const fx = (from: string, to: string) => {
-      const r = (fxRows ?? []).find((x) => x.from_currency.toUpperCase() === from && x.to_currency.toUpperCase() === to);
-      return r ? Number(r.rate) : null;
-    };
+    // Current effective rate (manual override or automatic, incl. safety buffer; none if older than 7 days).
+    const fx = fxRows.lookup;
     const known = new Set((existing ?? []).map((e) => `${e.provider_plan_id}|${e.destination_id}`));
     const startedAt = new Date().toISOString();
     const counts = { added: 0, updated: 0, unpriced: 0 };

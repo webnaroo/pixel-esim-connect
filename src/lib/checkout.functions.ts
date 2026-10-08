@@ -15,22 +15,20 @@ async function loadPricedPlan(planId: string) {
     .eq("id", planId)
     .maybeSingle();
   if (!plan || !plan.is_active || !plan.destination) return null;
-  const [{ data: rules }, { data: fxRows }, { data: vatRow }] = await Promise.all([
+  const [{ data: rules }, fxCtx, { data: vatRow }] = await Promise.all([
     db.from("pricing_rules").select("id,scope,scope_ref,type,value,rounding,priority"),
-    db.from("fx_rates").select("from_currency,to_currency,rate,valid_from").lte("valid_from", new Date().toISOString()).order("valid_from", { ascending: false }),
+    import("./fx.server").then(({ loadFx }) => loadFx(db)),
     db.from("app_settings").select("value").eq("key", "vat_rate").maybeSingle(),
   ]);
   const vatRate = typeof vatRow?.value === "number" ? vatRow.value : 0.19;
-  const fx = (from: string, to: string) => {
-    const r = (fxRows ?? []).find((x) => x.from_currency.toUpperCase() === from && x.to_currency.toUpperCase() === to);
-    return r ? Number(r.rate) : null;
-  };
+  const fx = fxCtx.lookup;
+  const fxRate = plan.cost_currency.toUpperCase() === "EUR" ? 1 : fx(plan.cost_currency, "EUR");
   // Recalculated on the server from cost + current rules; the stored list price is not trusted.
   const price = computePrice(
     { providerPlanId: plan.provider_plan_id, destinationSlug: plan.destination.slug, planType: plan.type, costPrice: Number(plan.cost_price), costCurrency: plan.cost_currency },
     (rules ?? []) as PricingRule[], fx, vatRate,
   );
-  return { plan, price, vatRate };
+  return { plan, price, vatRate, fxRate };
 }
 
 export const getCheckoutPlan = createServerFn({ method: "GET" })
@@ -115,6 +113,11 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
         is_test: !live,
         is_sandbox: (await import("./providers/index.server")).providerSetupStatus().sandbox,
         stripe_env: env,
+        // Margin traceability + price frozen for 30 minutes from checkout start.
+        fx_rate: r.fxRate,
+        cost_amount: Number(r.plan.cost_price),
+        cost_currency: r.plan.cost_currency,
+        price_frozen_until: new Date(Date.now() + 30 * 60_000).toISOString(),
       })
       .select("id")
       .single();
