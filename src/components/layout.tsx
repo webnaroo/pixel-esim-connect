@@ -129,7 +129,7 @@ export function Footer() {
       </div>
       <div className="container-page flex flex-wrap items-center gap-x-2 border-t border-line py-6 text-xs text-ink-muted">
         <span>© {new Date().getFullYear()} GlobeSIM · Alle Preise inkl. MwSt.</span>
-        <Link to="/admin/" aria-label="Admin-Login" title="Admin-Login" className="inline-flex size-9 shrink-0 items-center justify-center rounded-md text-ink-muted hover:bg-muted hover:text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary">
+        <Link to="/admin" aria-label="Admin-Login" title="Admin-Login" className="inline-flex size-9 shrink-0 items-center justify-center rounded-md text-ink-muted hover:bg-muted hover:text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary">
           <LockSimple size={16} aria-hidden />
         </Link>
       </div>
