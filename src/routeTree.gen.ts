@@ -30,6 +30,7 @@ import { Route as AuthenticatedAdminOrdersRouteImport } from './routes/_authenti
 import { Route as AuthenticatedAdminPricingRouteImport } from './routes/_authenticated/admin.pricing'
 import { Route as ApiPublicCronCatalogSyncRouteImport } from './routes/api/public/cron/catalog-sync'
 import { Route as ApiPublicCronFulfillmentRetryRouteImport } from './routes/api/public/cron/fulfillment-retry'
+import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
 import { Route as ApiPublicWebhooksEsimergeRouteImport } from './routes/api/public/webhooks/esimerge'
 
 const IndexRoute = IndexRouteImport.update({
@@ -141,6 +142,12 @@ const ApiPublicCronFulfillmentRetryRoute =
     path: '/api/public/cron/fulfillment-retry',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicPaymentsWebhookRoute =
+  ApiPublicPaymentsWebhookRouteImport.update({
+    id: '/api/public/payments/webhook',
+    path: '/api/public/payments/webhook',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicWebhooksEsimergeRoute =
   ApiPublicWebhooksEsimergeRouteImport.update({
     id: '/api/public/webhooks/esimerge',
@@ -169,6 +176,7 @@ export interface FileRoutesByFullPath {
   '/admin/': typeof AuthenticatedAdminIndexRoute
   '/api/public/cron/catalog-sync': typeof ApiPublicCronCatalogSyncRoute
   '/api/public/cron/fulfillment-retry': typeof ApiPublicCronFulfillmentRetryRoute
+  '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/api/public/webhooks/esimerge': typeof ApiPublicWebhooksEsimergeRoute
 }
 export interface FileRoutesByTo {
@@ -191,6 +199,7 @@ export interface FileRoutesByTo {
   '/admin': typeof AuthenticatedAdminIndexRoute
   '/api/public/cron/catalog-sync': typeof ApiPublicCronCatalogSyncRoute
   '/api/public/cron/fulfillment-retry': typeof ApiPublicCronFulfillmentRetryRoute
+  '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/api/public/webhooks/esimerge': typeof ApiPublicWebhooksEsimergeRoute
 }
 export interface FileRoutesById {
@@ -216,6 +225,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
   '/api/public/cron/catalog-sync': typeof ApiPublicCronCatalogSyncRoute
   '/api/public/cron/fulfillment-retry': typeof ApiPublicCronFulfillmentRetryRoute
+  '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/api/public/webhooks/esimerge': typeof ApiPublicWebhooksEsimergeRoute
 }
 export interface FileRouteTypes {
@@ -241,6 +251,7 @@ export interface FileRouteTypes {
     | '/admin/'
     | '/api/public/cron/catalog-sync'
     | '/api/public/cron/fulfillment-retry'
+    | '/api/public/payments/webhook'
     | '/api/public/webhooks/esimerge'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -263,6 +274,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/api/public/cron/catalog-sync'
     | '/api/public/cron/fulfillment-retry'
+    | '/api/public/payments/webhook'
     | '/api/public/webhooks/esimerge'
   id:
     | '__root__'
@@ -287,6 +299,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/'
     | '/api/public/cron/catalog-sync'
     | '/api/public/cron/fulfillment-retry'
+    | '/api/public/payments/webhook'
     | '/api/public/webhooks/esimerge'
   fileRoutesById: FileRoutesById
 }
@@ -307,6 +320,7 @@ export interface RootRouteChildren {
   RegionsSlugRoute: typeof RegionsSlugRoute
   ApiPublicCronCatalogSyncRoute: typeof ApiPublicCronCatalogSyncRoute
   ApiPublicCronFulfillmentRetryRoute: typeof ApiPublicCronFulfillmentRetryRoute
+  ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
   ApiPublicWebhooksEsimergeRoute: typeof ApiPublicWebhooksEsimergeRoute
 }
 
@@ -459,6 +473,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicCronFulfillmentRetryRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/payments/webhook': {
+      id: '/api/public/payments/webhook'
+      path: '/api/public/payments/webhook'
+      fullPath: '/api/public/payments/webhook'
+      preLoaderRoute: typeof ApiPublicPaymentsWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/webhooks/esimerge': {
       id: '/api/public/webhooks/esimerge'
       path: '/api/public/webhooks/esimerge'
@@ -514,6 +535,7 @@ const rootRouteChildren: RootRouteChildren = {
   RegionsSlugRoute: RegionsSlugRoute,
   ApiPublicCronCatalogSyncRoute: ApiPublicCronCatalogSyncRoute,
   ApiPublicCronFulfillmentRetryRoute: ApiPublicCronFulfillmentRetryRoute,
+  ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
   ApiPublicWebhooksEsimergeRoute: ApiPublicWebhooksEsimergeRoute,
 }
 export const routeTree = rootRouteImport
