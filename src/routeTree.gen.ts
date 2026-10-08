@@ -30,6 +30,7 @@ import { Route as OrderOrderIdRouteImport } from './routes/order.$orderId'
 import { Route as RegionsSlugRouteImport } from './routes/regions.$slug'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
 import { Route as AuthenticatedAdminCompareRouteImport } from './routes/_authenticated/admin.compare'
+import { Route as AuthenticatedAdminContentRouteImport } from './routes/_authenticated/admin.content'
 import { Route as AuthenticatedAdminCustomersRouteImport } from './routes/_authenticated/admin.customers'
 import { Route as AuthenticatedAdminEsimsRouteImport } from './routes/_authenticated/admin.esims'
 import { Route as AuthenticatedAdminExplorerRouteImport } from './routes/_authenticated/admin.explorer'
@@ -149,6 +150,12 @@ const AuthenticatedAdminCompareRoute =
     path: '/compare',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
+const AuthenticatedAdminContentRoute =
+  AuthenticatedAdminContentRouteImport.update({
+    id: '/content',
+    path: '/content',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
 const AuthenticatedAdminCustomersRoute =
   AuthenticatedAdminCustomersRouteImport.update({
     id: '/customers',
@@ -245,6 +252,7 @@ export interface FileRoutesByFullPath {
   '/regions/$slug': typeof RegionsSlugRoute
   '/blog/': typeof BlogIndexRoute
   '/admin/compare': typeof AuthenticatedAdminCompareRoute
+  '/admin/content': typeof AuthenticatedAdminContentRoute
   '/admin/customers': typeof AuthenticatedAdminCustomersRoute
   '/admin/esims': typeof AuthenticatedAdminEsimsRoute
   '/admin/explorer': typeof AuthenticatedAdminExplorerRoute
@@ -279,6 +287,7 @@ export interface FileRoutesByTo {
   '/regions/$slug': typeof RegionsSlugRoute
   '/blog': typeof BlogIndexRoute
   '/admin/compare': typeof AuthenticatedAdminCompareRoute
+  '/admin/content': typeof AuthenticatedAdminContentRoute
   '/admin/customers': typeof AuthenticatedAdminCustomersRoute
   '/admin/esims': typeof AuthenticatedAdminEsimsRoute
   '/admin/explorer': typeof AuthenticatedAdminExplorerRoute
@@ -316,6 +325,7 @@ export interface FileRoutesById {
   '/regions/$slug': typeof RegionsSlugRoute
   '/blog/': typeof BlogIndexRoute
   '/_authenticated/admin/compare': typeof AuthenticatedAdminCompareRoute
+  '/_authenticated/admin/content': typeof AuthenticatedAdminContentRoute
   '/_authenticated/admin/customers': typeof AuthenticatedAdminCustomersRoute
   '/_authenticated/admin/esims': typeof AuthenticatedAdminEsimsRoute
   '/_authenticated/admin/explorer': typeof AuthenticatedAdminExplorerRoute
@@ -353,6 +363,7 @@ export interface FileRouteTypes {
     | '/regions/$slug'
     | '/blog/'
     | '/admin/compare'
+    | '/admin/content'
     | '/admin/customers'
     | '/admin/esims'
     | '/admin/explorer'
@@ -387,6 +398,7 @@ export interface FileRouteTypes {
     | '/regions/$slug'
     | '/blog'
     | '/admin/compare'
+    | '/admin/content'
     | '/admin/customers'
     | '/admin/esims'
     | '/admin/explorer'
@@ -423,6 +435,7 @@ export interface FileRouteTypes {
     | '/regions/$slug'
     | '/blog/'
     | '/_authenticated/admin/compare'
+    | '/_authenticated/admin/content'
     | '/_authenticated/admin/customers'
     | '/_authenticated/admin/esims'
     | '/_authenticated/admin/explorer'
@@ -613,6 +626,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminCompareRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/_authenticated/admin/content': {
+      id: '/_authenticated/admin/content'
+      path: '/content'
+      fullPath: '/admin/content'
+      preLoaderRoute: typeof AuthenticatedAdminContentRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
     '/_authenticated/admin/customers': {
       id: '/_authenticated/admin/customers'
       path: '/customers'
@@ -709,6 +729,7 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedAdminRouteChildren {
   AuthenticatedAdminCompareRoute: typeof AuthenticatedAdminCompareRoute
+  AuthenticatedAdminContentRoute: typeof AuthenticatedAdminContentRoute
   AuthenticatedAdminCustomersRoute: typeof AuthenticatedAdminCustomersRoute
   AuthenticatedAdminEsimsRoute: typeof AuthenticatedAdminEsimsRoute
   AuthenticatedAdminExplorerRoute: typeof AuthenticatedAdminExplorerRoute
@@ -722,6 +743,7 @@ interface AuthenticatedAdminRouteChildren {
 
 const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
   AuthenticatedAdminCompareRoute: AuthenticatedAdminCompareRoute,
+  AuthenticatedAdminContentRoute: AuthenticatedAdminContentRoute,
   AuthenticatedAdminCustomersRoute: AuthenticatedAdminCustomersRoute,
   AuthenticatedAdminEsimsRoute: AuthenticatedAdminEsimsRoute,
   AuthenticatedAdminExplorerRoute: AuthenticatedAdminExplorerRoute,
