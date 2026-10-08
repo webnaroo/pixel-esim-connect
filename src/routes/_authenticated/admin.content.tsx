@@ -9,6 +9,8 @@ import { contentAdminQuery, deleteBlogPost, deleteFaq, saveBlogPost, saveCompany
 import { COMPANY_FIELDS, type CompanyInfo } from "@/lib/legal";
 import { FAQ_PLACEHOLDERS } from "@/lib/faq-rules";
 import { AdminError } from "./admin";
+import { z } from "zod";
+import { faqItemSchema, publishBlockers, sectionSchema, wordCount, type FaqItem, type Section } from "@/lib/ratgeber";
 import { privateHead } from "@/lib/seo";
 
 export const Route = createFileRoute("/_authenticated/admin/content")({ head: () => privateHead("Inhalte verwalten", "Rechtsseiten, Firmendaten, FAQ und Blog im GlobeSIM-Admin."), component: Content, errorComponent: AdminError });
@@ -36,7 +38,7 @@ function Content() {
   if (q.error) throw q.error;
   return (
     <div className="space-y-6">
-      <SegmentedControl label="Inhaltsbereich" value={sec} onChange={setSec} options={[{ value: "legal", label: "Rechtsseiten" }, { value: "company", label: "Firmendaten" }, { value: "faq", label: "FAQ" }, { value: "blog", label: "Blog" }, { value: "email", label: "E-Mail" }]} />
+      <SegmentedControl label="Inhaltsbereich" value={sec} onChange={setSec} options={[{ value: "legal", label: "Rechtsseiten" }, { value: "company", label: "Firmendaten" }, { value: "faq", label: "FAQ" }, { value: "blog", label: "Ratgeber" }, { value: "email", label: "E-Mail" }]} />
       {!q.data ? <p className="text-ink-muted">Wird geladen …</p> : sec === "legal" ? <Legal d={q.data} /> : sec === "company" ? <Company d={q.data} /> : sec === "faq" ? <Faq d={q.data} /> : sec === "blog" ? <Blog d={q.data} /> : <Email d={q.data} />}
     </div>
   );
@@ -158,7 +160,7 @@ function Blog({ d }: { d: Data }) {
           <li key={p.id} className="p-4">
             {editing === p.id ? <BlogEditor p={p} onDone={() => setEditing(null)} /> : (
               <div className="flex items-start justify-between gap-3">
-                <div><div className="font-medium">{p.title}</div><div className="text-xs text-ink-muted">/blog/{p.slug} · {p.published_at ? "veröffentlicht" : "Entwurf"}</div></div>
+                <div><div className="font-medium">{p.title}</div><div className="text-xs text-ink-muted">/ratgeber/{p.slug} · {p.status === "published" ? "veröffentlicht" : "Entwurf"}</div></div>
                 <Button variant="ghost" onClick={() => setEditing(p.id)}>Bearbeiten</Button>
               </div>
             )}
@@ -173,19 +175,40 @@ function BlogEditor({ p, onDone }: { p?: Data["posts"][number]; onDone: () => vo
   const save = useServerFn(saveBlogPost);
   const del = useServerFn(deleteBlogPost);
   const { run, busy, Msg } = useSaver();
-  const [title, setTitle] = useState(p?.title ?? "");
-  const [slug, setSlug] = useState(p?.slug ?? "");
-  const [body, setBody] = useState(p?.body_md ?? "");
-  const [published, setPublished] = useState(!!p?.published_at);
+  const [f, setF] = useState({
+    title: p?.title ?? "", slug: p?.slug ?? "", meta_title: p?.meta_title ?? "", meta_description: p?.meta_description ?? "",
+    answer_summary: p?.answer_summary ?? "", author_name: p?.author_name ?? "GlobeSIM-Team", country_code: p?.country_code ?? "", cover_url: p?.cover_url ?? "", body: p?.body_md ?? "",
+    sections: JSON.stringify(p?.sections ?? [], null, 2), faq: JSON.stringify(p?.faq ?? [], null, 2),
+  });
+  const [published, setPublished] = useState(p?.status === "published");
+  const set = (k: keyof typeof f) => (e: { target: { value: string } }) => setF((o) => ({ ...o, [k]: e.target.value }));
+  let parsed: { sections: Section[]; faq: FaqItem[] } | null = null;
+  try { parsed = { sections: z.array(sectionSchema).parse(JSON.parse(f.sections || "[]")), faq: z.array(faqItemSchema).parse(JSON.parse(f.faq || "[]")) }; } catch { parsed = null; }
+  const blockers = parsed ? publishBlockers({ ...f, ...parsed }) : ["Abschnitte oder FAQ sind kein gültiges JSON."];
+  const words = wordCount(f.answer_summary);
   return (
-    <form className="space-y-3" onSubmit={(e) => { e.preventDefault(); run(async () => { await save({ data: { id: p?.id, title, slug, body, published } }); onDone(); }); }}>
-      <label className="block text-sm font-medium">Titel<Input className="mt-1" value={title} onChange={(e) => setTitle(e.target.value)} /></label>
-      <label className="block text-sm font-medium">Adresse (Slug)<Input className="mt-1" value={slug} onChange={(e) => setSlug(e.target.value)} placeholder="z-b-esim-tuerkei" /></label>
-      <label className="block text-sm font-medium">Text (Markdown)<Textarea className="mt-1 min-h-[200px]" value={body} onChange={(e) => setBody(e.target.value)} /></label>
-      <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={published} onChange={(e) => setPublished(e.target.checked)} /> Veröffentlicht</label>
+    <form className="space-y-3" onSubmit={(e) => { e.preventDefault(); if (!parsed) return; const ps = parsed; run(async () => {
+      await save({ data: { id: p?.id, title: f.title, slug: f.slug, meta_title: f.meta_title || null, meta_description: f.meta_description || null, answer_summary: f.answer_summary || null, author_name: f.author_name || null, country_code: f.country_code || null, cover_url: f.cover_url || null, body: f.body, sections: ps.sections, faq: ps.faq, published } });
+      onDone();
+    }); }}>
+      <label className="block text-sm font-medium">Titel (H1)<Input className="mt-1" value={f.title} onChange={set("title")} /></label>
+      <label className="block text-sm font-medium">Adresse (Slug) – /ratgeber/{f.slug || "…"}<Input className="mt-1" value={f.slug} onChange={set("slug")} placeholder="esim-tuerkei" /></label>
+      <label className="block text-sm font-medium">Meta-Title ({f.meta_title.length}/60)<Input className="mt-1" value={f.meta_title} onChange={set("meta_title")} /></label>
+      <label className="block text-sm font-medium">Meta-Description ({f.meta_description.length}/155)<Textarea className="mt-1" value={f.meta_description} onChange={set("meta_description")} /></label>
+      <label className="block text-sm font-medium">„Kurz erklärt“ ({words} Wörter, Ziel 40–60)<Textarea className="mt-1" value={f.answer_summary} onChange={set("answer_summary")} /></label>
+      <div className="grid gap-3 sm:grid-cols-3">
+        <label className="block text-sm font-medium">Autor<Input className="mt-1" value={f.author_name} onChange={set("author_name")} /></label>
+        <label className="block text-sm font-medium">Ländercode (z. B. TR)<Input className="mt-1" value={f.country_code} onChange={set("country_code")} maxLength={2} /></label>
+        <label className="block text-sm font-medium">Titelbild-URL (https)<Input className="mt-1" value={f.cover_url} onChange={set("cover_url")} /></label>
+      </div>
+      <label className="block text-sm font-medium">Abschnitte (JSON: heading, body_md, block = "plans" | "compat")<Textarea className="mt-1 min-h-[260px] font-mono text-xs" value={f.sections} onChange={set("sections")} /></label>
+      <label className="block text-sm font-medium">FAQ (JSON: q, a)<Textarea className="mt-1 min-h-[160px] font-mono text-xs" value={f.faq} onChange={set("faq")} /></label>
+      <label className="block text-sm font-medium">Zusätzlicher Einleitungstext (Markdown, optional)<Textarea className="mt-1" value={f.body} onChange={set("body")} /></label>
+      {blockers.length > 0 && <ul className="rounded-[14px] border border-line p-3 text-sm text-ink-muted">{blockers.map((b) => <li key={b}>⚠ {b}</li>)}</ul>}
+      <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={published} disabled={blockers.length > 0 && !published} onChange={(e) => setPublished(e.target.checked)} /> Veröffentlicht {blockers.length > 0 && "(erst nach Klärung der Hinweise)"}</label>
       <Msg />
       <div className="flex flex-wrap gap-2">
-        <Button type="submit" loading={busy}>Speichern</Button>
+        <Button type="submit" loading={busy} disabled={!parsed}>Speichern</Button>
         <Button type="button" variant="secondary" onClick={onDone}>Abbrechen</Button>
         {p && <Button type="button" variant="ghost" onClick={() => { if (confirm("Beitrag löschen?")) run(async () => { await del({ data: { id: p.id } }); onDone(); }); }}>Löschen</Button>}
       </div>
