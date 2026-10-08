@@ -204,8 +204,8 @@ export function SearchBox({ size = "lg", autoFocus }: { size?: "lg" | "sm"; auto
         </div>
       )}
 
-      {open && isMobile && (
-        <div className="fixed inset-0 z-50 flex flex-col bg-surface animate-in fade-in duration-150" role="dialog" aria-modal="true" aria-label="Reiseziel suchen">
+      {open && isMobile && typeof document !== "undefined" && createPortal(
+        <div className="fixed inset-0 z-[100] flex flex-col bg-surface animate-in fade-in duration-150" role="dialog" aria-modal="true" aria-label="Reiseziel suchen">
           <div className="flex items-center gap-2 border-b border-line px-3 py-3">
             <button aria-label="Suche schließen" onClick={() => setOpen(false)} className="flex size-12 items-center justify-center rounded-md text-ink">
               <ArrowLeft size={22} />
