@@ -30,8 +30,12 @@ import { Route as OrderOrderIdRouteImport } from './routes/order.$orderId'
 import { Route as RegionsSlugRouteImport } from './routes/regions.$slug'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
 import { Route as AuthenticatedAdminCompareRouteImport } from './routes/_authenticated/admin.compare'
+import { Route as AuthenticatedAdminCustomersRouteImport } from './routes/_authenticated/admin.customers'
+import { Route as AuthenticatedAdminEsimsRouteImport } from './routes/_authenticated/admin.esims'
 import { Route as AuthenticatedAdminExplorerRouteImport } from './routes/_authenticated/admin.explorer'
+import { Route as AuthenticatedAdminLogsRouteImport } from './routes/_authenticated/admin.logs'
 import { Route as AuthenticatedAdminOrdersRouteImport } from './routes/_authenticated/admin.orders'
+import { Route as AuthenticatedAdminPlansRouteImport } from './routes/_authenticated/admin.plans'
 import { Route as AuthenticatedAdminPricingRouteImport } from './routes/_authenticated/admin.pricing'
 import { Route as AuthenticatedAdminUnlimitedRouteImport } from './routes/_authenticated/admin.unlimited'
 import { Route as ApiPublicCronCatalogSyncRouteImport } from './routes/api/public/cron/catalog-sync'
@@ -145,18 +149,39 @@ const AuthenticatedAdminCompareRoute =
     path: '/compare',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
+const AuthenticatedAdminCustomersRoute =
+  AuthenticatedAdminCustomersRouteImport.update({
+    id: '/customers',
+    path: '/customers',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
+const AuthenticatedAdminEsimsRoute = AuthenticatedAdminEsimsRouteImport.update({
+  id: '/esims',
+  path: '/esims',
+  getParentRoute: () => AuthenticatedAdminRoute,
+} as any)
 const AuthenticatedAdminExplorerRoute =
   AuthenticatedAdminExplorerRouteImport.update({
     id: '/explorer',
     path: '/explorer',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
+const AuthenticatedAdminLogsRoute = AuthenticatedAdminLogsRouteImport.update({
+  id: '/logs',
+  path: '/logs',
+  getParentRoute: () => AuthenticatedAdminRoute,
+} as any)
 const AuthenticatedAdminOrdersRoute =
   AuthenticatedAdminOrdersRouteImport.update({
     id: '/orders',
     path: '/orders',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
+const AuthenticatedAdminPlansRoute = AuthenticatedAdminPlansRouteImport.update({
+  id: '/plans',
+  path: '/plans',
+  getParentRoute: () => AuthenticatedAdminRoute,
+} as any)
 const AuthenticatedAdminPricingRoute =
   AuthenticatedAdminPricingRouteImport.update({
     id: '/pricing',
@@ -220,8 +245,12 @@ export interface FileRoutesByFullPath {
   '/regions/$slug': typeof RegionsSlugRoute
   '/blog/': typeof BlogIndexRoute
   '/admin/compare': typeof AuthenticatedAdminCompareRoute
+  '/admin/customers': typeof AuthenticatedAdminCustomersRoute
+  '/admin/esims': typeof AuthenticatedAdminEsimsRoute
   '/admin/explorer': typeof AuthenticatedAdminExplorerRoute
+  '/admin/logs': typeof AuthenticatedAdminLogsRoute
   '/admin/orders': typeof AuthenticatedAdminOrdersRoute
+  '/admin/plans': typeof AuthenticatedAdminPlansRoute
   '/admin/pricing': typeof AuthenticatedAdminPricingRoute
   '/admin/unlimited': typeof AuthenticatedAdminUnlimitedRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
@@ -250,8 +279,12 @@ export interface FileRoutesByTo {
   '/regions/$slug': typeof RegionsSlugRoute
   '/blog': typeof BlogIndexRoute
   '/admin/compare': typeof AuthenticatedAdminCompareRoute
+  '/admin/customers': typeof AuthenticatedAdminCustomersRoute
+  '/admin/esims': typeof AuthenticatedAdminEsimsRoute
   '/admin/explorer': typeof AuthenticatedAdminExplorerRoute
+  '/admin/logs': typeof AuthenticatedAdminLogsRoute
   '/admin/orders': typeof AuthenticatedAdminOrdersRoute
+  '/admin/plans': typeof AuthenticatedAdminPlansRoute
   '/admin/pricing': typeof AuthenticatedAdminPricingRoute
   '/admin/unlimited': typeof AuthenticatedAdminUnlimitedRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
@@ -283,8 +316,12 @@ export interface FileRoutesById {
   '/regions/$slug': typeof RegionsSlugRoute
   '/blog/': typeof BlogIndexRoute
   '/_authenticated/admin/compare': typeof AuthenticatedAdminCompareRoute
+  '/_authenticated/admin/customers': typeof AuthenticatedAdminCustomersRoute
+  '/_authenticated/admin/esims': typeof AuthenticatedAdminEsimsRoute
   '/_authenticated/admin/explorer': typeof AuthenticatedAdminExplorerRoute
+  '/_authenticated/admin/logs': typeof AuthenticatedAdminLogsRoute
   '/_authenticated/admin/orders': typeof AuthenticatedAdminOrdersRoute
+  '/_authenticated/admin/plans': typeof AuthenticatedAdminPlansRoute
   '/_authenticated/admin/pricing': typeof AuthenticatedAdminPricingRoute
   '/_authenticated/admin/unlimited': typeof AuthenticatedAdminUnlimitedRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
@@ -316,8 +353,12 @@ export interface FileRouteTypes {
     | '/regions/$slug'
     | '/blog/'
     | '/admin/compare'
+    | '/admin/customers'
+    | '/admin/esims'
     | '/admin/explorer'
+    | '/admin/logs'
     | '/admin/orders'
+    | '/admin/plans'
     | '/admin/pricing'
     | '/admin/unlimited'
     | '/admin/'
@@ -346,8 +387,12 @@ export interface FileRouteTypes {
     | '/regions/$slug'
     | '/blog'
     | '/admin/compare'
+    | '/admin/customers'
+    | '/admin/esims'
     | '/admin/explorer'
+    | '/admin/logs'
     | '/admin/orders'
+    | '/admin/plans'
     | '/admin/pricing'
     | '/admin/unlimited'
     | '/admin'
@@ -378,8 +423,12 @@ export interface FileRouteTypes {
     | '/regions/$slug'
     | '/blog/'
     | '/_authenticated/admin/compare'
+    | '/_authenticated/admin/customers'
+    | '/_authenticated/admin/esims'
     | '/_authenticated/admin/explorer'
+    | '/_authenticated/admin/logs'
     | '/_authenticated/admin/orders'
+    | '/_authenticated/admin/plans'
     | '/_authenticated/admin/pricing'
     | '/_authenticated/admin/unlimited'
     | '/_authenticated/admin/'
@@ -564,6 +613,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminCompareRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/_authenticated/admin/customers': {
+      id: '/_authenticated/admin/customers'
+      path: '/customers'
+      fullPath: '/admin/customers'
+      preLoaderRoute: typeof AuthenticatedAdminCustomersRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/admin/esims': {
+      id: '/_authenticated/admin/esims'
+      path: '/esims'
+      fullPath: '/admin/esims'
+      preLoaderRoute: typeof AuthenticatedAdminEsimsRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
     '/_authenticated/admin/explorer': {
       id: '/_authenticated/admin/explorer'
       path: '/explorer'
@@ -571,11 +634,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminExplorerRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/_authenticated/admin/logs': {
+      id: '/_authenticated/admin/logs'
+      path: '/logs'
+      fullPath: '/admin/logs'
+      preLoaderRoute: typeof AuthenticatedAdminLogsRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
     '/_authenticated/admin/orders': {
       id: '/_authenticated/admin/orders'
       path: '/orders'
       fullPath: '/admin/orders'
       preLoaderRoute: typeof AuthenticatedAdminOrdersRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/admin/plans': {
+      id: '/_authenticated/admin/plans'
+      path: '/plans'
+      fullPath: '/admin/plans'
+      preLoaderRoute: typeof AuthenticatedAdminPlansRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
     '/_authenticated/admin/pricing': {
@@ -632,8 +709,12 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedAdminRouteChildren {
   AuthenticatedAdminCompareRoute: typeof AuthenticatedAdminCompareRoute
+  AuthenticatedAdminCustomersRoute: typeof AuthenticatedAdminCustomersRoute
+  AuthenticatedAdminEsimsRoute: typeof AuthenticatedAdminEsimsRoute
   AuthenticatedAdminExplorerRoute: typeof AuthenticatedAdminExplorerRoute
+  AuthenticatedAdminLogsRoute: typeof AuthenticatedAdminLogsRoute
   AuthenticatedAdminOrdersRoute: typeof AuthenticatedAdminOrdersRoute
+  AuthenticatedAdminPlansRoute: typeof AuthenticatedAdminPlansRoute
   AuthenticatedAdminPricingRoute: typeof AuthenticatedAdminPricingRoute
   AuthenticatedAdminUnlimitedRoute: typeof AuthenticatedAdminUnlimitedRoute
   AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
@@ -641,8 +722,12 @@ interface AuthenticatedAdminRouteChildren {
 
 const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
   AuthenticatedAdminCompareRoute: AuthenticatedAdminCompareRoute,
+  AuthenticatedAdminCustomersRoute: AuthenticatedAdminCustomersRoute,
+  AuthenticatedAdminEsimsRoute: AuthenticatedAdminEsimsRoute,
   AuthenticatedAdminExplorerRoute: AuthenticatedAdminExplorerRoute,
+  AuthenticatedAdminLogsRoute: AuthenticatedAdminLogsRoute,
   AuthenticatedAdminOrdersRoute: AuthenticatedAdminOrdersRoute,
+  AuthenticatedAdminPlansRoute: AuthenticatedAdminPlansRoute,
   AuthenticatedAdminPricingRoute: AuthenticatedAdminPricingRoute,
   AuthenticatedAdminUnlimitedRoute: AuthenticatedAdminUnlimitedRoute,
   AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
