@@ -14,6 +14,7 @@ import { Route as DestinationsRouteImport } from './routes/destinations'
 import { Route as FaqRouteImport } from './routes/faq'
 import { Route as HelpRouteImport } from './routes/help'
 import { Route as HowItWorksRouteImport } from './routes/how-it-works'
+import { Route as LoginRouteImport } from './routes/login'
 import { Route as CountriesSlugRouteImport } from './routes/countries.$slug'
 import { Route as RegionsSlugRouteImport } from './routes/regions.$slug'
 
@@ -42,6 +43,11 @@ const HowItWorksRoute = HowItWorksRouteImport.update({
   path: '/how-it-works',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CountriesSlugRoute = CountriesSlugRouteImport.update({
   id: '/countries/$slug',
   path: '/countries/$slug',
@@ -59,6 +65,7 @@ export interface FileRoutesByFullPath {
   '/faq': typeof FaqRoute
   '/help': typeof HelpRoute
   '/how-it-works': typeof HowItWorksRoute
+  '/login': typeof LoginRoute
   '/countries/$slug': typeof CountriesSlugRoute
   '/regions/$slug': typeof RegionsSlugRoute
 }
@@ -68,6 +75,7 @@ export interface FileRoutesByTo {
   '/faq': typeof FaqRoute
   '/help': typeof HelpRoute
   '/how-it-works': typeof HowItWorksRoute
+  '/login': typeof LoginRoute
   '/countries/$slug': typeof CountriesSlugRoute
   '/regions/$slug': typeof RegionsSlugRoute
 }
@@ -78,6 +86,7 @@ export interface FileRoutesById {
   '/faq': typeof FaqRoute
   '/help': typeof HelpRoute
   '/how-it-works': typeof HowItWorksRoute
+  '/login': typeof LoginRoute
   '/countries/$slug': typeof CountriesSlugRoute
   '/regions/$slug': typeof RegionsSlugRoute
 }
@@ -89,6 +98,7 @@ export interface FileRouteTypes {
     | '/faq'
     | '/help'
     | '/how-it-works'
+    | '/login'
     | '/countries/$slug'
     | '/regions/$slug'
   fileRoutesByTo: FileRoutesByTo
@@ -98,6 +108,7 @@ export interface FileRouteTypes {
     | '/faq'
     | '/help'
     | '/how-it-works'
+    | '/login'
     | '/countries/$slug'
     | '/regions/$slug'
   id:
@@ -107,6 +118,7 @@ export interface FileRouteTypes {
     | '/faq'
     | '/help'
     | '/how-it-works'
+    | '/login'
     | '/countries/$slug'
     | '/regions/$slug'
   fileRoutesById: FileRoutesById
@@ -117,6 +129,7 @@ export interface RootRouteChildren {
   FaqRoute: typeof FaqRoute
   HelpRoute: typeof HelpRoute
   HowItWorksRoute: typeof HowItWorksRoute
+  LoginRoute: typeof LoginRoute
   CountriesSlugRoute: typeof CountriesSlugRoute
   RegionsSlugRoute: typeof RegionsSlugRoute
 }
@@ -158,6 +171,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof HowItWorksRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/countries/$slug': {
       id: '/countries/$slug'
       path: '/countries/$slug'
@@ -181,6 +201,7 @@ const rootRouteChildren: RootRouteChildren = {
   FaqRoute: FaqRoute,
   HelpRoute: HelpRoute,
   HowItWorksRoute: HowItWorksRoute,
+  LoginRoute: LoginRoute,
   CountriesSlugRoute: CountriesSlugRoute,
   RegionsSlugRoute: RegionsSlugRoute,
 }
