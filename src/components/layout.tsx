@@ -5,7 +5,7 @@ import { Wordmark } from "./brand";
 import { SearchBox } from "./search-box";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
-import { useQuery } from "@tanstack/react-query";
+import { useSuspenseQuery } from "@tanstack/react-query";
 import { legalIndexQuery } from "@/lib/content.functions";
 
 const NAV = [
@@ -175,7 +175,7 @@ export async function signOut() {
 }
 
 function LegalLinks() {
-  const { data } = useQuery(legalIndexQuery());
+  const { data } = useSuspenseQuery(legalIndexQuery());
   if (!data?.length) return null;
   return <FooterCol title="Rechtliches" links={data.map((p) => ({ to: `/legal/${p.slug}`, label: p.title }))} />;
 }
