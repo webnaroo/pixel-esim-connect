@@ -40,7 +40,7 @@ export function CompetitorPicker({ items, value, onChange }: { items: ViewCompet
     else if (e.key === "End") n = items.length - 1;
     else return;
     e.preventDefault();
-    onChange(items[n].id);
+    onChange(items[n]!.id);
     refs.current[n]?.focus();
   }
   return (
@@ -89,7 +89,7 @@ export function ComparisonSection() {
   if (isLoading) return <section className="container-page max-w-[880px] py-16" aria-hidden><div className="h-8 w-64 animate-pulse rounded bg-muted" /><div className="mt-6 h-40 animate-pulse rounded-[14px] bg-muted" /></section>;
   const view = data?.view;
   if (!view) return null;
-  const current = view.competitors.find((c) => c.id === sel) ?? view.competitors[0];
+  const current = view.competitors.find((c) => c.id === sel) ?? view.competitors[0]!;
 
   function focusSearch() {
     const input = document.querySelector<HTMLInputElement>("[data-hero-search] input");

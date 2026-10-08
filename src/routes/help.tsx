@@ -13,7 +13,7 @@ const schema = z.object({
 });
 
 export const Route = createFileRoute("/help")({
-  validateSearch: (s: Record<string, unknown>): { subject?: string } => (typeof s.subject === "string" ? { subject: s.subject.slice(0, 150) } : {}),
+  validateSearch: (s: Record<string, unknown>): { subject?: string } => (typeof s["subject"] === "string" ? { subject: s["subject"].slice(0, 150) } : {}),
   head: () => ({
     meta: [
       { title: "Hilfe & Kontakt | GlobeSIM" },

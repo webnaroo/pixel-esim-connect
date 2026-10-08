@@ -107,8 +107,8 @@ function CompetitorEditor({ c, onSaved }: { c: Comp; onSaved: () => void }) {
   const [url, setUrl] = useState(c.website_url ?? "");
   async function onLogo(file: File | undefined) {
     if (!file) return;
-    if (!["image/png", "image/svg+xml"].includes(file.type)) return toast.error("Nur PNG oder SVG.");
-    if (file.size > 200 * 1024) return toast.error("Maximal 200 KB.");
+    if (!["image/png", "image/svg+xml"].includes(file.type)) { toast.error("Nur PNG oder SVG."); return; }
+    if (file.size > 200 * 1024) { toast.error("Maximal 200 KB."); return; }
     const dataUrl = await new Promise<string>((res) => { const r = new FileReader(); r.onload = () => res(String(r.result)); r.readAsDataURL(file); });
     await run(supabase.from("competitors").update({ logo_url: dataUrl }).eq("id", c.id), "Logo gespeichert", onSaved);
   }
@@ -133,7 +133,7 @@ function RowEditor({ r, onSaved }: { r: RowRec | null; onSaved: () => void }) {
   const [v, setV] = useState({ sort_order: r?.sort_order ?? 99, question: r?.question ?? "", globesim_text: r?.globesim_text ?? "", globesim_status: r?.globesim_status ?? "neutral", requires: r?.requires ?? "", enabled: r?.enabled ?? false });
   const body = { ...v, requires: v.requires || null };
   function save() {
-    if (!v.question.trim()) return toast.error("Frage fehlt.");
+    if (!v.question.trim()) { toast.error("Frage fehlt."); return; }
     run(r ? supabase.from("comparison_rows").update(body).eq("id", r.id) : supabase.from("comparison_rows").insert(body), "Zeile gespeichert", onSaved);
   }
   return (
@@ -158,9 +158,9 @@ type Fact = { id: string; text: string; status: string; source_url: string; chec
 function FactEditor({ rowId, question, competitorId, f, light, onSaved }: { rowId: string; question: string; competitorId: string; f: Fact | null; light: FactLight | null; onSaved: () => void }) {
   const [v, setV] = useState({ text: f?.text ?? "", status: f?.status ?? "neutral", source_url: f?.source_url ?? "", checked_at: f?.checked_at ?? today(), enabled: f?.enabled ?? true });
   function save() {
-    if (!v.text.trim()) return toast.error("Text fehlt.");
-    if (!/^https:\/\/\S+$/.test(v.source_url)) return toast.error("Quelle (https-Link) ist Pflicht.");
-    if (!v.checked_at) return toast.error("Prüfdatum ist Pflicht.");
+    if (!v.text.trim()) { toast.error("Text fehlt."); return; }
+    if (!/^https:\/\/\S+$/.test(v.source_url)) { toast.error("Quelle (https-Link) ist Pflicht."); return; }
+    if (!v.checked_at) { toast.error("Prüfdatum ist Pflicht."); return; }
     const body = { ...v, row_id: rowId, competitor_id: competitorId };
     run(f ? supabase.from("comparison_facts").update(body).eq("id", f.id) : supabase.from("comparison_facts").insert(body), "Fakt gespeichert", onSaved);
   }
