@@ -47,8 +47,8 @@ export type RequestOptions = {
   params?: Record<string, string>; // replaces ':key' in path
   query?: Record<string, string | number | undefined>;
   body?: unknown;
-  idempotencyKey?: string;
-  idempotencyHeader?: string; // TODO(ESIMERGE): header name if supported
+  idempotencyKey?: string | undefined;
+  idempotencyHeader?: string | undefined; // TODO(ESIMERGE): header name if supported
 };
 
 export async function providerRequest(name: string, def: EndpointDef | null, opts: RequestOptions = {}): Promise<{ status: number; body: unknown; latencyMs: number }> {
@@ -77,7 +77,7 @@ export async function providerRequest(name: string, def: EndpointDef | null, opt
       const res = await fetch(url, {
         method: def.method,
         headers,
-        body: opts.body !== undefined ? JSON.stringify(opts.body) : undefined,
+        body: opts.body !== undefined ? JSON.stringify(opts.body) : null,
         signal: AbortSignal.timeout(esimergeConfig.limits.timeoutMs),
       });
       const latencyMs = Date.now() - started;

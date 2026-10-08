@@ -25,7 +25,7 @@ export type PlanItem = {
   networkType: string | null;
   networks: string[] | null;
   hotspot: boolean | null;
-  voiceSms: unknown;
+  voiceSms: { voice?: boolean; sms?: boolean; note?: string } | null;
   fairUse: { throttleAfterMb?: number; throttledSpeedKbps?: number; note?: string } | null;
   topUpable: boolean | null;
   price: number;
@@ -119,7 +119,7 @@ export const getDestinationDetail = createServerFn({ method: "GET" })
       networkType: p.network_type,
       networks: p.networks,
       hotspot: p.hotspot,
-      voiceSms: p.voice_sms,
+      voiceSms: (p.voice_sms as PlanItem["voiceSms"]) ?? null,
       fairUse: (p.fair_use as PlanItem["fairUse"]) ?? null,
       topUpable: p.top_upable,
       price: Number(p.sell_price),
@@ -134,7 +134,7 @@ export const getDestinationDetail = createServerFn({ method: "GET" })
       name: d.name_de,
       flagCode: d.flag_code,
       plans: planItems,
-      content: content ?? null,
+      content: content ? { intro: content.intro, seoTitle: content.seo_title, seoDescription: content.seo_description, faq: (Array.isArray(content.faq) ? content.faq : []) as { q: string; a: string }[] } : null,
       countries: (members ?? []).flatMap((m) => (m.country ? [{ slug: m.country.slug, name: m.country.name_de, flagCode: m.country.flag_code }] : [])).sort((a, b) => a.name.localeCompare(b.name, "de")),
       regions: (parents ?? []).flatMap((p) => (p.region ? [{ slug: p.region.slug, name: p.region.name_de }] : [])),
       related,

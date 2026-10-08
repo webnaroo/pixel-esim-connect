@@ -65,9 +65,9 @@ function Help() {
           </div>
         ) : (
           <form onSubmit={onSubmit} noValidate className="space-y-4">
-            <Field label="E-Mail" name="email" error={errors.email}><Input id="email" name="email" type="email" autoComplete="email" /></Field>
-            <Field label="Betreff" name="subject" error={errors.subject}><Input id="subject" name="subject" /></Field>
-            <Field label="Nachricht" name="message" error={errors.message}>
+            <Field label="E-Mail" name="email" error={errors['email']}><Input id="email" name="email" type="email" autoComplete="email" /></Field>
+            <Field label="Betreff" name="subject" error={errors['subject']}><Input id="subject" name="subject" /></Field>
+            <Field label="Nachricht" name="message" error={errors['message']}>
               <textarea id="message" name="message" rows={6} className="w-full rounded-md border border-line-strong bg-surface p-4 text-base focus:border-primary focus:outline-none" />
             </Field>
             <Button type="submit" loading={sending} className="w-full sm:w-auto">Nachricht senden</Button>
@@ -78,7 +78,7 @@ function Help() {
   );
 }
 
-export function Field({ label, name, error, children }: { label: string; name: string; error?: string; children: React.ReactNode }) {
+export function Field({ label, name, error, children }: { label: string; name: string; error?: string | undefined; children: React.ReactNode }) {
   return (
     <div>
       <label htmlFor={name} className="mb-1.5 block text-sm font-medium text-ink">{label}</label>

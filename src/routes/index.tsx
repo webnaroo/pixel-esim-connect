@@ -8,7 +8,6 @@ import { DestinationRow, DestinationRowSkeleton } from "@/components/catalog";
 import { SegmentedControl, LinkButton } from "@/components/ui-kit";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { destinationsQuery, faqsQuery, popularQuery } from "@/lib/catalog.functions";
-import heroImg from "@/assets/hero-arrival.jpg";
 
 export const Route = createFileRoute("/")({
   loader: ({ context }) =>
@@ -54,13 +53,15 @@ function Hero() {
         </div>
         <p className="mt-3 text-sm text-ink-muted">Sofort per E-Mail · Deine SIM bleibt aktiv · Preise inkl. MwSt.</p>
       </div>
-      <img
-        src={heroImg}
-        alt="Reisende am Flughafenfenster mit Smartphone in der Hand"
-        width={1200}
-        height={1408}
-        className="hidden aspect-[4/5] w-full rounded-xl object-cover lg:block"
-      />
+      {/* Placeholder until a real photo is supplied */}
+      <div
+        role="img"
+        aria-label="Platzhalter für Hero-Foto"
+        data-hero-placeholder
+        className="hidden aspect-[4/5] w-full flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-line-strong bg-surface text-ink-muted lg:flex"
+      >
+        <span className="text-sm font-medium">Foto folgt</span>
+      </div>
     </section>
   );
 }
