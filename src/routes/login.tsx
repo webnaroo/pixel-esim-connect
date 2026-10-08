@@ -67,7 +67,8 @@ function Login() {
     <AuthShell title="Anmelden">
       <SegmentedControl
         value={method}
-        onChange={(v) => setMethod(v as "password" | "magic")}
+        label="Anmeldemethode"
+        onChange={setMethod}
         options={[
           { value: "password", label: "Passwort" },
           { value: "magic", label: "Magic Link" },
