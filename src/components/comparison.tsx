@@ -1,6 +1,6 @@
 import { useId, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useSuspenseQuery } from "@tanstack/react-query";
 import { Check, Minus, X } from "@phosphor-icons/react";
 import { comparisonQuery } from "@/lib/comparison.functions";
 import type { CellStatus, ViewCompetitor, ViewRow } from "@/lib/comparison";
@@ -83,13 +83,13 @@ export function ComparisonRow({ row, competitor }: { row: ViewRow; competitor: s
 }
 
 export function ComparisonSection() {
-  const { data, isLoading } = useQuery(comparisonQuery());
+  const { data } = useSuspenseQuery(comparisonQuery());
   const [sel, setSel] = useState<string | null>(null);
   const hid = useId();
-  if (isLoading) return <section className="container-page max-w-[880px] py-16" aria-hidden><div className="h-8 w-64 animate-pulse rounded bg-muted" /><div className="mt-6 h-40 animate-pulse rounded-[14px] bg-muted" /></section>;
   const view = data?.view;
   if (!view) return null;
-  const current = view.competitors.find((c) => c.id === sel) ?? view.competitors[0]!;
+  const current = view.competitors.find((c) => c.id === sel) ?? view.competitors[0];
+  if (!current) return null;
 
   function focusSearch() {
     const input = document.querySelector<HTMLInputElement>("[data-hero-search] input");

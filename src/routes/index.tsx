@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
+import { useSuspenseQuery } from "@tanstack/react-query";
 import { DeviceMobile } from "@phosphor-icons/react";
 import { SiteLayout } from "@/components/layout";
 import { ComparisonSection } from "@/components/comparison";
@@ -11,6 +11,11 @@ import { SegmentedControl, LinkButton } from "@/components/ui-kit";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { comparisonQuery } from "@/lib/comparison.functions";
 import { destinationsQuery, faqsQuery, popularQuery } from "@/lib/catalog.functions";
+import airportBanner from "@/assets/home-airport.jpg";
+import speedIcon from "@/assets/speed.png.asset.json";
+import wifiIcon from "@/assets/wifi.png.asset.json";
+import shieldIcon from "@/assets/shield.png.asset.json";
+import worldIcon from "@/assets/world.png.asset.json";
 
 export const Route = createFileRoute("/")({
   loader: ({ context }) =>
@@ -23,7 +28,7 @@ export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
       { title: "GlobeSIM – eSIM für deine Reise. Online, sobald du landest." },
-      { name: "description", content: "eSIM für über 200 Reiseziele kaufen, in Minuten installieren und ohne Roaming-Überraschung online sein. Sofort per E-Mail, deine SIM bleibt aktiv." },
+      { name: "description", content: "Entdecke GlobeSIM Reise-eSIMs für dein Reiseziel. Einfach installieren und ohne Roaming-Überraschung verbunden bleiben – deine SIM bleibt aktiv." },
       { property: "og:title", content: "GlobeSIM – Online, sobald du landest." },
       { property: "og:description", content: "eSIM kaufen, in Minuten installieren, ohne Roaming-Überraschung." },
       { property: "og:type", content: "website" },
@@ -47,24 +52,44 @@ function Home() {
 }
 
 function Hero() {
+  const benefits = [
+    { icon: speedIcon.url, title: "Sofort per E-Mail", detail: "Digital statt per Post" },
+    { icon: wifiIcon.url, title: "Lokale Tarife", detail: "Für dein Reiseziel" },
+    { icon: shieldIcon.url, title: "Sicher bezahlen", detail: "SSL-verschlüsselt" },
+  ];
   return (
-    <section className="container-page grid items-center gap-10 pb-16 pt-10 lg:grid-cols-[1.1fr_0.9fr] lg:gap-16 lg:pb-24 lg:pt-16">
-      <div>
-        <h1 className="max-w-xl">Online, sobald du landest.</h1>
-        <p className="mt-4 max-w-lg text-lg text-ink-muted">eSIM kaufen, in Minuten installieren, ohne Roaming-Überraschung.</p>
-        <div className="mt-8 max-w-xl" data-hero-search>
-          <SearchBox />
+    <section className="home-hero relative isolate" aria-labelledby="home-title">
+      <img src={airportBanner} alt="Reisende am Flughafen mit Smartphone und GlobeSIM Reise-eSIM" fetchPriority="high" className="home-hero-image" />
+      <div className="container-page relative z-10">
+        <div className="home-hero-copy pb-7 pt-8 lg:py-14">
+          <p className="mb-4 flex items-center gap-2 text-sm font-medium text-primary">
+            <img src={speedIcon.url} alt="" className="size-6 object-contain" aria-hidden />
+            GlobeSIM · Deine Reise-eSIM
+          </p>
+          <h1 id="home-title" className="!tracking-normal">Online, sobald du landest.</h1>
+          <p className="mt-4 max-w-lg text-lg text-ink-muted">eSIM kaufen, in Minuten installieren, ohne Roaming-Überraschung. Bleibe weltweit verbunden – einfach und schnell.</p>
+          <div className="mt-7" data-hero-search>
+            <SearchBox />
+          </div>
+          <ul className="mt-6 grid grid-cols-3 gap-2 lg:gap-3" aria-label="Deine Vorteile">
+            {benefits.map((benefit) => (
+              <li key={benefit.title} className="flex min-w-0 flex-col items-center gap-2 text-center lg:flex-row lg:items-start lg:text-left">
+                <img src={benefit.icon} alt="" aria-hidden loading="eager" className="size-8 shrink-0 object-contain" />
+                <div className="min-w-0">
+                  <p className="text-xs font-semibold leading-5">{benefit.title}</p>
+                  <p className="text-xs leading-5 text-ink-muted">{benefit.detail}</p>
+                </div>
+              </li>
+            ))}
+          </ul>
+          <div className="mt-7 flex items-center gap-3 border-t border-line pt-4">
+            <img src={worldIcon.url} alt="" aria-hidden className="size-9 shrink-0 object-contain" />
+            <div>
+              <p className="text-sm font-medium">Weltweit verbunden</p>
+              <p className="text-xs text-ink-muted">Deine SIM bleibt aktiv · Preise inkl. MwSt.<NoThrottleClaim className="before:content-['_·_']" /></p>
+            </div>
+          </div>
         </div>
-        <p className="mt-3 text-sm text-ink-muted">Sofort per E-Mail · Deine SIM bleibt aktiv · Preise inkl. MwSt.<NoThrottleClaim className="before:content-['_·_']" /></p>
-      </div>
-      {/* Placeholder until a real photo is supplied */}
-      <div
-        role="img"
-        aria-label="Platzhalter für Hero-Foto"
-        data-hero-placeholder
-        className="hidden aspect-[4/5] w-full flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-line-strong bg-surface text-ink-muted lg:flex"
-      >
-        <span className="text-sm font-medium">Foto folgt</span>
       </div>
     </section>
   );
@@ -175,7 +200,7 @@ function Compatibility() {
 }
 
 function HomeFaq() {
-  const { data: faqs = [] } = useQuery(faqsQuery());
+  const { data: faqs = [] } = useSuspenseQuery(faqsQuery());
   if (!faqs.length) return null;
   return (
     <section className="container-page max-w-3xl py-16 lg:py-24" aria-labelledby="faq-h">

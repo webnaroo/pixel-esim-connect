@@ -1,4 +1,5 @@
 # Roadmap
+- [x] Homepage: uploaded airport banner and four benefit icons with reference-style text
 - [ ] Stage C rest: fixture plans (preview only), Stripe payment form in browser, published-build check for test data
 - [x] eSIMerge sandbox connection, mapping, order/polling, sandbox guard, sync, docs
 - [x] Live status on order page, usage display in account
