@@ -20,9 +20,12 @@ import { Route as RegisterRouteImport } from './routes/register'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as AuthenticatedAccountRouteImport } from './routes/_authenticated/account'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
+import { Route as BlogIndexRouteImport } from './routes/blog.index'
+import { Route as BlogSlugRouteImport } from './routes/blog.$slug'
 import { Route as CheckoutPlanIdRouteImport } from './routes/checkout.$planId'
 import { Route as CountriesSlugRouteImport } from './routes/countries.$slug'
 import { Route as InstallOrderIdRouteImport } from './routes/install.$orderId'
+import { Route as LegalSlugRouteImport } from './routes/legal.$slug'
 import { Route as OrderOrderIdRouteImport } from './routes/order.$orderId'
 import { Route as RegionsSlugRouteImport } from './routes/regions.$slug'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
@@ -91,6 +94,16 @@ const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
   path: '/admin',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const BlogIndexRoute = BlogIndexRouteImport.update({
+  id: '/blog/',
+  path: '/blog/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BlogSlugRoute = BlogSlugRouteImport.update({
+  id: '/blog/$slug',
+  path: '/blog/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CheckoutPlanIdRoute = CheckoutPlanIdRouteImport.update({
   id: '/checkout/$planId',
   path: '/checkout/$planId',
@@ -104,6 +117,11 @@ const CountriesSlugRoute = CountriesSlugRouteImport.update({
 const InstallOrderIdRoute = InstallOrderIdRouteImport.update({
   id: '/install/$orderId',
   path: '/install/$orderId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LegalSlugRoute = LegalSlugRouteImport.update({
+  id: '/legal/$slug',
+  path: '/legal/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
 const OrderOrderIdRoute = OrderOrderIdRouteImport.update({
@@ -193,11 +211,14 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof ResetPasswordRoute
   '/account': typeof AuthenticatedAccountRoute
   '/admin': typeof AuthenticatedAdminRouteWithChildren
+  '/blog/$slug': typeof BlogSlugRoute
   '/checkout/$planId': typeof CheckoutPlanIdRoute
   '/countries/$slug': typeof CountriesSlugRoute
   '/install/$orderId': typeof InstallOrderIdRoute
+  '/legal/$slug': typeof LegalSlugRoute
   '/order/$orderId': typeof OrderOrderIdRoute
   '/regions/$slug': typeof RegionsSlugRoute
+  '/blog/': typeof BlogIndexRoute
   '/admin/compare': typeof AuthenticatedAdminCompareRoute
   '/admin/explorer': typeof AuthenticatedAdminExplorerRoute
   '/admin/orders': typeof AuthenticatedAdminOrdersRoute
@@ -220,11 +241,14 @@ export interface FileRoutesByTo {
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
   '/account': typeof AuthenticatedAccountRoute
+  '/blog/$slug': typeof BlogSlugRoute
   '/checkout/$planId': typeof CheckoutPlanIdRoute
   '/countries/$slug': typeof CountriesSlugRoute
   '/install/$orderId': typeof InstallOrderIdRoute
+  '/legal/$slug': typeof LegalSlugRoute
   '/order/$orderId': typeof OrderOrderIdRoute
   '/regions/$slug': typeof RegionsSlugRoute
+  '/blog': typeof BlogIndexRoute
   '/admin/compare': typeof AuthenticatedAdminCompareRoute
   '/admin/explorer': typeof AuthenticatedAdminExplorerRoute
   '/admin/orders': typeof AuthenticatedAdminOrdersRoute
@@ -250,11 +274,14 @@ export interface FileRoutesById {
   '/reset-password': typeof ResetPasswordRoute
   '/_authenticated/account': typeof AuthenticatedAccountRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
+  '/blog/$slug': typeof BlogSlugRoute
   '/checkout/$planId': typeof CheckoutPlanIdRoute
   '/countries/$slug': typeof CountriesSlugRoute
   '/install/$orderId': typeof InstallOrderIdRoute
+  '/legal/$slug': typeof LegalSlugRoute
   '/order/$orderId': typeof OrderOrderIdRoute
   '/regions/$slug': typeof RegionsSlugRoute
+  '/blog/': typeof BlogIndexRoute
   '/_authenticated/admin/compare': typeof AuthenticatedAdminCompareRoute
   '/_authenticated/admin/explorer': typeof AuthenticatedAdminExplorerRoute
   '/_authenticated/admin/orders': typeof AuthenticatedAdminOrdersRoute
@@ -280,11 +307,14 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/account'
     | '/admin'
+    | '/blog/$slug'
     | '/checkout/$planId'
     | '/countries/$slug'
     | '/install/$orderId'
+    | '/legal/$slug'
     | '/order/$orderId'
     | '/regions/$slug'
+    | '/blog/'
     | '/admin/compare'
     | '/admin/explorer'
     | '/admin/orders'
@@ -307,11 +337,14 @@ export interface FileRouteTypes {
     | '/register'
     | '/reset-password'
     | '/account'
+    | '/blog/$slug'
     | '/checkout/$planId'
     | '/countries/$slug'
     | '/install/$orderId'
+    | '/legal/$slug'
     | '/order/$orderId'
     | '/regions/$slug'
+    | '/blog'
     | '/admin/compare'
     | '/admin/explorer'
     | '/admin/orders'
@@ -336,11 +369,14 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/_authenticated/account'
     | '/_authenticated/admin'
+    | '/blog/$slug'
     | '/checkout/$planId'
     | '/countries/$slug'
     | '/install/$orderId'
+    | '/legal/$slug'
     | '/order/$orderId'
     | '/regions/$slug'
+    | '/blog/'
     | '/_authenticated/admin/compare'
     | '/_authenticated/admin/explorer'
     | '/_authenticated/admin/orders'
@@ -364,11 +400,14 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   RegisterRoute: typeof RegisterRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
+  BlogSlugRoute: typeof BlogSlugRoute
   CheckoutPlanIdRoute: typeof CheckoutPlanIdRoute
   CountriesSlugRoute: typeof CountriesSlugRoute
   InstallOrderIdRoute: typeof InstallOrderIdRoute
+  LegalSlugRoute: typeof LegalSlugRoute
   OrderOrderIdRoute: typeof OrderOrderIdRoute
   RegionsSlugRoute: typeof RegionsSlugRoute
+  BlogIndexRoute: typeof BlogIndexRoute
   ApiPublicCronCatalogSyncRoute: typeof ApiPublicCronCatalogSyncRoute
   ApiPublicCronEsimStatusPollRoute: typeof ApiPublicCronEsimStatusPollRoute
   ApiPublicCronFulfillmentRetryRoute: typeof ApiPublicCronFulfillmentRetryRoute
@@ -455,6 +494,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/blog/': {
+      id: '/blog/'
+      path: '/blog'
+      fullPath: '/blog/'
+      preLoaderRoute: typeof BlogIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/blog/$slug': {
+      id: '/blog/$slug'
+      path: '/blog/$slug'
+      fullPath: '/blog/$slug'
+      preLoaderRoute: typeof BlogSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/checkout/$planId': {
       id: '/checkout/$planId'
       path: '/checkout/$planId'
@@ -474,6 +527,13 @@ declare module '@tanstack/react-router' {
       path: '/install/$orderId'
       fullPath: '/install/$orderId'
       preLoaderRoute: typeof InstallOrderIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/legal/$slug': {
+      id: '/legal/$slug'
+      path: '/legal/$slug'
+      fullPath: '/legal/$slug'
+      preLoaderRoute: typeof LegalSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/order/$orderId': {
@@ -614,11 +674,14 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   RegisterRoute: RegisterRoute,
   ResetPasswordRoute: ResetPasswordRoute,
+  BlogSlugRoute: BlogSlugRoute,
   CheckoutPlanIdRoute: CheckoutPlanIdRoute,
   CountriesSlugRoute: CountriesSlugRoute,
   InstallOrderIdRoute: InstallOrderIdRoute,
+  LegalSlugRoute: LegalSlugRoute,
   OrderOrderIdRoute: OrderOrderIdRoute,
   RegionsSlugRoute: RegionsSlugRoute,
+  BlogIndexRoute: BlogIndexRoute,
   ApiPublicCronCatalogSyncRoute: ApiPublicCronCatalogSyncRoute,
   ApiPublicCronEsimStatusPollRoute: ApiPublicCronEsimStatusPollRoute,
   ApiPublicCronFulfillmentRetryRoute: ApiPublicCronFulfillmentRetryRoute,
