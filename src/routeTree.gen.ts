@@ -25,6 +25,7 @@ import { Route as InstallOrderIdRouteImport } from './routes/install.$orderId'
 import { Route as OrderOrderIdRouteImport } from './routes/order.$orderId'
 import { Route as RegionsSlugRouteImport } from './routes/regions.$slug'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
+import { Route as AuthenticatedAdminCompareRouteImport } from './routes/_authenticated/admin.compare'
 import { Route as AuthenticatedAdminExplorerRouteImport } from './routes/_authenticated/admin.explorer'
 import { Route as AuthenticatedAdminOrdersRouteImport } from './routes/_authenticated/admin.orders'
 import { Route as AuthenticatedAdminPricingRouteImport } from './routes/_authenticated/admin.pricing'
@@ -113,6 +114,12 @@ const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AuthenticatedAdminRoute,
 } as any)
+const AuthenticatedAdminCompareRoute =
+  AuthenticatedAdminCompareRouteImport.update({
+    id: '/compare',
+    path: '/compare',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
 const AuthenticatedAdminExplorerRoute =
   AuthenticatedAdminExplorerRouteImport.update({
     id: '/explorer',
@@ -177,6 +184,7 @@ export interface FileRoutesByFullPath {
   '/install/$orderId': typeof InstallOrderIdRoute
   '/order/$orderId': typeof OrderOrderIdRoute
   '/regions/$slug': typeof RegionsSlugRoute
+  '/admin/compare': typeof AuthenticatedAdminCompareRoute
   '/admin/explorer': typeof AuthenticatedAdminExplorerRoute
   '/admin/orders': typeof AuthenticatedAdminOrdersRoute
   '/admin/pricing': typeof AuthenticatedAdminPricingRoute
@@ -201,6 +209,7 @@ export interface FileRoutesByTo {
   '/install/$orderId': typeof InstallOrderIdRoute
   '/order/$orderId': typeof OrderOrderIdRoute
   '/regions/$slug': typeof RegionsSlugRoute
+  '/admin/compare': typeof AuthenticatedAdminCompareRoute
   '/admin/explorer': typeof AuthenticatedAdminExplorerRoute
   '/admin/orders': typeof AuthenticatedAdminOrdersRoute
   '/admin/pricing': typeof AuthenticatedAdminPricingRoute
@@ -228,6 +237,7 @@ export interface FileRoutesById {
   '/install/$orderId': typeof InstallOrderIdRoute
   '/order/$orderId': typeof OrderOrderIdRoute
   '/regions/$slug': typeof RegionsSlugRoute
+  '/_authenticated/admin/compare': typeof AuthenticatedAdminCompareRoute
   '/_authenticated/admin/explorer': typeof AuthenticatedAdminExplorerRoute
   '/_authenticated/admin/orders': typeof AuthenticatedAdminOrdersRoute
   '/_authenticated/admin/pricing': typeof AuthenticatedAdminPricingRoute
@@ -255,6 +265,7 @@ export interface FileRouteTypes {
     | '/install/$orderId'
     | '/order/$orderId'
     | '/regions/$slug'
+    | '/admin/compare'
     | '/admin/explorer'
     | '/admin/orders'
     | '/admin/pricing'
@@ -279,6 +290,7 @@ export interface FileRouteTypes {
     | '/install/$orderId'
     | '/order/$orderId'
     | '/regions/$slug'
+    | '/admin/compare'
     | '/admin/explorer'
     | '/admin/orders'
     | '/admin/pricing'
@@ -305,6 +317,7 @@ export interface FileRouteTypes {
     | '/install/$orderId'
     | '/order/$orderId'
     | '/regions/$slug'
+    | '/_authenticated/admin/compare'
     | '/_authenticated/admin/explorer'
     | '/_authenticated/admin/orders'
     | '/_authenticated/admin/pricing'
@@ -452,6 +465,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminIndexRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/_authenticated/admin/compare': {
+      id: '/_authenticated/admin/compare'
+      path: '/compare'
+      fullPath: '/admin/compare'
+      preLoaderRoute: typeof AuthenticatedAdminCompareRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
     '/_authenticated/admin/explorer': {
       id: '/_authenticated/admin/explorer'
       path: '/explorer'
@@ -512,6 +532,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedAdminRouteChildren {
+  AuthenticatedAdminCompareRoute: typeof AuthenticatedAdminCompareRoute
   AuthenticatedAdminExplorerRoute: typeof AuthenticatedAdminExplorerRoute
   AuthenticatedAdminOrdersRoute: typeof AuthenticatedAdminOrdersRoute
   AuthenticatedAdminPricingRoute: typeof AuthenticatedAdminPricingRoute
@@ -519,6 +540,7 @@ interface AuthenticatedAdminRouteChildren {
 }
 
 const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
+  AuthenticatedAdminCompareRoute: AuthenticatedAdminCompareRoute,
   AuthenticatedAdminExplorerRoute: AuthenticatedAdminExplorerRoute,
   AuthenticatedAdminOrdersRoute: AuthenticatedAdminOrdersRoute,
   AuthenticatedAdminPricingRoute: AuthenticatedAdminPricingRoute,
