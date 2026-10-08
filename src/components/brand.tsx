@@ -15,7 +15,7 @@ export function Flag({ code, size = 32, className }: { code: string | null | und
   const style = { width: size, height: size };
   if (!code || code.length !== 2) {
     return (
-      <span aria-hidden className={cn("flag-round inline-flex! items-center justify-center bg-muted text-primary", className)} style={style}>
+      <span aria-hidden className={cn("flag-round bg-muted text-primary", className)} style={style}>
         <Globe size={Math.round(size * 0.62)} weight="regular" />
       </span>
     );
