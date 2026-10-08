@@ -123,7 +123,11 @@ function Popular() {
         <h2 className="min-w-0 text-lg">Beliebte Reiseziele</h2>
         <Link to="/destinations" className="flex shrink-0 items-center text-xs font-medium text-mobile-action">Alle anzeigen <CaretRight size={14} aria-hidden /></Link>
       </div>
-      <div className="grid grid-cols-4 gap-2 sm:hidden">
+      <div className="mb-6 hidden sm:flex sm:items-end sm:justify-between sm:gap-5">
+        <h2 id="popular-h">Beliebte Reiseziele</h2>
+        <SegmentedControl label="Art des Reiseziels" value={tab} onChange={setTab} options={[{ value: "country", label: "Länder" }, { value: "region", label: "Regionen" }, { value: "global", label: "Global" }]} />
+      </div>
+      <div className={`grid grid-cols-4 gap-2 sm:gap-4 ${tab !== "country" ? "sm:hidden" : ""}`}>
         {["turkey", "united-states", "thailand", "japan"].map((slug) => bySlug.get(slug)).filter((d) => d && d.type === "country").map((d) => {
           if (!d) return null;
           const photo = ({ turkey: "turkey", turkei: "turkey", "tuerkei": "turkey", "united-states": "usa", usa: "usa", thailand: "thailand", japan: "japan" } as Record<string, string>)[d.slug];
@@ -131,18 +135,16 @@ function Popular() {
             <div className={`home-destination-photo ${photo ? `home-photo-${photo}` : "home-photo-fallback"}`}>
               {photo ? <img src={destinationPhotos} alt="" loading="lazy" width={1600} height={800} /> : <Flag code={d.flagCode} size={32} />}
             </div>
-            <div className="px-2 pb-2 pt-1"><Flag code={d.flagCode} size={18} /><p className="mt-1 truncate text-xs font-semibold">{d.slug === "united-states" ? "USA" : d.name}</p>{d.fromPrice != null && <p className="mt-1 text-[10px] tabular">ab {formatPrice(d.fromPrice)}</p>}</div>
+            <div className="px-2 pb-2 pt-1 sm:p-4"><Flag code={d.flagCode} size={18} /><p className="mt-1 truncate text-xs font-semibold sm:mt-2 sm:text-base">{d.slug === "united-states" ? "USA" : d.name}</p>{d.fromPrice != null && <p className="mt-1 text-[10px] tabular sm:text-sm">ab {formatPrice(d.fromPrice)}</p>}</div>
           </Link>;
         })}
       </div>
       <div className="hidden sm:block">
-      <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
-        <h2 id="popular-h">Beliebte Reiseziele</h2>
-        <SegmentedControl label="Art des Reiseziels" value={tab} onChange={setTab} options={[{ value: "country", label: "Länder" }, { value: "region", label: "Regionen" }, { value: "global", label: "Global" }]} />
-      </div>
+      {tab !== "country" && (
       <div className="mt-6 grid gap-3 sm:grid-cols-2">
         {list.length ? list.map((d) => <DestinationRow key={d.id} d={d} />) : [0, 1, 2, 3].map((i) => <DestinationRowSkeleton key={i} />)}
       </div>
+      )}
       <div className="mt-6">
         <LinkButton to="/destinations" variant="secondary">Alle Reiseziele</LinkButton>
       </div>
