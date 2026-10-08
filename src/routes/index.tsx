@@ -239,7 +239,16 @@ function HomeFaq() {
   if (!faqs.length) return null;
   return (
     <section className="container-page max-w-3xl py-10 sm:py-16 lg:py-24" aria-labelledby="faq-h">
-      <h2 id="faq-h">Häufige Fragen</h2>
+      <div className="flex flex-wrap items-center gap-3">
+        <Link
+          to="/destinations"
+          className="inline-flex items-center rounded-2xl border border-primary px-4 py-2 text-sm font-medium text-primary transition-colors hover:bg-primary hover:text-primary-contrast"
+        >
+          Reiseziele ansehen
+        </Link>
+        <span className="text-sm text-ink-muted">eSIM für dein nächstes Reiseland</span>
+      </div>
+      <h2 id="faq-h" className="mt-6">Häufige Fragen</h2>
       <Accordion type="single" collapsible className="mt-6">
         {faqs.slice(0, 6).map((f) => (
           <AccordionItem key={f.id} value={f.id}>
