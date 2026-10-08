@@ -117,7 +117,7 @@ function ManualForm({ busy, onSubmit }: { busy: boolean; onSubmit: (v: { from: s
     <form className="grid gap-3 rounded-[14px] border border-line p-4 sm:grid-cols-2" onSubmit={(e) => {
       e.preventDefault();
       const f = new FormData(e.currentTarget);
-      onSubmit({ from: String(f.get("from")).toUpperCase().trim(), rate: Number(String(f.get("rate")).replace(",", ".")), reason: String(f.get("reason")), expiresAt: `${String(f.get("expires"))}T23:59:00Z` });
+      onSubmit({ from: String(f.get("from")).toUpperCase().trim(), rate: Number(String(f.get("rate")).replace(",", ".")), reason: String(f.get("reason")), expiresAt: new Date(Math.min(new Date(`${String(f.get("expires"))}T23:59:00Z`).getTime(), Date.now() + 7 * 86_400_000 - 120_000)).toISOString() });
     }}>
       <p className="text-sm text-ink-muted sm:col-span-2">Notlösung: Der manuelle Kurs übersteuert den automatischen bis zum Ablaufdatum (höchstens 7 Tage). Der Aufschlag wird zusätzlich angewendet.</p>
       <label className="text-sm font-medium">Währung<Input name="from" className="mt-1" defaultValue="USD" maxLength={3} required /></label>
