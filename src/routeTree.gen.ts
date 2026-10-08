@@ -21,6 +21,7 @@ import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as AuthenticatedAccountRouteImport } from './routes/_authenticated/account'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
+import { Route as ApiRatgeberAiRouteImport } from './routes/api/ratgeber-ai'
 import { Route as ApiSeoAnalysisRouteImport } from './routes/api/seo-analysis'
 import { Route as BlogIndexRouteImport } from './routes/blog.index'
 import { Route as BlogSlugRouteImport } from './routes/blog.$slug'
@@ -45,6 +46,7 @@ import { Route as AuthenticatedAdminPlansRouteImport } from './routes/_authentic
 import { Route as AuthenticatedAdminPricingRouteImport } from './routes/_authenticated/admin.pricing'
 import { Route as AuthenticatedAdminSeoRouteImport } from './routes/_authenticated/admin.seo'
 import { Route as AuthenticatedAdminUnlimitedRouteImport } from './routes/_authenticated/admin.unlimited'
+import { Route as BildRatgeberFileRouteImport } from './routes/bild.ratgeber.$file'
 import { Route as ApiPublicCronCatalogSyncRouteImport } from './routes/api/public/cron/catalog-sync'
 import { Route as ApiPublicCronEsimStatusPollRouteImport } from './routes/api/public/cron/esim-status-poll'
 import { Route as ApiPublicCronFulfillmentRetryRouteImport } from './routes/api/public/cron/fulfillment-retry'
@@ -111,6 +113,11 @@ const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
   id: '/admin',
   path: '/admin',
   getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const ApiRatgeberAiRoute = ApiRatgeberAiRouteImport.update({
+  id: '/api/ratgeber-ai',
+  path: '/api/ratgeber-ai',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const ApiSeoAnalysisRoute = ApiSeoAnalysisRouteImport.update({
   id: '/api/seo-analysis',
@@ -240,6 +247,11 @@ const AuthenticatedAdminUnlimitedRoute =
     path: '/unlimited',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
+const BildRatgeberFileRoute = BildRatgeberFileRouteImport.update({
+  id: '/bild/ratgeber/$file',
+  path: '/bild/ratgeber/$file',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicCronCatalogSyncRoute =
   ApiPublicCronCatalogSyncRouteImport.update({
     id: '/api/public/cron/catalog-sync',
@@ -294,6 +306,7 @@ export interface FileRoutesByFullPath {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/account': typeof AuthenticatedAccountRoute
   '/admin': typeof AuthenticatedAdminRouteWithChildren
+  '/api/ratgeber-ai': typeof ApiRatgeberAiRoute
   '/api/seo-analysis': typeof ApiSeoAnalysisRoute
   '/blog/$slug': typeof BlogSlugRoute
   '/checkout/$planId': typeof CheckoutPlanIdRoute
@@ -317,6 +330,7 @@ export interface FileRoutesByFullPath {
   '/admin/pricing': typeof AuthenticatedAdminPricingRoute
   '/admin/seo': typeof AuthenticatedAdminSeoRoute
   '/admin/unlimited': typeof AuthenticatedAdminUnlimitedRoute
+  '/bild/ratgeber/$file': typeof BildRatgeberFileRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
   '/api/public/cron/catalog-sync': typeof ApiPublicCronCatalogSyncRoute
   '/api/public/cron/esim-status-poll': typeof ApiPublicCronEsimStatusPollRoute
@@ -337,6 +351,7 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/account': typeof AuthenticatedAccountRoute
+  '/api/ratgeber-ai': typeof ApiRatgeberAiRoute
   '/api/seo-analysis': typeof ApiSeoAnalysisRoute
   '/blog/$slug': typeof BlogSlugRoute
   '/checkout/$planId': typeof CheckoutPlanIdRoute
@@ -360,6 +375,7 @@ export interface FileRoutesByTo {
   '/admin/pricing': typeof AuthenticatedAdminPricingRoute
   '/admin/seo': typeof AuthenticatedAdminSeoRoute
   '/admin/unlimited': typeof AuthenticatedAdminUnlimitedRoute
+  '/bild/ratgeber/$file': typeof BildRatgeberFileRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
   '/api/public/cron/catalog-sync': typeof ApiPublicCronCatalogSyncRoute
   '/api/public/cron/esim-status-poll': typeof ApiPublicCronEsimStatusPollRoute
@@ -383,6 +399,7 @@ export interface FileRoutesById {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/_authenticated/account': typeof AuthenticatedAccountRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
+  '/api/ratgeber-ai': typeof ApiRatgeberAiRoute
   '/api/seo-analysis': typeof ApiSeoAnalysisRoute
   '/blog/$slug': typeof BlogSlugRoute
   '/checkout/$planId': typeof CheckoutPlanIdRoute
@@ -406,6 +423,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/pricing': typeof AuthenticatedAdminPricingRoute
   '/_authenticated/admin/seo': typeof AuthenticatedAdminSeoRoute
   '/_authenticated/admin/unlimited': typeof AuthenticatedAdminUnlimitedRoute
+  '/bild/ratgeber/$file': typeof BildRatgeberFileRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
   '/api/public/cron/catalog-sync': typeof ApiPublicCronCatalogSyncRoute
   '/api/public/cron/esim-status-poll': typeof ApiPublicCronEsimStatusPollRoute
@@ -429,6 +447,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/account'
     | '/admin'
+    | '/api/ratgeber-ai'
     | '/api/seo-analysis'
     | '/blog/$slug'
     | '/checkout/$planId'
@@ -452,6 +471,7 @@ export interface FileRouteTypes {
     | '/admin/pricing'
     | '/admin/seo'
     | '/admin/unlimited'
+    | '/bild/ratgeber/$file'
     | '/admin/'
     | '/api/public/cron/catalog-sync'
     | '/api/public/cron/esim-status-poll'
@@ -472,6 +492,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/sitemap.xml'
     | '/account'
+    | '/api/ratgeber-ai'
     | '/api/seo-analysis'
     | '/blog/$slug'
     | '/checkout/$planId'
@@ -495,6 +516,7 @@ export interface FileRouteTypes {
     | '/admin/pricing'
     | '/admin/seo'
     | '/admin/unlimited'
+    | '/bild/ratgeber/$file'
     | '/admin'
     | '/api/public/cron/catalog-sync'
     | '/api/public/cron/esim-status-poll'
@@ -517,6 +539,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/_authenticated/account'
     | '/_authenticated/admin'
+    | '/api/ratgeber-ai'
     | '/api/seo-analysis'
     | '/blog/$slug'
     | '/checkout/$planId'
@@ -540,6 +563,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/pricing'
     | '/_authenticated/admin/seo'
     | '/_authenticated/admin/unlimited'
+    | '/bild/ratgeber/$file'
     | '/_authenticated/admin/'
     | '/api/public/cron/catalog-sync'
     | '/api/public/cron/esim-status-poll'
@@ -561,6 +585,7 @@ export interface RootRouteChildren {
   RegisterRoute: typeof RegisterRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
+  ApiRatgeberAiRoute: typeof ApiRatgeberAiRoute
   ApiSeoAnalysisRoute: typeof ApiSeoAnalysisRoute
   BlogSlugRoute: typeof BlogSlugRoute
   CheckoutPlanIdRoute: typeof CheckoutPlanIdRoute
@@ -572,6 +597,7 @@ export interface RootRouteChildren {
   RegionsSlugRoute: typeof RegionsSlugRoute
   BlogIndexRoute: typeof BlogIndexRoute
   RatgeberIndexRoute: typeof RatgeberIndexRoute
+  BildRatgeberFileRoute: typeof BildRatgeberFileRoute
   ApiPublicCronCatalogSyncRoute: typeof ApiPublicCronCatalogSyncRoute
   ApiPublicCronEsimStatusPollRoute: typeof ApiPublicCronEsimStatusPollRoute
   ApiPublicCronFulfillmentRetryRoute: typeof ApiPublicCronFulfillmentRetryRoute
@@ -666,6 +692,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/admin'
       preLoaderRoute: typeof AuthenticatedAdminRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/api/ratgeber-ai': {
+      id: '/api/ratgeber-ai'
+      path: '/api/ratgeber-ai'
+      fullPath: '/api/ratgeber-ai'
+      preLoaderRoute: typeof ApiRatgeberAiRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/api/seo-analysis': {
       id: '/api/seo-analysis'
@@ -835,6 +868,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminUnlimitedRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/bild/ratgeber/$file': {
+      id: '/bild/ratgeber/$file'
+      path: '/bild/ratgeber/$file'
+      fullPath: '/bild/ratgeber/$file'
+      preLoaderRoute: typeof BildRatgeberFileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/cron/catalog-sync': {
       id: '/api/public/cron/catalog-sync'
       path: '/api/public/cron/catalog-sync'
@@ -946,6 +986,7 @@ const rootRouteChildren: RootRouteChildren = {
   RegisterRoute: RegisterRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
+  ApiRatgeberAiRoute: ApiRatgeberAiRoute,
   ApiSeoAnalysisRoute: ApiSeoAnalysisRoute,
   BlogSlugRoute: BlogSlugRoute,
   CheckoutPlanIdRoute: CheckoutPlanIdRoute,
@@ -957,6 +998,7 @@ const rootRouteChildren: RootRouteChildren = {
   RegionsSlugRoute: RegionsSlugRoute,
   BlogIndexRoute: BlogIndexRoute,
   RatgeberIndexRoute: RatgeberIndexRoute,
+  BildRatgeberFileRoute: BildRatgeberFileRoute,
   ApiPublicCronCatalogSyncRoute: ApiPublicCronCatalogSyncRoute,
   ApiPublicCronEsimStatusPollRoute: ApiPublicCronEsimStatusPollRoute,
   ApiPublicCronFulfillmentRetryRoute: ApiPublicCronFulfillmentRetryRoute,

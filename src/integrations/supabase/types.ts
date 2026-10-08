@@ -92,23 +92,66 @@ export type Database = {
         }
         Relationships: []
       }
+      blog_post_versions: {
+        Row: {
+          actor_id: string | null
+          created_at: string
+          id: string
+          post_id: string
+          snapshot: Json
+        }
+        Insert: {
+          actor_id?: string | null
+          created_at?: string
+          id?: string
+          post_id: string
+          snapshot: Json
+        }
+        Update: {
+          actor_id?: string | null
+          created_at?: string
+          id?: string
+          post_id?: string
+          snapshot?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "blog_post_versions_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "blog_posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       blog_posts: {
         Row: {
           answer_summary: string | null
           author_name: string | null
           body_md: string
           country_code: string | null
+          cover_image_alt: string | null
           cover_url: string | null
           created_at: string
           faq: Json
+          focus_keyword: string | null
+          generation_meta: Json | null
           id: string
+          internal_links: Json
           meta_description: string | null
           meta_title: string | null
+          post_type: string
           published_at: string | null
+          quality_report: Json | null
+          quality_score: number | null
+          scheduled_at: string | null
+          score_override_reason: string | null
           sections: Json
           seo: Json | null
           slug: string
+          sources: Json
           status: string
+          target_words: number
           title: string
           updated_at: string
         }
@@ -117,17 +160,28 @@ export type Database = {
           author_name?: string | null
           body_md?: string
           country_code?: string | null
+          cover_image_alt?: string | null
           cover_url?: string | null
           created_at?: string
           faq?: Json
+          focus_keyword?: string | null
+          generation_meta?: Json | null
           id?: string
+          internal_links?: Json
           meta_description?: string | null
           meta_title?: string | null
+          post_type?: string
           published_at?: string | null
+          quality_report?: Json | null
+          quality_score?: number | null
+          scheduled_at?: string | null
+          score_override_reason?: string | null
           sections?: Json
           seo?: Json | null
           slug: string
+          sources?: Json
           status?: string
+          target_words?: number
           title: string
           updated_at?: string
         }
@@ -136,17 +190,28 @@ export type Database = {
           author_name?: string | null
           body_md?: string
           country_code?: string | null
+          cover_image_alt?: string | null
           cover_url?: string | null
           created_at?: string
           faq?: Json
+          focus_keyword?: string | null
+          generation_meta?: Json | null
           id?: string
+          internal_links?: Json
           meta_description?: string | null
           meta_title?: string | null
+          post_type?: string
           published_at?: string | null
+          quality_report?: Json | null
+          quality_score?: number | null
+          scheduled_at?: string | null
+          score_override_reason?: string | null
           sections?: Json
           seo?: Json | null
           slug?: string
+          sources?: Json
           status?: string
+          target_words?: number
           title?: string
           updated_at?: string
         }
