@@ -613,6 +613,8 @@ export type Database = {
           provider_plan_id: string
           raw: Json | null
           sell_price: number
+          throttle_claim: string
+          throttle_confirmation: Json | null
           top_upable: boolean | null
           type: Database["public"]["Enums"]["plan_type"]
           updated_at: string
@@ -638,6 +640,8 @@ export type Database = {
           provider_plan_id: string
           raw?: Json | null
           sell_price: number
+          throttle_claim?: string
+          throttle_confirmation?: Json | null
           top_upable?: boolean | null
           type: Database["public"]["Enums"]["plan_type"]
           updated_at?: string
@@ -663,6 +667,8 @@ export type Database = {
           provider_plan_id?: string
           raw?: Json | null
           sell_price?: number
+          throttle_claim?: string
+          throttle_confirmation?: Json | null
           top_upable?: boolean | null
           type?: Database["public"]["Enums"]["plan_type"]
           updated_at?: string
