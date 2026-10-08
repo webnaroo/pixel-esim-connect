@@ -2,10 +2,12 @@ import { createFileRoute } from "@tanstack/react-router";
 import { AdminList } from "@/components/admin-list";
 import { formatPrice } from "@/lib/format";
 import { AdminError } from "./admin";
+import { privateHead } from "@/lib/seo";
 
 const eur = (v: unknown) => (v == null ? "–" : Number(v).toLocaleString("de-DE", { style: "currency", currency: "EUR" }));
 
 export const Route = createFileRoute("/_authenticated/admin/plans")({
+  head: () => privateHead("Tarife verwalten", "Geschützte Tarif- und Margenübersicht von GlobeSIM."),
   component: () => (
     <AdminList kind="plans" searchLabel="Tarif-ID suchen" filters={[{ value: "active", label: "Aktiv" }, { value: "inactive", label: "Inaktiv" }, { value: "data", label: "Datenpakete" }, { value: "unlimited", label: "Unlimited" }]}
       cols={[

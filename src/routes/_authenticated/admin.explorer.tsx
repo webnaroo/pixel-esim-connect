@@ -5,10 +5,12 @@ import { useState } from "react";
 import { explorerCall, explorerEndpoints } from "@/lib/admin.functions";
 import { Button, Input } from "@/components/ui-kit";
 import { AdminError } from "./admin";
+import { privateHead } from "@/lib/seo";
 
 const endpointsQuery = () => queryOptions({ queryKey: ["admin", "explorer"], queryFn: () => explorerEndpoints() });
 
 export const Route = createFileRoute("/_authenticated/admin/explorer")({
+  head: () => privateHead("API-Explorer", "Geschützter GlobeSIM-Explorer für maskierte Provider-Antworten."),
   loader: ({ context }) => context.queryClient.ensureQueryData(endpointsQuery()),
   errorComponent: AdminError,
   component: Explorer,

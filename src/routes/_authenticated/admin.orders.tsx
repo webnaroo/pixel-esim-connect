@@ -7,8 +7,10 @@ import { Chip, ErrorBox, EmptyState } from "@/components/brand";
 import { Button, Input } from "@/components/ui-kit";
 import { formatPrice } from "@/lib/format";
 import { AdminError } from "./admin";
+import { privateHead } from "@/lib/seo";
 
 export const Route = createFileRoute("/_authenticated/admin/orders")({
+  head: () => privateHead("Bestellungen verwalten", "Geschützte Bestell- und Erstattungsverwaltung von GlobeSIM."),
   component: AdminOrders,
   errorComponent: AdminError,
 });

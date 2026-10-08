@@ -10,8 +10,10 @@ import { useQuery } from "@tanstack/react-query";
 import { computeMargin, computePrice, type PricingRule } from "@/lib/pricing";
 import { Button, Input } from "@/components/ui-kit";
 import { AdminError } from "./admin";
+import { privateHead } from "@/lib/seo";
 
 export const Route = createFileRoute("/_authenticated/admin/pricing")({
+  head: () => privateHead("Preise verwalten", "Wechselkurse, Gebühren und Preisregeln im GlobeSIM-Admin."),
   loader: ({ context }) => context.queryClient.ensureQueryData(pricingQuery()),
   errorComponent: AdminError,
   component: Pricing,

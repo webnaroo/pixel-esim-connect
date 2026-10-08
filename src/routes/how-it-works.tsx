@@ -1,17 +1,29 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { SiteLayout } from "@/components/layout";
 import { LinkButton } from "@/components/ui-kit";
+import { pageIdentity } from "@/lib/seo";
 
 export const Route = createFileRoute("/how-it-works")({
   head: () => ({
     meta: [
-      { title: "So funktioniert's – eSIM in 3 Schritten | GlobeSIM" },
+      { title: "eSIM installieren: Anleitung für iPhone & Android | GlobeSIM" },
       { name: "description", content: "So installierst du deine GlobeSIM eSIM: Reiseziel wählen, bezahlen, QR-Code scannen. Anleitung für iPhone und Android." },
       { property: "og:title", content: "So funktioniert GlobeSIM" },
       { property: "og:description", content: "Reiseziel wählen, bezahlen, QR-Code scannen." },
       { property: "og:type", content: "article" },
       { name: "twitter:card", content: "summary" },
+      ...pageIdentity("/how-it-works").meta,
     ],
+    links: pageIdentity("/how-it-works").links,
+    scripts: [{ type: "application/ld+json", children: JSON.stringify({
+      "@context": "https://schema.org", "@type": "HowTo", name: "GlobeSIM eSIM installieren und nutzen",
+      step: [
+        { "@type": "HowToStep", name: "Reiseziel wählen", text: "Suche dein Reiseziel und vergleiche Datenvolumen, Laufzeit und Preis inkl. MwSt." },
+        { "@type": "HowToStep", name: "Bezahlen", text: "Bestelle als Gast oder mit deinem GlobeSIM-Konto." },
+        { "@type": "HowToStep", name: "Installieren", text: "Öffne die Mobilfunk-Einstellungen, wähle eSIM hinzufügen und scanne den QR-Code. Alternativ gib SM-DP+-Adresse und Aktivierungscode manuell ein." },
+        { "@type": "HowToStep", name: "Am Reiseziel einschalten", text: "Wähle die GlobeSIM-eSIM für mobile Daten und aktiviere Datenroaming für diese eSIM." },
+      ],
+    }) }],
   }),
   component: () => (
     <SiteLayout>

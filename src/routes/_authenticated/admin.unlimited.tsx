@@ -9,8 +9,10 @@ import { hasThrottleHint, type FairUse } from "@/lib/throttle";
 import { Button, Input } from "@/components/ui-kit";
 import { Chip } from "@/components/brand";
 import { AdminError } from "./admin";
+import { privateHead } from "@/lib/seo";
 
 export const Route = createFileRoute("/_authenticated/admin/unlimited")({
+  head: () => privateHead("Unlimited-Prüfung", "Manuelle Prüfung der Unlimited-Anbieteraussagen im GlobeSIM-Admin."),
   loader: ({ context }) => context.queryClient.ensureQueryData(throttleReviewQuery()),
   errorComponent: AdminError,
   component: UnlimitedReview,

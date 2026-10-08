@@ -6,10 +6,11 @@ import { Markdown } from "@/components/markdown";
 import { EmptyState } from "@/components/brand";
 import { useAuth } from "@/hooks/use-auth";
 import { getLegalPreview, legalPageQuery } from "@/lib/content.functions";
+import { pageIdentity } from "@/lib/seo";
 
 export const Route = createFileRoute("/legal/$slug")({
   loader: ({ context, params }) => context.queryClient.ensureQueryData(legalPageQuery(params.slug)),
-  head: ({ loaderData }) => {
+  head: ({ loaderData, params }) => {
     const title = loaderData ? `${loaderData.title} | GlobeSIM` : "Seite nicht gefunden | GlobeSIM";
     const desc = loaderData ? `${loaderData.title} von GlobeSIM.` : "Diese Seite ist nicht verfügbar.";
     return {
@@ -20,8 +21,10 @@ export const Route = createFileRoute("/legal/$slug")({
         { property: "og:description", content: desc },
         { property: "og:type", content: "website" },
         { name: "twitter:card", content: "summary" },
+        ...pageIdentity(`/legal/${params.slug}`).meta,
         ...(loaderData ? [] : [{ name: "robots", content: "noindex" }]),
       ],
+      links: pageIdentity(`/legal/${params.slug}`).links,
     };
   },
   component: LegalPage,

@@ -1,26 +1,29 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { publicDb } from "@/lib/public-db.server";
+import { pageUrl } from "@/lib/seo";
+import { readAllPages, sitemapXml } from "@/lib/sitemap";
 
 // Sitemap built from live data: only destinations with purchasable plans, published legal pages and blog posts.
 export const Route = createFileRoute("/sitemap.xml")({
   server: {
     handlers: {
-      GET: async ({ request }) => {
-        const origin = new URL(request.url).origin;
+      GET: async () => {
+        const { publicDb } = await import("@/lib/public-db.server");
         const db = publicDb();
-        const [{ data: plans }, { data: legal }, { data: posts }] = await Promise.all([
-          db.from("public_plans").select("destination_id"),
-          db.from("legal_pages").select("slug").eq("published", true),
-          db.from("blog_posts").select("slug").not("published_at", "is", null).lte("published_at", new Date().toISOString()),
-        ]);
-        const ids = [...new Set((plans ?? []).map((p) => p.destination_id).filter((x): x is string => !!x))];
-        const { data: dests } = ids.length ? await db.from("destinations").select("slug,type").in("id", ids) : { data: [] as { slug: string; type: string }[] };
-        const dest = new Set<string>();
-        for (const d of dests ?? []) dest.add(d.type === "country" ? `/countries/${d.slug}` : `/regions/${d.slug}`);
-        const paths = ["/", "/destinations", "/how-it-works", "/faq", "/help", ...(posts?.length ? ["/blog"] : []), ...dest, ...(legal ?? []).map((l) => `/legal/${l.slug}`), ...(posts ?? []).map((p) => `/blog/${p.slug}`)];
-        const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;");
-        const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${paths.map((p) => `  <url><loc>${esc(origin + p)}</loc></url>`).join("\n")}\n</urlset>\n`;
-        return new Response(xml, { headers: { "Content-Type": "application/xml; charset=utf-8", "Cache-Control": "public, max-age=3600" } });
+        try {
+          const [plans, legal, posts, destinations] = await Promise.all([
+            readAllPages((from, to) => db.from("public_plans").select("id,destination_id").order("id").range(from, to)),
+            readAllPages((from, to) => db.from("legal_pages").select("slug").eq("published", true).order("slug").range(from, to)),
+            readAllPages((from, to) => db.from("blog_posts").select("slug").not("published_at", "is", null).lte("published_at", new Date().toISOString()).order("slug").range(from, to)),
+            readAllPages((from, to) => db.from("destinations").select("id,slug,type").eq("is_active", true).order("id").range(from, to)),
+          ]);
+          const ids = new Set(plans.map((p) => p.destination_id));
+          const dest = destinations.filter((d) => ids.has(d.id)).map((d) => d.type === "country" ? `/countries/${d.slug}` : `/regions/${d.slug}`);
+          const paths = ["/", "/destinations", "/how-it-works", "/faq", "/help", ...(posts.length ? ["/blog"] : []), ...dest, ...legal.map((l) => `/legal/${l.slug}`), ...posts.map((p) => `/blog/${p.slug}`)];
+          return new Response(sitemapXml(paths.map(pageUrl)), { headers: { "Content-Type": "application/xml; charset=utf-8", "Cache-Control": "public, max-age=3600" } });
+        } catch {
+          console.error("Sitemap public data read failed");
+          return new Response("Sitemap temporarily unavailable", { status: 503, headers: { "Cache-Control": "no-store", "Retry-After": "300" } });
+        }
       },
     },
   },

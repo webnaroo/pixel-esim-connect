@@ -3,10 +3,11 @@ import { useState } from "react";
 import { AdminList } from "@/components/admin-list";
 import { SegmentedControl } from "@/components/ui-kit";
 import { AdminError } from "./admin";
+import { privateHead } from "@/lib/seo";
 
 type K = "audit" | "api_logs" | "sync_runs" | "webhooks";
 
-export const Route = createFileRoute("/_authenticated/admin/logs")({ component: Logs, errorComponent: AdminError });
+export const Route = createFileRoute("/_authenticated/admin/logs")({ head: () => privateHead("Protokolle", "Geschützte Audit-, API-, Sync- und Zahlungsprotokolle von GlobeSIM."), component: Logs, errorComponent: AdminError });
 
 function Logs() {
   const [k, setK] = useState<K>("audit");

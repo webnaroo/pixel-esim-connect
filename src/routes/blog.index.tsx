@@ -3,6 +3,7 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 import { SiteLayout } from "@/components/layout";
 import { EmptyState } from "@/components/brand";
 import { blogListQuery } from "@/lib/content.functions";
+import { pageIdentity } from "@/lib/seo";
 
 export const Route = createFileRoute("/blog/")({
   loader: ({ context }) => context.queryClient.ensureQueryData(blogListQuery()),
@@ -14,8 +15,10 @@ export const Route = createFileRoute("/blog/")({
       { property: "og:description", content: "Tipps rund um eSIM und Reisen." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
+      ...pageIdentity("/blog").meta,
       ...(loaderData?.length ? [] : [{ name: "robots", content: "noindex, follow" }]),
     ],
+    links: pageIdentity("/blog").links,
   }),
   component: BlogIndex,
 });

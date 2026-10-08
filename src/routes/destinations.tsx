@@ -6,6 +6,7 @@ import { SearchBox } from "@/components/search-box";
 import { DestinationRow } from "@/components/catalog";
 import { SegmentedControl } from "@/components/ui-kit";
 import { destinationsQuery } from "@/lib/catalog.functions";
+import { pageIdentity } from "@/lib/seo";
 
 const CONTINENTS: Record<string, string> = { EU: "Europa", AS: "Asien", NA: "Nordamerika & Karibik", SA: "Südamerika", AF: "Afrika", OC: "Ozeanien" };
 
@@ -14,12 +15,14 @@ export const Route = createFileRoute("/destinations")({
   head: () => ({
     meta: [
       { title: "Alle Reiseziele – eSIM für Länder, Regionen und weltweit | GlobeSIM" },
-      { name: "description", content: "Finde die passende eSIM für dein Reiseziel: über 200 Länder, Regionen wie Europa und Asien sowie weltweite Tarife. Preise inkl. MwSt." },
+      { name: "description", content: "Finde GlobeSIM eSIM-Tarife für dein Reiseziel. Vergleiche verfügbare Datenpakete und Unlimited-Tarife nach Laufzeit und Preis inkl. MwSt." },
       { property: "og:title", content: "Alle Reiseziele | GlobeSIM" },
       { property: "og:description", content: "eSIM für Länder, Regionen und weltweit." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
+      ...pageIdentity("/destinations").meta,
     ],
+    links: pageIdentity("/destinations").links,
   }),
   component: Destinations,
 });

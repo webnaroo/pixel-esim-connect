@@ -16,10 +16,10 @@ function StatusIcon({ status }: { status: CellStatus }) {
   return <>{icon}<span className="sr-only">{STATUS_LABEL[status]}: </span></>;
 }
 
-export function SourceLink({ href, checkedAt }: { href: string; checkedAt: string }) {
+export function SourceLink({ href, checkedAt, context }: { href: string; checkedAt: string; context?: string }) {
   return (
     <p className="mt-2 flex flex-wrap items-center gap-x-2 text-xs text-ink-muted">
-      <a href={href} target="_blank" rel="noopener noreferrer nofollow" className="inline-flex min-h-[48px] items-center font-medium text-primary underline underline-offset-2 sm:min-h-0">Quelle</a>
+      <a href={href} target="_blank" rel="noopener noreferrer nofollow" aria-label={context ? `Quelle: ${context} (neuer Tab)` : "Quelle (neuer Tab)"} className="inline-flex min-h-[48px] items-center font-medium text-primary underline underline-offset-2 sm:min-h-0">Quelle</a>
       <span>geprüft {fmtDate(checkedAt)}</span>
     </p>
   );
@@ -40,7 +40,9 @@ export function CompetitorPicker({ items, value, onChange }: { items: ViewCompet
     else if (e.key === "End") n = items.length - 1;
     else return;
     e.preventDefault();
-    onChange(items[n]!.id);
+    const next = items[n];
+    if (!next) return;
+    onChange(next.id);
     refs.current[n]?.focus();
   }
   return (
@@ -75,7 +77,7 @@ export function ComparisonRow({ row, competitor }: { row: ViewRow; competitor: s
         </li>
         <li className={cn(cell, "border-line")} aria-label={`${competitor}: ${row.other.text}`}>
           <div className="flex gap-2"><StatusIcon status={row.other.status} /><span className="line-clamp-3">{row.other.text}</span></div>
-          <SourceLink href={row.other.sourceUrl} checkedAt={row.other.checkedAt} />
+          <SourceLink href={row.other.sourceUrl} checkedAt={row.other.checkedAt} context={`${competitor} – ${row.question}`} />
         </li>
       </ul>
     </li>
