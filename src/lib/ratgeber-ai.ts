@@ -60,7 +60,7 @@ export function allowedPaths(ctx: AiContext) {
 }
 
 /** Builds the row saved for a generated draft. Status is ALWAYS draft. */
-const META = /[^.!?\n]*(bereitgestellten Daten|vorliegenden (GlobeSIM-)?Daten|Datenlage|Produktgrundlage|nicht feststellen|nicht als eigenes Reiseziel|keine bestätigte\\w*|bestätigte (Angaben|Antworten|Konfiguration)|noch zu prüfenden?|pauschale Empfehlung|produktspezifischen Vorgaben)[^.!?\n]*[.!?]?/gi;
+const META = /[^.!?\n]*(bereitgestellten Daten|vorliegenden (GlobeSIM-)?Daten|Datenlage|Produktgrundlage|nicht feststellen|nicht als eigenes Reiseziel|keine bestätigte\w*|bestätigte (Angaben|Antworten|Konfiguration)|noch zu prüfenden?|pauschale Empfehlung|produktspezifischen Vorgaben)[^.!?\n]*[.!?]?/gi;
 /** Removes sentences where the model talks about its data instead of the topic. */
 export const stripMeta = (t: string) => t.replace(META, "").replace(/[ \t]{2,}/g, " ").trim();
 
