@@ -208,6 +208,13 @@
   margin-inline: auto;
 }
 .home-search-hint, .home-search-arrow { display: none; }
+.home-destination-photo { position: relative; aspect-ratio: 4 / 3; overflow: hidden; }
+.home-destination-photo img { position: absolute; width: 400%; max-width: none; height: 100%; object-fit: cover; }
+.home-photo-turkey img { left: 0; }
+.home-photo-usa img { left: -100%; }
+.home-photo-thailand img { left: -200%; }
+.home-photo-japan img { left: -300%; }
+.home-photo-fallback { display: grid; place-items: center; background: var(--mobile-benefit); }
 @media (max-width: 639px) {
   .home-hero-image { height: 142px; }
   .home-hero-image img { object-position: center 24%; }
@@ -234,13 +241,7 @@
   .home-world-benefit p:first-child { font-size: 12px; line-height: 17px; }
   .home-world-benefit p:last-child { font-size: 10px; line-height: 14px; }
   .home-popular { padding-top: 10px; padding-bottom: 24px; }
-  .home-destination-photo { position: relative; height: 85px; overflow: hidden; }
-  .home-destination-photo img { position: absolute; width: 400%; max-width: none; height: 100%; object-fit: cover; }
-  .home-photo-turkey img { left: 0; }
-  .home-photo-usa img { left: -100%; }
-  .home-photo-thailand img { left: -200%; }
-  .home-photo-japan img { left: -300%; }
-  .home-photo-fallback { display: grid; place-items: center; background: var(--mobile-benefit); }
+  .home-destination-photo { height: 85px; aspect-ratio: auto; }
 }
 @media (min-width: 640px) and (max-width: 1023px) {
   .home-hero-image {

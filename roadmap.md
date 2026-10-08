@@ -1,4 +1,5 @@
 # Roadmap
+- [x] Show popular destination photo tiles on desktop and tablet, preserving mobile and other homepage sections
 - [x] Mobile-only homepage redesign matching the optimized reference
 - [x] Reusable admin SEO AI analysis with saved prioritized recommendations
 - [x] Public canonical/structured-data audit test and persisted results
