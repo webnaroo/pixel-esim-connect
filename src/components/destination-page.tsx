@@ -1,3 +1,5 @@
+import { NoThrottleClaim, UnlimitedLabel } from "./unlimited-claim";
+import { showsNoThrottle } from "@/lib/throttle";
 import { useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
@@ -59,6 +61,7 @@ export function DestinationPage({ slug }: { slug: string }) {
               {sample?.networkType && <Chip>{sample.networkType}</Chip>}
               {fromPrice != null && <Chip tone="muted">ab {formatPrice(fromPrice)}</Chip>}
               {!isCountry && d.countries.length > 0 && <Chip tone="muted">{d.countries.length} Länder</Chip>}
+              <NoThrottleClaim when={unlimitedPlans.some(showsNoThrottle)} className="inline-flex items-center rounded-full border border-line-strong px-3 py-1 text-xs font-medium text-ink" />
             </div>
             <p className="mt-3 max-w-xl text-ink-muted">{d.content?.intro ?? "Sofort per E-Mail, in Minuten installiert. Deine bisherige SIM bleibt aktiv."}</p>
           </div>
@@ -116,7 +119,7 @@ export function DestinationPage({ slug }: { slug: string }) {
             {sample.voiceSms != null && <Info k="Telefonie / SMS" v={Object.keys(sample.voiceSms as object).length ? "Je nach Tarif" : "Nein, nur Daten"} />}
             {sample.topUpable != null && <Info k="Nachbuchen" v={sample.topUpable ? "Möglich" : "Nicht möglich"} />}
             {sample.networks?.length ? <Info k="Netze" v={sample.networks.join(", ")} /> : null}
-            {tab === "unlimited" && unlimitedPlans[0]?.fairUse && <Info k="Fair-Use" v={fairUseText(unlimitedPlans[0])} />}
+            {tab === "unlimited" && unlimitedPlans[0]?.fairUse && !showsNoThrottle(unlimitedPlans[0]) && <Info k="Fair-Use" v={fairUseText(unlimitedPlans[0])} />}
           </dl>
         </section>
       )}
@@ -196,7 +199,7 @@ function BuyBar({ plan, canBuy, inline }: { plan: PlanItem; canBuy: boolean; inl
   return (
     <div className={inline ? "flex items-center justify-between gap-4 rounded-lg border border-line bg-surface p-4" : "flex items-center justify-between gap-4"}>
       <div>
-        <div className="text-sm text-ink-muted">{plan.type === "unlimited" ? "Unlimited" : formatData(plan.dataMb)} · {formatDays(plan.validityDays)}</div>
+        <div className="text-sm text-ink-muted">{plan.type === "unlimited" ? <UnlimitedLabel throttleClaim={plan.throttleClaim} /> : formatData(plan.dataMb)} · {formatDays(plan.validityDays)}</div>
         <div className="tabular text-lg font-semibold">{formatPrice(plan.price, plan.currency)}</div>
       </div>
       <div className="text-right">
