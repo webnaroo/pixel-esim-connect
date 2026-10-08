@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
-import { Link, useRouterState } from "@tanstack/react-router";
-import { List, X, MagnifyingGlass, UserCircle, LockSimple } from "@phosphor-icons/react";
+import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
+import { List, X, MagnifyingGlass, UserCircle, LockSimple, SignOut } from "@phosphor-icons/react";
 import { Wordmark } from "./brand";
 import { SearchBox } from "./search-box";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
-import { useSuspenseQuery } from "@tanstack/react-query";
+import { useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { legalIndexQuery } from "@/lib/content.functions";
 
 const NAV = [
