@@ -5,6 +5,7 @@ import { Button, Input, SegmentedControl } from "@/components/ui-kit";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { AuthShell, GoogleButton, authHead, isEmail } from "@/components/auth-shell";
+import { getMyRole } from "@/lib/account.functions";
 
 export const Route = createFileRoute("/login")({
   head: () => authHead("Anmelden", "Melde dich bei GlobeSIM an, um deine eSIMs und Bestellungen zu sehen."),
