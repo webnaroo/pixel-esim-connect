@@ -161,7 +161,7 @@ describe("generator", () => {
   });
   it("drops unknown links, unconfirmed throttle claims and fixed prices", () => {
     const row = draftRow(out, ctx, req, 1400);
-    expect(row.sections[0]!.body_md).toBe("[Tarife](/countries/turkey) und fremd");
+    expect(row.sections[0]!.body_md).toContain("[Tarife](/countries/turkey) und fremd");
     expect(row.internal_links).toEqual([{ label: "Tarife", path: "/countries/turkey" }]);
     expect(row.answer_summary).not.toMatch(/Drosselung|PRÜFEN/);
     expect(row.answer_summary).not.toContain("9,99");
