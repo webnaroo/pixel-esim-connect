@@ -18,3 +18,16 @@ describe("public route auth", () => {
     expect(await verifyAuth({ kind: "bearer" }, "tok", new Headers({ authorization: "Bearer tok" }), "")).toBe(true);
   });
 });
+
+import { verifyStripeSignature as vss, hmacSha256Hex as hx } from "./public-route-guard.server";
+describe("stripe signature", () => {
+  const body = '{"id":"evt_1"}';
+  it("accepts valid, rejects invalid, tampered and stale", async () => {
+    const sig = await hx("whsec_test", `1000.${body}`);
+    expect(await vss(`t=1000,v1=${sig}`, body, "whsec_test", 1100)).toBe(true);
+    expect(await vss(`t=1000,v1=${"0".repeat(64)}`, body, "whsec_test", 1100)).toBe(false);
+    expect(await vss(`t=1000,v1=${sig}`, body + " ", "whsec_test", 1100)).toBe(false);
+    expect(await vss(`t=1000,v1=${sig}`, body, "whsec_test", 2000)).toBe(false);
+    expect(await vss("", body, "whsec_test", 1000)).toBe(false);
+  });
+});

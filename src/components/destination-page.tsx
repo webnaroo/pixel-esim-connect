@@ -200,7 +200,7 @@ function BuyBar({ plan, canBuy, inline }: { plan: PlanItem; canBuy: boolean; inl
         <div className="tabular text-lg font-semibold">{formatPrice(plan.price, plan.currency)}</div>
       </div>
       <div className="text-right">
-        <Button disabled={!canBuy}>{canBuy ? "Weiter" : "Bald verfügbar"}</Button>
+        {canBuy ? <LinkButton to="/checkout/$planId" params={{ planId: plan.id }}>Weiter</LinkButton> : <Button disabled>Bald verfügbar</Button>}
         <p className="mt-1 text-xs text-ink-muted">{canBuy ? "Sofort per E-Mail · Sichere Zahlung" : "Der Kauf wird gerade vorbereitet."}</p>
       </div>
     </div>

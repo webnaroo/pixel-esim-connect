@@ -29,6 +29,13 @@
       "when": 1791476807922,
       "tag": "0003_lock_shop_switch_server_only",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1791477354727,
+      "tag": "0004_fulfillment_claim_and_order_fields",
+      "breakpoints": true
     }
   ]
 }
