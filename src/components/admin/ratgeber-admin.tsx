@@ -198,7 +198,12 @@ function Editor({ p, data, onClose, onOpen }: { p: Post; data: AdminData; onClos
   const [suggestions, setSuggestions] = useState<{ area: string; suggestion: string }[] | null>(null);
   const [autoState, setAutoState] = useState("");
   const set = (patch: Partial<Form>) => { setF((x) => ({ ...x, ...patch })); setDirty(true); };
-  const refresh = () => qc.invalidateQueries({ queryKey: ["admin", "blog"] });
+  // Also drop the public Ratgeber caches so /ratgeber shows status changes immediately.
+  const refresh = () => Promise.all([
+    qc.invalidateQueries({ queryKey: ["admin", "blog"] }),
+    qc.invalidateQueries({ queryKey: ["blog"] }),
+    qc.invalidateQueries({ queryKey: ["guide-country"] }),
+  ]);
 
   const payload = (autosave: boolean) => ({
     id: p.id, slug: f.slug, title: f.title, meta_title: nul(f.meta_title), meta_description: nul(f.meta_description), answer_summary: nul(f.answer_summary),
