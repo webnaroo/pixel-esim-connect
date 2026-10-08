@@ -8,6 +8,7 @@ import { adminOverviewQuery, runSyncNow, setShopEnabled, setSyncEnabled } from "
 import { Button } from "@/components/ui-kit";
 import { Chip } from "@/components/brand";
 import { AdminError } from "./admin";
+import { ComparisonRecheckHint } from "@/components/admin-comparison";
 
 export const Route = createFileRoute("/_authenticated/admin/")({
   loader: ({ context }) => context.queryClient.ensureQueryData(adminOverviewQuery()),
@@ -74,6 +75,7 @@ function Overview() {
           </div>
         </div>
       )}
+      <ComparisonRecheckHint />
       {lastStats?.missingFx?.length ? (
         <div role="alert" className="flex gap-3 rounded-lg border border-warning bg-surface p-4 lg:col-span-2">
           <Warning size={22} className="shrink-0 text-warning" weight="fill" />
