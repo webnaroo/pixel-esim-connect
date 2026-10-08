@@ -100,7 +100,7 @@ export function ComparisonSection() {
   }
 
   return (
-    <section className="container-page max-w-[880px] py-16 lg:py-24" aria-labelledby={hid}>
+    <section className="container-page max-w-[880px] py-10 sm:py-16 lg:py-24" aria-labelledby={hid}>
       <div className="flex flex-wrap items-center gap-3">
         <h2 id={hid}>GlobeSIM im Vergleich</h2>
         {data.fixture && <FixtureBadge />}

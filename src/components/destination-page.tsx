@@ -45,7 +45,7 @@ export function DestinationPage({ slug }: { slug: string }) {
   );
 
   return (
-    <div className="pb-28 lg:pb-0">
+    <div className={selectedPlan ? "pb-28 lg:pb-0" : ""}>
       <nav aria-label="Brotkrumen" className="container-page pt-6 text-sm text-ink-muted">
         <Link to="/" className="hover:text-ink">Start</Link>
         <span className="mx-2">/</span>
@@ -57,7 +57,7 @@ export function DestinationPage({ slug }: { slug: string }) {
       <section className="container-page pt-6">
         <div className="flex items-start gap-4">
           {isCountry && <Flag code={d.flagCode} size={48} />}
-          <div>
+          <div className="min-w-0">
             <h1>eSIM für {d.name}</h1>
             <div className="mt-3 flex flex-wrap gap-2">
               {sample?.networkType && <Chip>{sample.networkType}</Chip>}
@@ -84,7 +84,7 @@ export function DestinationPage({ slug }: { slug: string }) {
           <div className="lg:grid lg:grid-cols-[240px_1fr] lg:gap-10">
             <aside className="hidden lg:block" aria-label="Filter">{filterUi}</aside>
             <div>
-              <div className="flex items-center justify-between gap-3">
+              <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
                 {dataPlans.length > 0 && unlimitedPlans.length > 0 ? (
                   <SegmentedControl label="Tarifart" value={tab} onChange={(v) => { setTab(v); setFilters({ days: null, minGb: null }); }} options={[{ value: "data", label: "Datentarife" }, { value: "unlimited", label: "Unlimited" }]} />
                 ) : (

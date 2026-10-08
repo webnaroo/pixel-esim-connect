@@ -14,7 +14,7 @@ function inline(text: string, key: string) {
 export function Markdown({ text }: { text: string }) {
   const blocks = text.replace(/\r/g, "").split(/\n{2,}/).filter((b) => b.trim());
   return (
-    <div className="space-y-4 text-ink">
+    <div className="min-w-0 space-y-4 text-ink [overflow-wrap:anywhere]">
       {blocks.map((b, i) => {
         const h = b.match(/^(#{1,3})\s+(.*)$/);
         if (h && h[1] && h[2] !== undefined) return h[1].length === 1 ? <h2 key={i} className="text-2xl">{inline(h[2], `${i}`)}</h2> : <h3 key={i} className="text-xl">{inline(h[2], `${i}`)}</h3>;

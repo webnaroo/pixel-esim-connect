@@ -39,7 +39,7 @@ function LegalPage() {
   const page = pub ?? preview.data ?? null;
   return (
     <SiteLayout>
-      <section className="container-page max-w-3xl pb-16 pt-10">
+      <section className="container-page max-w-3xl pb-16 pt-10 [overflow-wrap:anywhere]">
         {!page ? (
           <EmptyState title="Seite nicht gefunden">
             <Link to="/" className="text-primary underline">Zur Startseite</Link>
@@ -54,7 +54,7 @@ function LegalPage() {
             {page.missing.length > 0 && (
               <p className="mb-6 text-sm text-ink-muted">Fehlende Firmendaten: {page.missing.join(", ")}</p>
             )}
-            <h1>{page.title}</h1>
+            <h1 className="max-sm:text-[28px] max-sm:leading-8">{page.title}</h1>
             <div className="mt-8"><Markdown text={page.text} /></div>
             <p className="mt-10 text-xs text-ink-muted">Stand: {new Date(page.updatedAt).toLocaleDateString("de-DE")}</p>
           </>

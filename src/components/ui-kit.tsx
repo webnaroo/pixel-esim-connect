@@ -46,7 +46,7 @@ Input.displayName = "Input";
 
 export function SegmentedControl<T extends string>({ value, onChange, options, label }: { value: T; onChange: (v: T) => void; options: { value: T; label: string }[]; label: string }) {
   return (
-    <div role="tablist" aria-label={label} className="inline-flex rounded-md border border-line bg-surface p-1">
+    <div role="tablist" aria-label={label} className="inline-flex max-w-full overflow-x-auto rounded-md border border-line bg-surface p-1">
       {options.map((o) => (
         <button
           key={o.value}
@@ -54,7 +54,7 @@ export function SegmentedControl<T extends string>({ value, onChange, options, l
           aria-selected={value === o.value}
           onClick={() => onChange(o.value)}
           className={cn(
-            "h-10 rounded-[9px] px-4 text-sm font-medium transition-colors duration-150",
+            "h-10 shrink-0 whitespace-nowrap rounded-[9px] px-3 text-sm font-medium transition-colors duration-150 sm:px-4",
             value === o.value ? "bg-primary text-primary-foreground" : "text-ink-muted hover:text-ink",
           )}
         >
