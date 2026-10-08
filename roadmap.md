@@ -1,4 +1,5 @@
 # Roadmap
+- [x] Compatibility-check button inside the FAQ device question (faq page and homepage section)
 - [x] Audit and correct spacing defects across shared layouts and public pages on mobile, tablet and desktop
 - [x] Show popular destination photo tiles on desktop and tablet, preserving mobile and other homepage sections
 - [x] Mobile-only homepage redesign matching the optimized reference
