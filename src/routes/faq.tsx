@@ -4,6 +4,8 @@ import { SiteLayout } from "@/components/layout";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { faqsQuery } from "@/lib/catalog.functions";
 import { pageIdentity } from "@/lib/seo";
+import { CompatCheck } from "@/components/compat-check";
+import { isCompatFaq } from "@/lib/faq-rules";
 
 export const Route = createFileRoute("/faq")({
   loader: ({ context }) => context.queryClient.ensureQueryData(faqsQuery()),
@@ -35,7 +37,7 @@ function Faq() {
           {data.map((f) => (
             <AccordionItem key={f.id} value={f.id}>
               <AccordionTrigger className="text-left text-base">{f.question}</AccordionTrigger>
-              <AccordionContent className="text-ink-muted">{f.answer}</AccordionContent>
+              <AccordionContent className="text-ink-muted">{f.answer}{isCompatFaq(f.question) && <CompatCheck hint className="mt-4" />}</AccordionContent>
             </AccordionItem>
           ))}
         </Accordion>

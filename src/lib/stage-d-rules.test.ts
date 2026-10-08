@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { fillLegal, parseCompanyInfo } from "./legal";
-import { checkFaqText, fillFaq } from "./faq-rules";
+import { checkFaqText, fillFaq, isCompatFaq } from "./faq-rules";
 import { anonymizeOrderPatch, isDeleteConfirmed } from "./anonymize";
 import { canSendCustomerEmail, parseEmailSettings } from "./email-rules";
 
@@ -19,6 +19,13 @@ describe("FAQ rules", () => {
   it("accepts placeholders", () => expect(checkFaqText("Ab {min_price} in {destination_count} Reisezielen, {unlimited_claim}")).toEqual([]));
   it("hides the entry when a DB value is missing", () => expect(fillFaq("Ab {min_price}", { minPrice: null, destinationCount: 7, unlimitedClaim: null })).toBeNull());
   it("fills DB values", () => expect(fillFaq("{destination_count} Ziele", { minPrice: null, destinationCount: 7, unlimitedClaim: null })).toBe("7 Ziele"));
+  it("shows the device check only at the compatibility question", () => {
+    expect(isCompatFaq("Ist mein Smartphone eSIM-fähig?")).toBe(true);
+    expect(isCompatFaq("Funktioniert die eSIM auf meinem Gerät?")).toBe(true);
+    expect(isCompatFaq("Was ist eine eSIM?")).toBe(false);
+    expect(isCompatFaq("Kann ich eine eSIM zurückgeben?")).toBe(false);
+    expect(isCompatFaq("Wann sollte ich die eSIM installieren?")).toBe(false);
+  });
 });
 
 describe("account deletion", () => {

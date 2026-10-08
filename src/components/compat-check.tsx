@@ -88,7 +88,7 @@ function CompatBody() {
             <label className="mt-3 flex items-center gap-2 rounded-md border border-line-strong bg-surface px-3">
               <MagnifyingGlass size={18} aria-hidden className="shrink-0 text-ink-muted" />
               <input value={q} onChange={(e) => setQ(e.target.value)} type="search" aria-label="Gerät suchen"
-                placeholder="Nach Hersteller oder Modell suchen (z. B. Apple, iPhone 15)" className="h-11 min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-ink-muted" />
+                placeholder="Hersteller oder Modell suchen" className="h-11 min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-ink-muted" />
             </label>
             {searching && !filtered.length ? (
               <p className="mt-4 text-sm">Kein Treffer. Frag bitte beim Hersteller nach eSIM-Unterstützung.</p>

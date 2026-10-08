@@ -22,3 +22,9 @@ export function fillFaq(text: string, ctx: FaqContext): string | null {
     .replace(/\{unlimited_claim\}/g, () => (ctx.unlimitedClaim ?? ((ok = false), "")));
   return ok ? out : null;
 }
+
+/** Questions about whether a device works with eSIM get the compatibility-check button. */
+const DEVICE_WORDS = /\b(smartphones?|ger[äa]te?s?|iphones?|handys?|tablets?|ipads?|devices?)\b/i;
+export function isCompatFaq(question: string): boolean {
+  return DEVICE_WORDS.test(question) && /(eSIM|kompatib)/i.test(question);
+}
