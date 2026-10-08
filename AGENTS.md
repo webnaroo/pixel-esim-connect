@@ -22,3 +22,8 @@
 - eSIMerge mapping is derived only from captured sandbox responses (sandbox.fixtures.ts); unmappable plans are recorded in sync_runs.unmapped, never dropped silently.
 - Comparison visibility rules (source, 90-day age, GlobeSIM conditions) live in src/lib/comparison.ts with tests and are mirrored by RLS on comparison_facts — nothing unsourced or stale can reach the public page.
 - The "ohne Drosselung" claim follows src/lib/throttle.ts (plans.throttle_claim); texts come from app_settings.unlimited_claim, never hardcoded — a catalog throttle hint flips a confirmed plan to conflict on sync.
+- Legal pages live in legal_pages and render only when published (RLS); company data comes from app_settings.company_info via placeholders in src/lib/legal.ts — never hardcode or invent legal/company data.
+- FAQ texts may state prices, coverage or throttling only through DB placeholders (src/lib/faq-rules.ts, checked on save; unfillable entries are hidden) — keeps public claims tied to real data.
+- Customer emails go only through src/lib/email.server.ts and only with a verified sender domain (email-rules.ts); otherwise orders get email_status pending_domain — no mail from an unverified domain.
+- Account deletion anonymises orders (kept for tax) and clears eSIM installation data before deleting the login (src/lib/anonymize.ts) — GDPR without losing bookkeeping records.
+- Admin list views (admin-lists.functions.ts) never select activation code, LPA or QR columns — installation data is visible only to the owner via getMyInstallData.
