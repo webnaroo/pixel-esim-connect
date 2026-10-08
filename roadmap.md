@@ -1,5 +1,5 @@
 # Roadmap
-- [ ] Mobile-only homepage redesign matching the optimized reference
+- [x] Mobile-only homepage redesign matching the optimized reference
 - [x] Reusable admin SEO AI analysis with saved prioritized recommendations
 - [x] Public canonical/structured-data audit test and persisted results
 - [x] Admin SEO change history with affected pages

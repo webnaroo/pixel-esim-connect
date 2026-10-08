@@ -124,14 +124,14 @@ function Popular() {
         <Link to="/destinations" className="flex shrink-0 items-center text-xs font-medium text-mobile-action">Alle anzeigen <CaretRight size={14} aria-hidden /></Link>
       </div>
       <div className="grid grid-cols-4 gap-2 sm:hidden">
-        {popular.map((slug) => bySlug.get(slug)).filter((d) => d && d.type === "country").slice(0, 4).map((d) => {
+        {["turkey", "united-states", "thailand", "japan"].map((slug) => bySlug.get(slug)).filter((d) => d && d.type === "country").map((d) => {
           if (!d) return null;
           const photo = ({ turkey: "turkey", turkei: "turkey", "tuerkei": "turkey", "united-states": "usa", usa: "usa", thailand: "thailand", japan: "japan" } as Record<string, string>)[d.slug];
           return <Link key={d.id} to="/countries/$slug" params={{ slug: d.slug }} className="home-destination-tile min-w-0 overflow-hidden rounded-lg border border-line bg-surface">
             <div className={`home-destination-photo ${photo ? `home-photo-${photo}` : "home-photo-fallback"}`}>
               {photo ? <img src={destinationPhotos} alt="" loading="lazy" width={1600} height={800} /> : <Flag code={d.flagCode} size={32} />}
             </div>
-            <div className="px-2 pb-2 pt-1"><Flag code={d.flagCode} size={18} /><p className="mt-1 truncate text-xs font-semibold">{d.name}</p>{d.fromPrice != null && <p className="mt-1 text-[10px] tabular">ab {formatPrice(d.fromPrice)}</p>}</div>
+            <div className="px-2 pb-2 pt-1"><Flag code={d.flagCode} size={18} /><p className="mt-1 truncate text-xs font-semibold">{d.slug === "united-states" ? "USA" : d.name}</p>{d.fromPrice != null && <p className="mt-1 text-[10px] tabular">ab {formatPrice(d.fromPrice)}</p>}</div>
           </Link>;
         })}
       </div>
