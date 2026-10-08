@@ -1,3 +1,4 @@
+import { UnlimitedLabel, UnlimitedNote } from "@/components/unlimited-claim";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { z } from "zod";
 import { SiteLayout } from "@/components/layout";
@@ -46,7 +47,7 @@ function OrderPage() {
 
             <dl className="mt-8 divide-y divide-line rounded-lg border border-line bg-surface">
               <Row k="Reiseziel" v={order.plan.destination ?? "–"} />
-              <Row k="Tarif" v={`${order.plan.type === "unlimited" ? "Unlimited" : formatData(order.plan.data_mb ?? null)} · ${formatDays(order.plan.validity_days ?? 0)}`} />
+              <Row k="Tarif" v={<>{order.plan.type === "unlimited" ? <UnlimitedLabel throttleClaim={order.plan.throttle_claim} /> : formatData(order.plan.data_mb ?? null)} · {formatDays(order.plan.validity_days ?? 0)}{order.plan.type === "unlimited" && <UnlimitedNote throttleClaim={order.plan.throttle_claim} />}</>} />
               <Row k="E-Mail" v={order.email} />
               <Row k="Betrag" v={fixture ? "Testdaten" : formatPrice(order.amount, order.currency)} />
             </dl>

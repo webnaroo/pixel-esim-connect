@@ -11,7 +11,7 @@ async function loadPricedPlan(planId: string) {
   const { supabaseAdmin: db } = await import("@/integrations/supabase/client.server");
   const { data: plan } = await db
     .from("plans")
-    .select("id,provider_plan_id,type,data_mb,validity_days,cost_price,cost_currency,is_active,destination:destinations(slug,name_de,flag_code,type)")
+    .select("id,provider_plan_id,type,data_mb,validity_days,cost_price,cost_currency,is_active,throttle_claim,destination:destinations(slug,name_de,flag_code,type)")
     .eq("id", planId)
     .maybeSingle();
   if (!plan || !plan.is_active || !plan.destination) return null;
@@ -44,6 +44,7 @@ export const getCheckoutPlan = createServerFn({ method: "GET" })
       type: r.plan.type,
       dataMb: r.plan.data_mb,
       validityDays: r.plan.validity_days,
+      throttleClaim: r.plan.throttle_claim as "unknown" | "none_confirmed" | "conflict",
       destination: { slug: d.slug, name: d.name_de, flagCode: d.flag_code, type: d.type },
       price: r.price.ok ? { gross: r.price.gross, net: r.price.net, vat: r.price.vat, currency: r.price.currency, vatRate: r.vatRate } : null,
     };
@@ -104,7 +105,7 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
         user_id: caller.userId,
         guest_email: parsed.data.email,
         plan_id: r.plan.id,
-        plan_snapshot: { provider_plan_id: r.plan.provider_plan_id, type: r.plan.type, data_mb: r.plan.data_mb, validity_days: r.plan.validity_days, destination: r.plan.destination!.name_de },
+        plan_snapshot: { provider_plan_id: r.plan.provider_plan_id, type: r.plan.type, data_mb: r.plan.data_mb, validity_days: r.plan.validity_days, destination: r.plan.destination!.name_de, throttle_claim: r.plan.throttle_claim },
         amount: r.price.gross,
         net: r.price.net,
         tax: r.price.vat,
