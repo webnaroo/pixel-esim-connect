@@ -92,6 +92,13 @@
       "when": 1791480833898,
       "tag": "0012_stage_d_account_legal_email",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1791482987017,
+      "tag": "0013_fx_auto_rates",
+      "breakpoints": true
     }
   ]
 }
