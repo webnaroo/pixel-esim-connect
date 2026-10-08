@@ -239,13 +239,8 @@ function HomeFaq() {
   if (!faqs.length) return null;
   return (
     <section className="container-page max-w-3xl py-10 sm:py-16 lg:py-24" aria-labelledby="faq-h">
-      <div className="flex flex-wrap items-center gap-3">
-        <Link
-          to="/destinations"
-          className="inline-flex items-center rounded-2xl border border-primary px-4 py-2 text-sm font-medium text-primary transition-colors hover:bg-primary hover:text-primary-foreground"
-        >
-          Reiseziele ansehen
-        </Link>
+      <div className="flex flex-wrap items-center gap-4">
+        <LinkButton to="/destinations" variant="secondary">Reiseziele ansehen</LinkButton>
         <span className="text-sm text-ink-muted">eSIM für dein nächstes Reiseland</span>
       </div>
       <h2 id="faq-h" className="mt-6">Häufige Fragen</h2>
