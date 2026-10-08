@@ -1,3 +1,4 @@
+import { FixtureBadge } from "./brand";
 import { NoThrottleClaim, UnlimitedLabel } from "./unlimited-claim";
 import { showsNoThrottle } from "@/lib/throttle";
 import { useMemo, useState } from "react";
@@ -31,7 +32,7 @@ export function DestinationPage({ slug }: { slug: string }) {
     (p) => (filters.days == null || p.validityDays === filters.days) && (filters.minGb == null || p.type === "unlimited" || (p.dataMb ?? 0) >= filters.minGb * 1024),
   );
   const selectedPlan = d.plans.find((p) => p.id === selected) ?? null;
-  const canBuy = shop?.state === "live";
+  const canBuy = shop?.state === "live" && !d.fixturePlans;
   const isCountry = d.type === "country";
   const fromPrice = hasPlans ? Math.min(...d.plans.map((p) => p.price)) : null;
   const allDays = [...new Set((tab === "data" ? dataPlans : unlimitedPlans).map((p) => p.validityDays))].sort((a, b) => a - b);
@@ -69,6 +70,7 @@ export function DestinationPage({ slug }: { slug: string }) {
       </section>
 
       <section className="container-page mt-10" aria-labelledby="plans-h">
+        {d.fixturePlans && <div className="mb-4 flex items-center gap-2 text-sm text-ink-muted"><FixtureBadge /> Beispieltarife nur in der Vorschau, nicht kaufbar.</div>}
         <h2 id="plans-h" className="sr-only">Tarife</h2>
         {!hasPlans ? (
           <EmptyState

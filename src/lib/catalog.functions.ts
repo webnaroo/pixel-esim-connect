@@ -135,13 +135,21 @@ export const getDestinationDetail = createServerFn({ method: "GET" })
       slug: d.slug,
       name: d.name_de,
       flagCode: d.flag_code,
-      plans: planItems,
+      ...(await withPreviewPlans(d.slug, planItems)),
       content: content ? { intro: content.intro, seoTitle: content.seo_title, seoDescription: content.seo_description, faq: (Array.isArray(content.faq) ? content.faq : []) as { q: string; a: string }[] } : null,
       countries: (members ?? []).flatMap((m) => (m.country ? [{ slug: m.country.slug, name: m.country.name_de, flagCode: m.country.flag_code }] : [])).sort((a, b) => a.name.localeCompare(b.name, "de")),
       regions: (parents ?? []).flatMap((p) => (p.region ? [{ slug: p.region.slug, name: p.region.name_de }] : [])),
       related,
     };
   });
+
+/** Preview-only sample plans (VITE_USE_FIXTURES=true, never in the published build), labelled "Testdaten". */
+async function withPreviewPlans(slug: string, plans: PlanItem[]): Promise<{ plans: PlanItem[]; fixturePlans: boolean }> {
+  const { USE_FIXTURES } = await import("./format");
+  if (plans.length || !USE_FIXTURES) return { plans, fixturePlans: false };
+  const { previewPlans } = await import("./fixtures/plans");
+  return { plans: previewPlans(slug), fixturePlans: true };
+}
 
 export type DestinationDetail = NonNullable<Awaited<ReturnType<typeof getDestinationDetail>>>;
 
