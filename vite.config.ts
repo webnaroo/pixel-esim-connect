@@ -16,6 +16,8 @@ export default defineConfig({
   vite: {
     resolve: {
       alias: {
+        // htmlparser2 (via linkedom) needs entities v7's "entities/decode"; the generic alias below pins v4.
+        "entities/decode": path.resolve(projectDir, "node_modules/htmlparser2/node_modules/entities/dist/esm/decode.js"),
         "entities/lib/decode.js": path.resolve(projectDir, "node_modules/entities/lib/decode.js"),
         "entities/lib/encode.js": path.resolve(projectDir, "node_modules/entities/lib/encode.js"),
         entities: path.resolve(projectDir, "node_modules/entities"),
