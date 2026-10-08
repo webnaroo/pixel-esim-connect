@@ -102,6 +102,8 @@ function Overview() {
           <Row ok={!c.providerSandbox} label="eSIMerge-Zugang" detail={data.provider.apiKeySet ? (c.providerSandbox ? "Sandbox (keine echten eSIMs)" : "Live") : "nicht gesetzt"} />
           <Row ok={c.catalogCount > 0} label="Katalog größer 0" detail={`${c.catalogCount} aktive Tarife`} />
           <Row ok={c.stripeConfigured} label="Stripe konfiguriert" detail={c.stripeConfigured ? "Schlüssel gesetzt" : "Stripe-Schlüssel nicht gesetzt"} />
+          <Row ok={!!c.emailVerified} label="E-Mail-Absender-Domain" detail={c.emailVerified ? "Verifiziert" : "Nicht verifiziert: keine Mails an Kunden"} />
+          <Row ok={!!c.legalPublished} label="Rechtsseiten freigegeben" detail={c.legalPublished ? "Alle freigegeben" : "Noch Platzhalter (Admin › Inhalte)"} />
         </ul>
         <div className="mt-4 flex flex-wrap items-center gap-3">
           <Chip tone={data.shopEnabled ? "active" : "muted"}>{data.shopEnabled ? "Shop aktiv" : "Shop aus"}</Chip>

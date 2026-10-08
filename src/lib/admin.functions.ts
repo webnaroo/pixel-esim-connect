@@ -28,7 +28,13 @@ async function buildChecklist(): Promise<ShopChecklist & { providerMessage: stri
   }
   const { count } = await supabaseAdmin.from("plans").select("id", { count: "exact", head: true }).eq("is_active", true);
   const stripeConfigured = Boolean(process.env["STRIPE_LIVE_API_KEY"] && process.env["PAYMENTS_LIVE_WEBHOOK_SECRET"]) // live payments, not the test environment;
-  return { providerReachable, providerSandbox: status.sandbox, providerMessage, catalogCount: count ?? 0, stripeConfigured };
+  const [{ data: mail }, { count: unpublished }] = await Promise.all([
+    supabaseAdmin.from("app_settings").select("value").eq("key", "email_settings").maybeSingle(),
+    supabaseAdmin.from("legal_pages").select("slug", { count: "exact", head: true }).eq("published", false),
+  ]);
+  const { canSendCustomerEmail, parseEmailSettings } = await import("./email-rules");
+  const emailVerified = canSendCustomerEmail(parseEmailSettings(mail?.value));
+  return { providerReachable, providerSandbox: status.sandbox, providerMessage, catalogCount: count ?? 0, stripeConfigured, emailVerified, legalPublished: (unpublished ?? 0) === 0 };
 }
 
 export const getAdminOverview = createServerFn({ method: "GET" })
