@@ -1,11 +1,11 @@
 // Pure comparison rules (no I/O). Server code and tests call these.
 export type CellStatus = "check" | "neutral" | "cross";
-export type Requires = "unlimited_plans" | "support_hours" | "destination_count" | null;
+export type Requires = "unlimited_plans" | "unlimited_no_throttle" | "support_hours" | "destination_count" | null;
 
 export type Competitor = { id: string; name: string; slug: string; logo_url: string | null; website_url?: string | null; enabled: boolean; sort_order: number };
 export type ComparisonRowRec = { id: string; sort_order: number; question: string; globesim_text: string; globesim_status: "check" | "neutral"; requires: Requires; enabled: boolean };
 export type FactRec = { id: string; row_id: string; competitor_id: string; text: string; status: CellStatus; source_url: string | null; checked_at: string | null; enabled: boolean };
-export type GlobeSimContext = { hasUnlimitedPlans: boolean; supportHours: string | null; destinationCount: number };
+export type GlobeSimContext = { hasUnlimitedPlans: boolean; hasNoThrottlePlans?: boolean; supportHours: string | null; destinationCount: number };
 
 export const FACT_MAX_AGE_DAYS = 90;
 export const FACT_WARN_AGE_DAYS = 60;
@@ -34,6 +34,7 @@ export function globeSimText(row: ComparisonRowRec, ctx: GlobeSimContext): strin
   if (!text) return null;
   switch (row.requires) {
     case "unlimited_plans": return ctx.hasUnlimitedPlans ? text : null;
+    case "unlimited_no_throttle": return ctx.hasNoThrottlePlans ? text : null;
     case "support_hours": return ctx.supportHours ? text.replaceAll("{hours}", ctx.supportHours) : null;
     case "destination_count": return ctx.destinationCount > 0 ? text.replaceAll("{count}", String(ctx.destinationCount)) : null;
     default: return text;

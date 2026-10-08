@@ -1,3 +1,4 @@
+import { claimAfterSync, type FairUse, type ThrottleConfirmation } from "./throttle";
 // Catalog sync: pulls plans from the provider, prices them and upserts into `plans`.
 // Safety: aborts without changes if the provider returns < 50 % of previously active plans.
 import { evaluateSyncThreshold } from "./admin-rules";
@@ -118,6 +119,15 @@ export async function runCatalogSync(trigger: "cron" | "manual"): Promise<SyncSu
       if (error) throw new Error(`Upsert fehlgeschlagen: ${error.message}`);
       if (known.has(`${p.providerPlanId}|${dest.id}`)) counts.updated++;
       else counts.added++;
+    }
+
+    // Provider hint vs. "ohne Drosselung" confirmation: never silently keep the claim.
+    const { data: confirmed } = await db.from("plans").select("id,fair_use,throttle_confirmation").eq("provider", "esimerge").eq("throttle_claim", "none_confirmed");
+    for (const c of confirmed ?? []) {
+      if (claimAfterSync("none_confirmed", c.throttle_confirmation as ThrottleConfirmation | null, c.fair_use as FairUse) === "conflict") {
+        await db.from("plans").update({ throttle_claim: "conflict" }).eq("id", c.id);
+        await db.from("audit_log").insert({ action: "throttle_conflict", entity: "plans", entity_id: c.id, meta: { fair_use: c.fair_use } as never });
+      }
     }
 
     const { data: gone } = await db.from("plans").update({ is_active: false }).eq("provider", "esimerge").eq("is_active", true).or(`last_synced_at.is.null,last_synced_at.lt.${startedAt}`).select("id");
