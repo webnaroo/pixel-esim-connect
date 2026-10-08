@@ -34,7 +34,7 @@ function Pricing() {
   const del = useServerFn(deletePricingRule);
   const saveMargin = useServerFn(saveMarginSettings);
   const fxq = useQuery(fxAdminQuery());
-  const refresh = () => qc.invalidateQueries({ queryKey: ["admin", "pricing"] });
+  const refresh = () => qc.invalidateQueries(); // prices feed admin tables and public pages
   const [scope, setScope] = useState<string>("global");
   const [test, setTest] = useState({ cost: "5", currency: "USD", slug: "turkey", type: "data" as "data" | "unlimited", planId: "" });
 

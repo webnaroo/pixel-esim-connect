@@ -151,7 +151,9 @@ export const savePricingRule = createServerFn({ method: "POST" })
     await assertAdmin(context as unknown as Ctx);
     const { error } = await context.supabase.from("pricing_rules").insert({ ...data, scope_ref: data.scope === "global" ? null : data.scope_ref });
     if (error) throw new Error("Regel konnte nicht gespeichert werden.");
-    return { ok: true };
+    const { repricePlans } = await import("./fx.server");
+    const reprice = await repricePlans(context.userId);
+    return { ok: true, reprice };
   });
 
 export const deletePricingRule = createServerFn({ method: "POST" })
@@ -159,8 +161,11 @@ export const deletePricingRule = createServerFn({ method: "POST" })
   .inputValidator((i) => z.object({ id: z.string().uuid() }).parse(i))
   .handler(async ({ data, context }) => {
     await assertAdmin(context as unknown as Ctx);
-    await context.supabase.from("pricing_rules").delete().eq("id", data.id);
-    return { ok: true };
+    const { error } = await context.supabase.from("pricing_rules").delete().eq("id", data.id);
+    if (error) throw new Error("Regel konnte nicht gelöscht werden.");
+    const { repricePlans } = await import("./fx.server");
+    const reprice = await repricePlans(context.userId);
+    return { ok: true, reprice };
   });
 
 // ---------- API explorer (read-only endpoints, masked output) ----------
