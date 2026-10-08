@@ -472,6 +472,7 @@ export type Database = {
           fetched_at: string
           from_currency: string
           id: string
+          last_checked_at: string | null
           published_at: string | null
           rate: number
           reason: string | null
@@ -487,6 +488,7 @@ export type Database = {
           fetched_at?: string
           from_currency: string
           id?: string
+          last_checked_at?: string | null
           published_at?: string | null
           rate: number
           reason?: string | null
@@ -502,6 +504,7 @@ export type Database = {
           fetched_at?: string
           from_currency?: string
           id?: string
+          last_checked_at?: string | null
           published_at?: string | null
           rate?: number
           reason?: string | null
