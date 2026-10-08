@@ -12,6 +12,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { comparisonQuery } from "@/lib/comparison.functions";
 import { destinationsQuery, faqsQuery, popularQuery } from "@/lib/catalog.functions";
 import airportBanner from "@/assets/home-airport.jpg";
+import mobileAirportBanner from "@/assets/home-airport-mobile.jpg.asset.json";
 import speedIcon from "@/assets/speed.png.asset.json";
 import wifiIcon from "@/assets/wifi.png.asset.json";
 import shieldIcon from "@/assets/shield.png.asset.json";
@@ -62,19 +63,22 @@ function Hero() {
   ];
   return (
     <section className="home-hero relative isolate" aria-labelledby="home-title">
-      <img src={airportBanner} alt="Reisende am Flughafen mit Smartphone und GlobeSIM Reise-eSIM" width={1920} height={960} fetchPriority="high" className="home-hero-image" />
+      <picture className="home-hero-image">
+        <source media="(max-width: 1023px)" srcSet={mobileAirportBanner.url} />
+        <img src={airportBanner} alt="Reisende am Flughafen mit Smartphone und GlobeSIM Reise-eSIM" width={1920} height={960} fetchPriority="high" />
+      </picture>
       <div className="container-page relative z-10">
-        <div className="home-hero-copy pb-7 pt-8 lg:py-14">
-          <p className="mb-4 flex items-center gap-2 text-sm font-medium text-primary">
+        <div className="home-hero-copy pb-6 pt-5 lg:py-14">
+          <p className="mb-2 flex items-center gap-2 text-sm font-medium text-primary lg:mb-4">
             <img src={speedIcon.url} alt="" className="size-6 object-contain" aria-hidden />
             GlobeSIM · Deine Reise-eSIM
           </p>
           <h1 id="home-title" className="!tracking-normal">GlobeSIM Reise-eSIM</h1>
-          <p className="mt-4 max-w-lg text-lg text-ink-muted">eSIM kaufen, in Minuten installieren, ohne Roaming-Überraschung. Bleibe weltweit verbunden – einfach und schnell.</p>
-          <div className="mt-7" data-hero-search>
+          <p className="mt-3 max-w-lg text-base text-ink-muted lg:mt-4 lg:text-lg">eSIM kaufen, in Minuten installieren, ohne Roaming-Überraschung. Bleibe weltweit verbunden – einfach und schnell.</p>
+          <div className="mt-5 lg:mt-7" data-hero-search>
             <SearchBox />
           </div>
-          <ul className="mt-6 grid grid-cols-3 gap-2 lg:gap-3" aria-label="Deine Vorteile">
+          <ul className="mt-5 grid grid-cols-3 gap-2 lg:mt-6 lg:gap-3" aria-label="Deine Vorteile">
             {benefits.map((benefit) => (
               <li key={benefit.title} className="flex min-w-0 flex-col items-center gap-2 text-center lg:flex-row lg:items-start lg:text-left">
                 <img src={benefit.icon} alt="" aria-hidden loading="eager" className="size-8 shrink-0 object-contain" />
@@ -85,7 +89,7 @@ function Hero() {
               </li>
             ))}
           </ul>
-          <div className="mt-7 flex items-center gap-3 border-t border-line pt-4">
+          <div className="mt-5 flex items-center gap-3 border-t border-line pt-4 lg:mt-7">
             <img src={worldIcon.url} alt="" aria-hidden className="size-9 shrink-0 object-contain" />
             <div>
               <p className="text-sm font-medium">Weltweit verbunden</p>
