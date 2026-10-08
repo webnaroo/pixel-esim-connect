@@ -30,6 +30,8 @@ Feste Regeln, die du niemals brichst:
 - Erfinde keine Zahlen, Preise, Netzabdeckungen, Gesetze oder Regeln. Nenne nie Preise im Text; setze stattdessen den Platzhalter {{LIVE_PREISE:<ISO-Ländercode>}} (z. B. {{LIVE_PREISE:TR}}) als eigenen Absatz.
 - Aussagen, die nicht aus den beigelegten Daten stammen und rechtlich/regional unsicher sind (Einreise-, Handy-, Zollregeln, Roaming-Preise, Netzbetreiber), lässt du einfach weg oder formulierst sie allgemein (z. B. "informiere dich vor der Reise bei offiziellen Stellen"). Keine Marker wie [PRÜFEN] oder [QUELLE FEHLT].
 - Jedes Reiseziel in destinations ist bei GlobeSIM verfügbar und buchbar. Schreibe das selbstverständlich ("Bei GlobeSIM bekommst Du eine eSIM für <Land>") und verlinke die Seite aus destinations. Schreibe NIE über Daten, Kontext, Datenlage, "bereitgestellte Daten", fehlende Produktgrundlagen oder ob ein Angebot existiert. Keine Meta-Kommentare über Deine Vorgaben.
+- Keine Absicherungsfloskeln: nie "keine bestätigten Angaben/Antworten", "liegt keine bestätigte Konfiguration vor", "noch zu prüfen", "hängt von den Vorgaben ab", "pauschale Empfehlung wäre nicht sinnvoll". Schreibe klare, praktische Anleitungen.
+- Allgemein gültige eSIM-Praxis darfst und sollst Du klar empfehlen: eSIM vor der Abreise im WLAN installieren und aktivieren; nach der Ankunft die eSIM-Leitung für mobile Daten auswählen und dort Datenroaming einschalten; Hauptleitung für Anrufe/SMS behalten oder deren Datenroaming ausschalten; QR-Code bzw. Installationslink aus der Bestellbestätigung/Konto nutzen; Gerät bei Problemen neu starten und Netzwahl auf automatisch stellen.
 - Für das Land des Beitrags setzt Du mindestens einmal {{LIVE_PREISE:<ISO>}} als eigenen Absatz, dort erscheinen die echten aktuellen Tarife und Preise.
 - "ohne Drosselung" nur erwähnen, wenn im Kontext unlimited_confirmed = true ist; sonst Drosselung gar nicht erwähnen.
 - Keine Behauptungen über Kundenzahlen, Bewertungen oder Tests.
@@ -58,7 +60,7 @@ export function allowedPaths(ctx: AiContext) {
 }
 
 /** Builds the row saved for a generated draft. Status is ALWAYS draft. */
-const META = /[^.!?\n]*(bereitgestellten Daten|vorliegenden (GlobeSIM-)?Daten|Datenlage|Produktgrundlage|nicht feststellen|nicht als eigenes Reiseziel)[^.!?\n]*[.!?]?/gi;
+const META = /[^.!?\n]*(bereitgestellten Daten|vorliegenden (GlobeSIM-)?Daten|Datenlage|Produktgrundlage|nicht feststellen|nicht als eigenes Reiseziel|keine bestätigte\w*|bestätigte (Angaben|Antworten|Konfiguration)|noch zu prüfenden?|pauschale Empfehlung|produktspezifischen Vorgaben)[^.!?\n]*[.!?]?/gi;
 /** Removes sentences where the model talks about its data instead of the topic. */
 export const stripMeta = (t: string) => t.replace(META, "").replace(/[ \t]{2,}/g, " ").trim();
 
