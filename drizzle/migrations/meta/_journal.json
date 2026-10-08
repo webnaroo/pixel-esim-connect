@@ -1,0 +1,20 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1791475503766,
+      "tag": "0000_globesim_schema",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1791475588222,
+      "tag": "0001_globesim_seed",
+      "breakpoints": true
+    }
+  ]
+}
