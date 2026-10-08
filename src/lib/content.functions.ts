@@ -6,6 +6,7 @@ import { publicDb } from "./public-db.server";
 import { COMPANY_FIELDS, fillLegal, isLegalSlug, LEGAL_SLUGS, parseCompanyInfo } from "./legal";
 import { checkFaqText } from "./faq-rules";
 import { isValidDomain, parseEmailSettings } from "./email-rules";
+import { faqItemSchema, publishBlockers, sectionSchema } from "./ratgeber";
 
 type Ctx = { supabase: { rpc: (fn: "has_role", args: { _user_id: string; _role: "admin" }) => PromiseLike<{ data: boolean | null }> }; userId: string };
 async function assertAdmin(ctx: unknown) {
@@ -62,7 +63,7 @@ export const getContentAdmin = createServerFn({ method: "GET" })
       db.from("legal_pages").select("slug,title,body_md,published,updated_at"),
       db.from("app_settings").select("key,value").in("key", ["company_info", "email_settings"]),
       db.from("faqs").select("id,category,question,answer,sort_order").order("sort_order"),
-      db.from("blog_posts").select("id,slug,title,body_md,published_at,created_at").order("created_at", { ascending: false }),
+      db.from("blog_posts").select("id,slug,title,body_md,published_at,created_at,meta_title,meta_description,answer_summary,sections,faq,author_name,status,country_code,cover_url,updated_at").order("created_at", { ascending: false }),
     ]);
     const order = LEGAL_SLUGS as readonly string[];
     return {
@@ -139,32 +140,74 @@ export const deleteFaq = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
-/* ---------- Blog ---------- */
+/* ---------- Ratgeber (blog) ---------- */
+const POST_COLS = "id,slug,title,meta_title,meta_description,answer_summary,sections,faq,author_name,published_at,updated_at,status,country_code,cover_url,body_md";
+const nowIso = () => new Date().toISOString();
+
 export const getBlogList = createServerFn({ method: "GET" }).handler(async () => {
-  const { data } = await publicDb().from("blog_posts").select("slug,title,body_md,published_at").not("published_at", "is", null).lte("published_at", new Date().toISOString()).order("published_at", { ascending: false });
-  return (data ?? []).map((p) => ({ slug: p.slug, title: p.title, excerpt: p.body_md.replace(/[#*_>`]/g, "").slice(0, 180), publishedAt: p.published_at! }));
+  const { data } = await publicDb().from("blog_posts").select("slug,title,meta_description,answer_summary,body_md,published_at,updated_at").eq("status", "published").not("published_at", "is", null).lte("published_at", nowIso()).order("published_at", { ascending: false });
+  return (data ?? []).map((p) => ({ slug: p.slug, title: p.title, excerpt: p.meta_description || p.answer_summary || p.body_md.replace(/[#*_>`]/g, "").slice(0, 180), publishedAt: p.published_at!, updatedAt: p.updated_at }));
 });
 export const blogListQuery = () => queryOptions({ queryKey: ["blog"], queryFn: () => getBlogList(), staleTime: 5 * 60_000 });
 
 export const getBlogPost = createServerFn({ method: "GET" })
   .inputValidator((i) => z.object({ slug: z.string().max(120) }).parse(i))
   .handler(async ({ data }) => {
-    const { data: p } = await publicDb().from("blog_posts").select("slug,title,body_md,published_at,seo").eq("slug", data.slug).not("published_at", "is", null).lte("published_at", new Date().toISOString()).maybeSingle();
-    return p;
+    const db = publicDb();
+    const { data: p } = await db.from("blog_posts").select(POST_COLS).eq("slug", data.slug).eq("status", "published").not("published_at", "is", null).lte("published_at", nowIso()).maybeSingle();
+    if (!p) return null;
+    let destinationSlug: string | null = null;
+    if (p.country_code) {
+      const { data: d } = await db.from("destinations").select("slug").eq("iso_code", p.country_code.toUpperCase()).eq("type", "country").eq("is_active", true).maybeSingle();
+      destinationSlug = d?.slug ?? null;
+    }
+    return { ...p, destinationSlug };
   });
 export const blogPostQuery = (slug: string) => queryOptions({ queryKey: ["blog", slug], queryFn: () => getBlogPost({ data: { slug } }) });
 
+/** Published guide for a country (internal link from destination page). */
+export const getGuideForCountry = createServerFn({ method: "GET" })
+  .inputValidator((i) => z.object({ iso: z.string().max(3) }).parse(i))
+  .handler(async ({ data }) => {
+    const { data: p } = await publicDb().from("blog_posts").select("slug,title").eq("country_code", data.iso.toUpperCase()).eq("status", "published").not("published_at", "is", null).lte("published_at", nowIso()).order("published_at", { ascending: false }).limit(1).maybeSingle();
+    return p ?? null;
+  });
+export const guideForCountryQuery = (iso: string) => queryOptions({ queryKey: ["guide-country", iso], queryFn: () => getGuideForCountry({ data: { iso } }), staleTime: 10 * 60_000 });
+
 export const saveBlogPost = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((i) => z.object({ id: z.string().uuid().optional(), slug: z.string().trim().regex(/^[a-z0-9]+(-[a-z0-9]+)*$/, "Slug: nur a-z, 0-9 und Bindestriche").max(120), title: z.string().trim().min(3).max(200), body: z.string().max(100_000), published: z.boolean() }).parse(i))
+  .inputValidator((i) => z.object({
+    id: z.string().uuid().optional(),
+    slug: z.string().trim().regex(/^[a-z0-9]+(-[a-z0-9]+)*$/, "Slug: nur a-z, 0-9 und Bindestriche").max(120),
+    title: z.string().trim().min(3).max(200),
+    meta_title: z.string().trim().max(60, "Meta-Title max. 60 Zeichen").nullable(),
+    meta_description: z.string().trim().max(155, "Meta-Description max. 155 Zeichen").nullable(),
+    answer_summary: z.string().trim().max(1000).nullable(),
+    author_name: z.string().trim().max(120).nullable(),
+    country_code: z.string().trim().regex(/^[A-Za-z]{2}$/).nullable(),
+    cover_url: z.string().trim().url().startsWith("https://").nullable(),
+    body: z.string().max(100_000),
+    sections: z.array(sectionSchema).max(30),
+    faq: z.array(faqItemSchema).max(30),
+    published: z.boolean(),
+  }).parse(i))
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
+    if (data.published) {
+      const b = publishBlockers(data);
+      if (b.length) throw new Error(`Veröffentlichen nicht möglich: ${b.join(" ")}`);
+    }
     const db = await admin();
     const existing = data.id ? (await db.from("blog_posts").select("published_at").eq("id", data.id).maybeSingle()).data : null;
-    const row = { slug: data.slug, title: data.title, body_md: data.body, published_at: data.published ? (existing?.published_at ?? new Date().toISOString()) : null };
+    const row = {
+      slug: data.slug, title: data.title, body_md: data.body, meta_title: data.meta_title || null, meta_description: data.meta_description || null,
+      answer_summary: data.answer_summary || null, author_name: data.author_name || null, country_code: data.country_code?.toUpperCase() || null, cover_url: data.cover_url || null,
+      sections: data.sections, faq: data.faq, status: data.published ? "published" : "draft",
+      published_at: data.published ? (existing?.published_at ?? nowIso()) : null,
+    };
     const { error } = data.id ? await db.from("blog_posts").update(row).eq("id", data.id) : await db.from("blog_posts").insert(row);
     if (error) throw new Error(error.code === "23505" ? "Dieser Slug ist schon vergeben." : "Speichern fehlgeschlagen.");
-    await audit(context.userId, "blog_saved", "blog_posts", data.id ?? data.slug);
+    await audit(context.userId, data.published ? "blog_published" : "blog_saved", "blog_posts", data.id ?? data.slug);
     return { ok: true };
   });
 
