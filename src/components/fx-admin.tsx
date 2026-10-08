@@ -94,11 +94,11 @@ export function FxSection() {
             <h3 className="text-base font-semibold">Verlauf (30 Tage)</h3>
             <div className="mt-2 max-h-72 overflow-auto rounded-lg border border-line">
               <table className="w-full min-w-[520px] text-sm tabular">
-                <thead className="sticky top-0 bg-muted text-left text-ink-muted"><tr><th className="p-2">Abgerufen</th><th className="p-2">Währung</th><th className="p-2">Kurs</th><th className="p-2">Quelle</th><th className="p-2">Stand</th><th className="p-2">Status</th></tr></thead>
+                <thead className="sticky top-0 bg-muted text-left text-ink-muted"><tr><th className="p-2">Abgerufen</th><th className="p-2">Währung</th><th className="p-2">Kurs</th><th className="p-2">Quelle</th><th className="p-2">Stand</th><th className="p-2">Status</th><th className="p-2">Zuletzt geprüft</th></tr></thead>
                 <tbody className="divide-y divide-line">
                   {data.history.length === 0 && <tr><td colSpan={6} className="p-2 text-ink-muted">Noch keine Kurse.</td></tr>}
                   {data.history.map((h) => (
-                    <tr key={h.id}><td className="p-2">{new Date(h.fetched_at).toLocaleString("de-DE")}</td><td className="p-2">{h.from_currency}</td><td className="p-2">{n(h.rate)}</td><td className="p-2">{SRC[h.source] ?? h.source}</td><td className="p-2">{h.source === "manual" ? `bis ${d(h.expires_at)}` : d(h.published_at)}</td><td className="p-2">{h.status === "active" ? "aktiv" : h.status === "pending_review" ? "Prüfung nötig" : "verworfen"}</td></tr>
+                    <tr key={h.id}><td className="p-2">{new Date(h.fetched_at).toLocaleString("de-DE")}</td><td className="p-2">{h.from_currency}</td><td className="p-2">{n(h.rate)}</td><td className="p-2">{SRC[h.source] ?? h.source}</td><td className="p-2">{h.source === "manual" ? `bis ${d(h.expires_at)}` : d(h.published_at)}</td><td className="p-2">{h.status === "active" ? "aktiv" : h.status === "pending_review" ? "Prüfung nötig" : "verworfen"}</td><td className="p-2">{h.source === "manual" ? "–" : new Date(h.last_checked_at ?? h.fetched_at).toLocaleString("de-DE")}</td></tr>
                   ))}
                 </tbody>
               </table>

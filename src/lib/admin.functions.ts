@@ -107,7 +107,30 @@ export const getPricingData = createServerFn({ method: "GET" })
       context.supabase.from("pricing_rules").select("*").order("priority", { ascending: false }),
       context.supabase.from("fx_rates").select("*").order("valid_from", { ascending: false }).limit(50),
     ]);
-    return { rules: (rules ?? []).map((r) => ({ ...r, value: Number(r.value) })), fx: (fx ?? []).map((r) => ({ ...r, rate: Number(r.rate) })) };
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: st } = await supabaseAdmin.from("app_settings").select("key,value").in("key", ["stripe_fees", "min_net_result", "vat_rate"]);
+    const val = (k: string) => st?.find((x) => x.key === k)?.value;
+    const { parseFeeSettings, parseMinNet } = await import("./pricing");
+    const vat = Number(val("vat_rate"));
+    return {
+      rules: (rules ?? []).map((r) => ({ ...r, value: Number(r.value) })), fx: (fx ?? []).map((r) => ({ ...r, rate: Number(r.rate) })),
+      fees: parseFeeSettings(val("stripe_fees")), minNet: parseMinNet(val("min_net_result")), vatRate: Number.isFinite(vat) && vat > 0 ? vat : 0.19,
+    };
+  });
+
+export const saveMarginSettings = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((i) => z.object({ percent: z.number().min(0).max(20), fixed: z.number().min(0).max(10), minNet: z.number().min(-100).max(100) }).parse(i))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context as unknown as Ctx);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const now = new Date().toISOString();
+    await supabaseAdmin.from("app_settings").upsert([
+      { key: "stripe_fees", value: { percent: data.percent, fixed: data.fixed } as never, updated_at: now },
+      { key: "min_net_result", value: data.minNet as never, updated_at: now },
+    ]);
+    await supabaseAdmin.from("audit_log").insert({ actor_id: context.userId, action: "margin_settings_changed", entity: "app_settings", meta: data as never });
+    return { ok: true };
   });
 
 export const pricingQuery = () => queryOptions({ queryKey: ["admin", "pricing"], queryFn: () => getPricingData() });

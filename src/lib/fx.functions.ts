@@ -21,7 +21,7 @@ export const getFxAdmin = createServerFn({ method: "GET" })
     const fx = await loadFx(db);
     const since = new Date(Date.now() - 30 * 86_400_000).toISOString();
     const [{ data: history }, { data: cur }] = await Promise.all([
-      db.from("fx_rates").select("id,from_currency,rate,source,status,published_at,fetched_at,expires_at,reason").gte("fetched_at", since).order("fetched_at", { ascending: false }).limit(200),
+      db.from("fx_rates").select("id,from_currency,rate,source,status,published_at,fetched_at,last_checked_at,expires_at,reason").gte("fetched_at", since).order("fetched_at", { ascending: false }).limit(200),
       db.from("plans").select("cost_currency").eq("provider", "esimerge"),
     ]);
     const currencies = [...new Set(["USD", ...(cur ?? []).map((c) => c.cost_currency.toUpperCase())])].filter((c) => c !== "EUR");
