@@ -244,56 +244,74 @@ export type Database = {
       esims: {
         Row: {
           activation_code: string | null
+          android_install_url: string | null
           created_at: string
           direct_install_url: string | null
           expires_at: string | null
           iccid: string | null
           id: string
           install_status: string | null
+          ios_install_url: string | null
           lpa_string: string | null
           order_id: string
           provider: string
+          provider_esim_id: string | null
           provider_order_id: string | null
+          provider_status: string | null
           qr_image_url: string | null
           smdp_address: string | null
           status: string
           updated_at: string
+          usage_cache: Json | null
+          usage_checked_at: string | null
           user_id: string | null
         }
         Insert: {
           activation_code?: string | null
+          android_install_url?: string | null
           created_at?: string
           direct_install_url?: string | null
           expires_at?: string | null
           iccid?: string | null
           id?: string
           install_status?: string | null
+          ios_install_url?: string | null
           lpa_string?: string | null
           order_id: string
           provider?: string
+          provider_esim_id?: string | null
           provider_order_id?: string | null
+          provider_status?: string | null
           qr_image_url?: string | null
           smdp_address?: string | null
           status?: string
           updated_at?: string
+          usage_cache?: Json | null
+          usage_checked_at?: string | null
           user_id?: string | null
         }
         Update: {
           activation_code?: string | null
+          android_install_url?: string | null
           created_at?: string
           direct_install_url?: string | null
           expires_at?: string | null
           iccid?: string | null
           id?: string
           install_status?: string | null
+          ios_install_url?: string | null
           lpa_string?: string | null
           order_id?: string
           provider?: string
+          provider_esim_id?: string | null
           provider_order_id?: string | null
+          provider_status?: string | null
           qr_image_url?: string | null
           smdp_address?: string | null
           status?: string
           updated_at?: string
+          usage_cache?: Json | null
+          usage_checked_at?: string | null
           user_id?: string | null
         }
         Relationships: [
@@ -384,6 +402,7 @@ export type Database = {
           guest_email: string
           id: string
           idempotency_key: string
+          is_sandbox: boolean
           is_test: boolean
           last_error: string | null
           net: number | null
@@ -407,6 +426,7 @@ export type Database = {
           guest_email: string
           id?: string
           idempotency_key?: string
+          is_sandbox?: boolean
           is_test?: boolean
           last_error?: string | null
           net?: number | null
@@ -430,6 +450,7 @@ export type Database = {
           guest_email?: string
           id?: string
           idempotency_key?: string
+          is_sandbox?: boolean
           is_test?: boolean
           last_error?: string | null
           net?: number | null
@@ -683,7 +704,9 @@ export type Database = {
           plans_deactivated: number
           plans_updated: number
           started_at: string
+          stats: Json | null
           status: string
+          unmapped: Json
         }
         Insert: {
           countries?: number
@@ -694,7 +717,9 @@ export type Database = {
           plans_deactivated?: number
           plans_updated?: number
           started_at?: string
+          stats?: Json | null
           status?: string
+          unmapped?: Json
         }
         Update: {
           countries?: number
@@ -705,7 +730,9 @@ export type Database = {
           plans_deactivated?: number
           plans_updated?: number
           started_at?: string
+          stats?: Json | null
           status?: string
+          unmapped?: Json
         }
         Relationships: []
       }
@@ -787,6 +814,7 @@ export type Database = {
           guest_email: string
           id: string
           idempotency_key: string
+          is_sandbox: boolean
           is_test: boolean
           last_error: string | null
           net: number | null
@@ -834,6 +862,7 @@ export type Database = {
         | "refunded"
         | "cancelled"
         | "payment_mismatch"
+        | "needs_review"
       plan_type: "data" | "unlimited"
       webhook_source: "stripe" | "provider"
     }
@@ -974,6 +1003,7 @@ export const Constants = {
         "refunded",
         "cancelled",
         "payment_mismatch",
+        "needs_review",
       ],
       plan_type: ["data", "unlimited"],
       webhook_source: ["stripe", "provider"],

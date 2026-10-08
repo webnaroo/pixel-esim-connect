@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
-import { backoffSeconds, fulfillOrder, MAX_FULFILLMENT_ATTEMPTS, processWebhookOnce, type FulfillmentStore } from "./fulfillment";
+import { backoffSeconds, fulfillOrder, MAX_FULFILLMENT_ATTEMPTS, pollUntilReady, processWebhookOnce, type FulfillmentStore } from "./fulfillment";
+import { ProviderRequestError } from "./providers/types";
 
 type Row = { status: string; attempts: number; nextAt: number | null; error?: string };
 
@@ -20,6 +21,7 @@ function memoryStore(clock: { t: number }) {
     async markFulfilled(id) { rows.get(id)!.status = "fulfilled"; },
     async scheduleRetry(id, at, error) { const r = rows.get(id)!; r.status = "fulfilling"; r.nextAt = at.getTime(); r.error = error; },
     async markFailed(id, error) { const r = rows.get(id)!; r.status = "fulfillment_failed"; r.error = error; },
+    async markNeedsReview(id, error) { const r = rows.get(id)!; r.status = "needs_review"; r.error = error; r.nextAt = null; },
   };
   return { rows, store, claims };
 }
@@ -52,7 +54,7 @@ describe("fulfillOrder", () => {
   it("a 'fulfilling' order is retried exactly 1, 5 and 25 minutes after each failure", async () => {
     const clock = { t: 0 };
     const { store, rows, claims } = memoryStore(clock);
-    const createOrder = vi.fn().mockRejectedValue(new Error("timeout"));
+    const createOrder = vi.fn().mockRejectedValue(new ProviderRequestError("HTTP 503", 503, "createOrder"));
     const deps = { store, createOrder, now: () => new Date(clock.t) };
     // Scheduler ticks every minute for 40 minutes.
     for (let m = 0; m <= 40; m++) { clock.t = m * MIN; await fulfillOrder(deps, "o1"); }
@@ -64,7 +66,7 @@ describe("fulfillOrder", () => {
   it("while waiting for a retry the order stays 'fulfilling' and is not claimed early", async () => {
     const clock = { t: 0 };
     const { store, rows } = memoryStore(clock);
-    const createOrder = vi.fn().mockRejectedValueOnce(new Error("timeout")).mockImplementation(ok);
+    const createOrder = vi.fn().mockRejectedValueOnce(new ProviderRequestError("HTTP 503", 503, "createOrder")).mockImplementation(ok);
     const deps = { store, createOrder, now: () => new Date(clock.t) };
     expect(await fulfillOrder(deps, "o1")).toBe("retry_scheduled");
     expect(rows.get("o1")!.status).toBe("fulfilling");
@@ -79,12 +81,52 @@ describe("fulfillOrder", () => {
   it("stored error never contains activation data", async () => {
     const clock = { t: 0 };
     const { store, rows } = memoryStore(clock);
-    const deps = { store, createOrder: vi.fn().mockRejectedValue(new Error("down LPA:1$smdp.example$SECRET")), now: () => new Date(clock.t) };
+    const deps = { store, createOrder: vi.fn().mockRejectedValue(new ProviderRequestError("down LPA:1$smdp.example$SECRET", 500, "createOrder")), now: () => new Date(clock.t) };
     await fulfillOrder(deps, "o1");
     expect(rows.get("o1")!.error).not.toContain("SECRET");
   });
 
   it("backoff grows: 1, 5, 25 minutes", () => {
     expect([1, 2, 3].map(backoffSeconds)).toEqual([60, 300, 1500]);
+  });
+});
+
+describe("unknown provider outcome (no blind POST retry)", () => {
+  it("timeout on POST sets needs_review and never posts a second time", async () => {
+    const clock = { t: 0 };
+    const { store, rows } = memoryStore(clock);
+    const timeout = Object.assign(new Error("The operation was aborted due to timeout"), { name: "TimeoutError" });
+    const createOrder = vi.fn().mockRejectedValue(timeout);
+    expect(await fulfillOrder({ store, createOrder, now: () => new Date(clock.t) }, "o1")).toBe("needs_review");
+    expect(rows.get("o1")!.status).toBe("needs_review");
+    for (const t of [1, 6, 31, 120]) {
+      clock.t = t * MIN;
+      expect(await fulfillOrder({ store, createOrder, now: () => new Date(clock.t) }, "o1")).toBe("skipped");
+    }
+    expect(createOrder).toHaveBeenCalledTimes(1);
+  });
+
+  it("parallel fulfill calls create only one provider order", async () => {
+    const { store } = memoryStore({ t: 0 });
+    const createOrder = vi.fn(ok);
+    await Promise.all([1, 2, 3].map(() => fulfillOrder({ store, createOrder }, "o1")));
+    expect(createOrder).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("pollUntilReady", () => {
+  it("polls every 5 s until the eSIM has installation data", async () => {
+    const sleeps: number[] = [];
+    let n = 0;
+    const r = await pollUntilReady(async () => ({ ready: ++n >= 4 }), (v) => v.ready, { sleep: async (ms) => { sleeps.push(ms); } });
+    expect(r).toEqual({ ready: true });
+    expect(n).toBe(4);
+    expect(sleeps).toEqual([5000, 5000, 5000]);
+  });
+  it("gives up after 3 minutes and leaves the rest to the scheduled poll", async () => {
+    let n = 0;
+    const r = await pollUntilReady(async () => { n++; return false; }, (v) => v, { sleep: async () => {} });
+    expect(r).toBeNull();
+    expect(n).toBe(37); // t = 0, 5, ..., 180 s
   });
 });

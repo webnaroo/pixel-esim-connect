@@ -37,7 +37,10 @@ export async function runCatalogSync(trigger: "cron" | "manual"): Promise<SyncSu
   }
 
   try {
-    const fetched = await getProvider().listPlans();
+    const provider = getProvider();
+    const detailed = provider.listPlansDetailed ? await provider.listPlansDetailed() : { plans: await provider.listPlans(), unmapped: [] };
+    const fetched = detailed.plans;
+    const unmapped: { providerPlanId: string | null; reason: string }[] = [...detailed.unmapped];
     const { count: previousActive } = await db.from("plans").select("id", { count: "exact", head: true }).eq("provider", "esimerge").eq("is_active", true);
     const threshold = evaluateSyncThreshold(previousActive ?? 0, fetched.length);
     if (threshold.abort) {
@@ -53,9 +56,10 @@ export async function runCatalogSync(trigger: "cron" | "manual"): Promise<SyncSu
       db.from("plans").select("provider_plan_id,destination_id").eq("provider", "esimerge"),
     ]);
     const vatRate = typeof vatRow?.value === "number" ? vatRow.value : 0.19;
-    const byIso = new Map((dests ?? []).filter((d) => d.iso_code).map((d) => [d.iso_code!.toUpperCase(), d]));
+    // Countries and regions are matched separately: region codes can collide with country ISO codes (e.g. SA).
+    const byIso = new Map((dests ?? []).filter((d) => d.type === "country" && d.iso_code).map((d) => [d.iso_code!.toUpperCase(), d]));
     const byRegion = new Map(
-      (dests ?? []).filter((d) => d.type !== "country").map((d) => [String((d.provider_ref as { code?: string } | null)?.code ?? d.slug).toLowerCase(), d]),
+      (dests ?? []).filter((d) => d.type === "region").map((d) => [String((d.provider_ref as { code?: string } | null)?.code ?? d.iso_code ?? d.slug).toUpperCase(), d]),
     );
     const globalDest = (dests ?? []).find((d) => d.type === "global");
     const fx = (from: string, to: string) => {
@@ -65,20 +69,29 @@ export async function runCatalogSync(trigger: "cron" | "manual"): Promise<SyncSu
     const known = new Set((existing ?? []).map((e) => `${e.provider_plan_id}|${e.destination_id}`));
     const startedAt = new Date().toISOString();
     const counts = { added: 0, updated: 0, unpriced: 0 };
+    const missingFx = new Set<string>();
+    const typeCount = { data: 0, unlimited: 0 };
     const countries = new Set<string>();
 
     for (const p of fetched) {
       const dest =
         p.coverage.kind === "country" ? byIso.get((p.coverage.countries[0] ?? "").toUpperCase())
-        : p.coverage.kind === "region" ? byRegion.get((p.coverage.regionCode ?? "").toLowerCase())
+        : p.coverage.kind === "region" ? byRegion.get((p.coverage.regionCode ?? "").toUpperCase())
         : globalDest;
-      if (!dest) continue;
+      if (!dest) {
+        unmapped.push({ providerPlanId: p.providerPlanId, reason: p.coverage.kind === "country" ? `Kein Reiseziel für Land ${p.coverage.countries[0]}` : p.coverage.kind === "region" ? `Keine Region für Code ${p.coverage.regionCode}` : "Kein globales Reiseziel" });
+        continue;
+      }
       countries.add(dest.id);
       const price = computePrice(
         { providerPlanId: p.providerPlanId, destinationSlug: dest.slug, planType: p.type, costPrice: p.costPrice, costCurrency: p.costCurrency },
         (rules ?? []) as PricingRule[], fx, vatRate,
       );
-      if (!price.ok) counts.unpriced++;
+      if (!price.ok) {
+        counts.unpriced++;
+        if (price.reason === "missing_fx") missingFx.add(p.costCurrency);
+      }
+      typeCount[p.type]++;
       const row = {
         provider: "esimerge",
         provider_plan_id: p.providerPlanId,
@@ -109,7 +122,12 @@ export async function runCatalogSync(trigger: "cron" | "manual"): Promise<SyncSu
 
     const { data: gone } = await db.from("plans").update({ is_active: false }).eq("provider", "esimerge").eq("is_active", true).or(`last_synced_at.is.null,last_synced_at.lt.${startedAt}`).select("id");
     const summary = { ...counts, deactivated: gone?.length ?? 0 };
-    const note = counts.unpriced ? `${counts.unpriced} Tarife ohne Preis (Wechselkurs oder Margenregel fehlt) bleiben inaktiv.` : null;
+    const notes = [
+      counts.unpriced ? `${counts.unpriced} Tarife ohne Preis bleiben inaktiv${missingFx.size ? ` (Wechselkurs ${[...missingFx].map((c) => `${c}→EUR`).join(", ")} fehlt)` : " (Margenregel fehlt)"}.` : null,
+      unmapped.length ? `${unmapped.length} Tarife nicht zuordenbar.` : null,
+    ].filter(Boolean);
+    const note = notes.length ? notes.join(" ") : null;
+    if (runId) await db.from("sync_runs").update({ unmapped: unmapped as never, stats: { plans: fetched.length, ...typeCount, missingFx: [...missingFx] } as never }).eq("id", runId);
     await finish(note ? "ok_with_warnings" : "ok", { ...summary, countries: countries.size, error: note });
     return { runId, status: note ? "ok_with_warnings" : "ok", ...(note ? { message: note } : {}), ...summary };
   } catch (e) {

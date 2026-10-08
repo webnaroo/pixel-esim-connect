@@ -60,8 +60,29 @@ function Overview() {
     refresh();
   }
 
+  const lastStats = (latest?.stats ?? null) as { plans?: number; data?: number; unlimited?: number; missingFx?: string[] } | null;
+  const lastUnmapped = (latest?.unmapped ?? []) as { providerPlanId: string | null; reason: string }[];
+
   return (
     <div className="grid gap-8 lg:grid-cols-2">
+      {data.provider.sandbox && (
+        <div role="alert" className="flex gap-3 rounded-lg border-2 border-warning bg-surface p-4 lg:col-span-2">
+          <Warning size={22} className="shrink-0 text-warning" weight="fill" />
+          <div>
+            <p className="font-medium">eSIMerge Sandbox, es werden keine echten eSIMs geliefert</p>
+            <p className="text-sm text-ink-muted">Der Shop lässt sich mit einem Sandbox-Zugang nicht aktivieren. Nur Admins können Testbestellungen aufgeben.</p>
+          </div>
+        </div>
+      )}
+      {lastStats?.missingFx?.length ? (
+        <div role="alert" className="flex gap-3 rounded-lg border border-warning bg-surface p-4 lg:col-span-2">
+          <Warning size={22} className="shrink-0 text-warning" weight="fill" />
+          <div>
+            <p className="font-medium">Wechselkurs fehlt: {lastStats.missingFx.map((c) => `${c} → EUR`).join(", ")}</p>
+            <p className="text-sm text-ink-muted">Ohne Kurs wird kein Preis angezeigt. Die Tarife bleiben inaktiv, bis du unter „Preise“ einen Kurs einträgst und neu synchronisierst.</p>
+          </div>
+        </div>
+      ) : null}
       {latestAbort && latest?.id === latestAbort.id && (
         <div role="alert" className="flex gap-3 rounded-lg border border-warning bg-surface p-4 lg:col-span-2">
           <Warning size={22} className="shrink-0 text-warning" weight="fill" />
@@ -76,6 +97,7 @@ function Overview() {
         <h2 className="text-xl">Shop-Checkliste</h2>
         <ul className="mt-2 divide-y divide-line">
           <Row ok={c.providerReachable} label="Provider erreichbar" detail={c.providerMessage} />
+          <Row ok={!c.providerSandbox} label="eSIMerge-Zugang" detail={data.provider.apiKeySet ? (c.providerSandbox ? "Sandbox (keine echten eSIMs)" : "Live") : "nicht gesetzt"} />
           <Row ok={c.catalogCount > 0} label="Katalog größer 0" detail={`${c.catalogCount} aktive Tarife`} />
           <Row ok={c.stripeConfigured} label="Stripe konfiguriert" detail={c.stripeConfigured ? "Schlüssel gesetzt" : "Stripe-Schlüssel nicht gesetzt"} />
         </ul>
@@ -98,9 +120,9 @@ function Overview() {
         <ul className="mt-2 divide-y divide-line">
           <Row ok={data.provider.baseUrlSet} label="ESIMERGE_BASE_URL" detail={data.provider.baseUrlSet ? "gesetzt" : "nicht gesetzt"} />
           <Row ok={data.provider.apiKeySet} label="ESIMERGE_API_KEY" detail={data.provider.apiKeySet ? "gesetzt" : "nicht gesetzt"} />
-          <Row ok={data.provider.webhookSecretSet} label="ESIMERGE_WEBHOOK_SECRET" detail={data.provider.webhookSecretSet ? "gesetzt" : "nicht gesetzt"} />
+          <Row ok label="Webhooks" detail="eSIMerge sendet keine Webhooks – Status wird alle 5 Minuten abgefragt" />
           <Row ok={data.provider.configMissing.length === 0} label="Endpunkte & Auth" detail={data.provider.configMissing.length ? `Offen: ${data.provider.configMissing.join(", ")}` : "vollständig"} />
-          <Row ok={data.provider.mappingReady} label="Feld-Mapping" detail={data.provider.mappingReady ? "fertig" : "wartet auf API-Doku"} />
+          <Row ok={data.provider.mappingReady} label="Feld-Mapping" detail={data.provider.mappingReady ? "fertig (anhand echter Sandbox-Antworten)" : "wartet auf API-Doku"} />
         </ul>
       </section>
 
@@ -135,6 +157,19 @@ function Overview() {
                 ))}
               </tbody>
             </table>
+          </div>
+        )}
+        {lastStats && (
+          <p className="mt-4 text-sm text-ink-muted">
+            Letzter Lauf: {lastStats.plans ?? 0} Tarife zugeordnet ({lastStats.data ?? 0} Datenpakete, {lastStats.unlimited ?? 0} Unlimited), {lastUnmapped.length} nicht zuordenbar.
+          </p>
+        )}
+        {lastUnmapped.length > 0 && (
+          <div className="mt-3 rounded-md border border-warning p-3">
+            <p className="text-sm font-medium">Nicht zuordenbare Tarife</p>
+            <ul className="mt-1 text-sm text-ink-muted">
+              {lastUnmapped.map((u, i) => <li key={i}><span className="font-mono">{u.providerPlanId ?? "ohne ID"}</span>: {u.reason}</li>)}
+            </ul>
           </div>
         )}
       </section>

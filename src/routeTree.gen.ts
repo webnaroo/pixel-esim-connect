@@ -29,6 +29,7 @@ import { Route as AuthenticatedAdminExplorerRouteImport } from './routes/_authen
 import { Route as AuthenticatedAdminOrdersRouteImport } from './routes/_authenticated/admin.orders'
 import { Route as AuthenticatedAdminPricingRouteImport } from './routes/_authenticated/admin.pricing'
 import { Route as ApiPublicCronCatalogSyncRouteImport } from './routes/api/public/cron/catalog-sync'
+import { Route as ApiPublicCronEsimStatusPollRouteImport } from './routes/api/public/cron/esim-status-poll'
 import { Route as ApiPublicCronFulfillmentRetryRouteImport } from './routes/api/public/cron/fulfillment-retry'
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
 import { Route as ApiPublicWebhooksEsimergeRouteImport } from './routes/api/public/webhooks/esimerge'
@@ -136,6 +137,12 @@ const ApiPublicCronCatalogSyncRoute =
     path: '/api/public/cron/catalog-sync',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicCronEsimStatusPollRoute =
+  ApiPublicCronEsimStatusPollRouteImport.update({
+    id: '/api/public/cron/esim-status-poll',
+    path: '/api/public/cron/esim-status-poll',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicCronFulfillmentRetryRoute =
   ApiPublicCronFulfillmentRetryRouteImport.update({
     id: '/api/public/cron/fulfillment-retry',
@@ -175,6 +182,7 @@ export interface FileRoutesByFullPath {
   '/admin/pricing': typeof AuthenticatedAdminPricingRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
   '/api/public/cron/catalog-sync': typeof ApiPublicCronCatalogSyncRoute
+  '/api/public/cron/esim-status-poll': typeof ApiPublicCronEsimStatusPollRoute
   '/api/public/cron/fulfillment-retry': typeof ApiPublicCronFulfillmentRetryRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/api/public/webhooks/esimerge': typeof ApiPublicWebhooksEsimergeRoute
@@ -198,6 +206,7 @@ export interface FileRoutesByTo {
   '/admin/pricing': typeof AuthenticatedAdminPricingRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
   '/api/public/cron/catalog-sync': typeof ApiPublicCronCatalogSyncRoute
+  '/api/public/cron/esim-status-poll': typeof ApiPublicCronEsimStatusPollRoute
   '/api/public/cron/fulfillment-retry': typeof ApiPublicCronFulfillmentRetryRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/api/public/webhooks/esimerge': typeof ApiPublicWebhooksEsimergeRoute
@@ -224,6 +233,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/pricing': typeof AuthenticatedAdminPricingRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
   '/api/public/cron/catalog-sync': typeof ApiPublicCronCatalogSyncRoute
+  '/api/public/cron/esim-status-poll': typeof ApiPublicCronEsimStatusPollRoute
   '/api/public/cron/fulfillment-retry': typeof ApiPublicCronFulfillmentRetryRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/api/public/webhooks/esimerge': typeof ApiPublicWebhooksEsimergeRoute
@@ -250,6 +260,7 @@ export interface FileRouteTypes {
     | '/admin/pricing'
     | '/admin/'
     | '/api/public/cron/catalog-sync'
+    | '/api/public/cron/esim-status-poll'
     | '/api/public/cron/fulfillment-retry'
     | '/api/public/payments/webhook'
     | '/api/public/webhooks/esimerge'
@@ -273,6 +284,7 @@ export interface FileRouteTypes {
     | '/admin/pricing'
     | '/admin'
     | '/api/public/cron/catalog-sync'
+    | '/api/public/cron/esim-status-poll'
     | '/api/public/cron/fulfillment-retry'
     | '/api/public/payments/webhook'
     | '/api/public/webhooks/esimerge'
@@ -298,6 +310,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/pricing'
     | '/_authenticated/admin/'
     | '/api/public/cron/catalog-sync'
+    | '/api/public/cron/esim-status-poll'
     | '/api/public/cron/fulfillment-retry'
     | '/api/public/payments/webhook'
     | '/api/public/webhooks/esimerge'
@@ -319,6 +332,7 @@ export interface RootRouteChildren {
   OrderOrderIdRoute: typeof OrderOrderIdRoute
   RegionsSlugRoute: typeof RegionsSlugRoute
   ApiPublicCronCatalogSyncRoute: typeof ApiPublicCronCatalogSyncRoute
+  ApiPublicCronEsimStatusPollRoute: typeof ApiPublicCronEsimStatusPollRoute
   ApiPublicCronFulfillmentRetryRoute: typeof ApiPublicCronFulfillmentRetryRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
   ApiPublicWebhooksEsimergeRoute: typeof ApiPublicWebhooksEsimergeRoute
@@ -466,6 +480,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicCronCatalogSyncRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/cron/esim-status-poll': {
+      id: '/api/public/cron/esim-status-poll'
+      path: '/api/public/cron/esim-status-poll'
+      fullPath: '/api/public/cron/esim-status-poll'
+      preLoaderRoute: typeof ApiPublicCronEsimStatusPollRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/cron/fulfillment-retry': {
       id: '/api/public/cron/fulfillment-retry'
       path: '/api/public/cron/fulfillment-retry'
@@ -534,6 +555,7 @@ const rootRouteChildren: RootRouteChildren = {
   OrderOrderIdRoute: OrderOrderIdRoute,
   RegionsSlugRoute: RegionsSlugRoute,
   ApiPublicCronCatalogSyncRoute: ApiPublicCronCatalogSyncRoute,
+  ApiPublicCronEsimStatusPollRoute: ApiPublicCronEsimStatusPollRoute,
   ApiPublicCronFulfillmentRetryRoute: ApiPublicCronFulfillmentRetryRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
   ApiPublicWebhooksEsimergeRoute: ApiPublicWebhooksEsimergeRoute,

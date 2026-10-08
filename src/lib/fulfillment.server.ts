@@ -29,6 +29,10 @@ export const dbFulfillmentStore: FulfillmentStore = {
         order_id: orderId,
         user_id: order?.user_id ?? null,
         provider_order_id: providerOrderId,
+        provider_esim_id: esim?.providerEsimId ?? null,
+        provider_status: esim?.providerStatus ?? null,
+        ios_install_url: esim?.iosInstallUrl ?? null,
+        android_install_url: esim?.androidInstallUrl ?? null,
         iccid: esim?.iccid ?? null,
         smdp_address: esim?.smdpAddress ?? null,
         activation_code: esim?.activationCode ?? null,
@@ -41,7 +45,7 @@ export const dbFulfillmentStore: FulfillmentStore = {
       },
       { onConflict: "order_id" },
     );
-    // Without activation data the order waits for the provider's "esim.ready" webhook.
+    // Without activation data the order stays 'fulfilling'; the status poll picks it up.
     await db.from("orders").update({ status: lpa ? "fulfilled" : "fulfilling", last_error: null }).eq("id", orderId);
     if (lpa) {
       const { sendOrderReadyEmail } = await import("./email.server");
@@ -51,6 +55,11 @@ export const dbFulfillmentStore: FulfillmentStore = {
   async scheduleRetry(orderId, at, error) {
     const db = await admin();
     await db.from("orders").update({ status: "fulfilling", next_attempt_at: at.toISOString(), last_error: error }).eq("id", orderId);
+  },
+  async markNeedsReview(orderId, error) {
+    const db = await admin();
+    await db.from("orders").update({ status: "needs_review", next_attempt_at: null, last_error: error }).eq("id", orderId);
+    await audit("fulfillment_needs_review", orderId, { reason: "provider_outcome_unknown" });
   },
   async markFailed(orderId, error) {
     const db = await admin();
@@ -84,5 +93,21 @@ export async function forgetWebhook(source: "stripe" | "provider", eventId: stri
 
 export async function fulfillOrderById(orderId: string): Promise<FulfillOutcome> {
   const { getProvider } = await import("./providers/index.server");
-  return fulfillOrder({ store: dbFulfillmentStore, createOrder: (i) => getProvider().createOrder(i) }, orderId);
+  const provider = getProvider();
+  const outcome = await fulfillOrder({ store: dbFulfillmentStore, createOrder: (i) => provider.createOrder(i) }, orderId);
+  if (outcome === "fulfilled") await pollPendingInstallData(orderId);
+  return outcome;
+}
+
+/** If the provider answered without installation data, poll briefly (5 s, max 3 min); then the cron job takes over. */
+export async function pollPendingInstallData(orderId: string, opts: { maxMs?: number } = {}) {
+  const db = await admin();
+  const { data: e } = await db.from("esims").select("provider_order_id,lpa_string").eq("order_id", orderId).maybeSingle();
+  if (!e?.provider_order_id || e.lpa_string) return;
+  const { getProvider } = await import("./providers/index.server");
+  const { pollUntilReady } = await import("./fulfillment");
+  const { hasInstallData } = await import("./providers/esimerge/mapping");
+  const p = getProvider();
+  const res = await pollUntilReady(() => p.getOrder!(e.provider_order_id!), (r) => hasInstallData(r.esim), opts);
+  if (res) await dbFulfillmentStore.markFulfilled(orderId, res.providerOrderId, res.esim);
 }

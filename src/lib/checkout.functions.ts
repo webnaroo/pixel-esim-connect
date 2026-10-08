@@ -112,6 +112,7 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
         status: "pending",
         withdrawal_consent_at: new Date().toISOString(),
         is_test: !live,
+        is_sandbox: (await import("./providers/index.server")).providerSetupStatus().sandbox,
         stripe_env: env,
       })
       .select("id")

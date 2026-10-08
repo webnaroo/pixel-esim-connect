@@ -28,7 +28,7 @@ async function buildChecklist(): Promise<ShopChecklist & { providerMessage: stri
   }
   const { count } = await supabaseAdmin.from("plans").select("id", { count: "exact", head: true }).eq("is_active", true);
   const stripeConfigured = Boolean(process.env["STRIPE_LIVE_API_KEY"] && process.env["PAYMENTS_LIVE_WEBHOOK_SECRET"]) // live payments, not the test environment;
-  return { providerReachable, providerMessage, catalogCount: count ?? 0, stripeConfigured };
+  return { providerReachable, providerSandbox: status.sandbox, providerMessage, catalogCount: count ?? 0, stripeConfigured };
 }
 
 export const getAdminOverview = createServerFn({ method: "GET" })
@@ -49,7 +49,7 @@ export const getAdminOverview = createServerFn({ method: "GET" })
       missing: shopChecklistMissing(checklist),
       shopEnabled: get("shop_enabled"),
       syncEnabled: get("catalog_sync_enabled"),
-      provider: { baseUrlSet: s.baseUrlSet, apiKeySet: s.apiKeySet, webhookSecretSet: s.webhookSecretSet, configMissing: s.configMissing, mappingReady: s.mappingReady },
+      provider: { baseUrlSet: s.baseUrlSet, apiKeySet: s.apiKeySet, webhookSecretSet: s.webhookSecretSet, configMissing: s.configMissing, mappingReady: s.mappingReady, sandbox: s.sandbox },
       runs: (runs ?? []).map((r) => ({ ...r })),
     };
   });

@@ -1,4 +1,4 @@
-// eSIMerge configuration. << Fill in once API docs / credentials arrive. >>
+// eSIMerge configuration (sandbox-verified 2026-10-08).
 // Contains NO secret values – only the names of the env vars that hold them.
 
 export type EndpointDef = { method: "GET" | "POST" | "PUT" | "DELETE"; path: string };
@@ -24,32 +24,35 @@ export type EsimergeConfig = {
 
 export const esimergeConfig: EsimergeConfig = {
   // Documented sandbox base URL: https://portal.esimerge.com/api/public (paths carry /v1).
-  // If the connection test returns 404, try base .../v1 with paths without /v1 (record result in docs/INTEGRATION.md).
+  // Verified: base without /v1 + paths with /v1 returns 200.
   baseUrlEnv: "ESIMERGE_BASE_URL",
   auth: { type: "bearer", headerName: null, tokenEnv: "ESIMERGE_API_KEY" },
   endpoints: {
     ping: { method: "GET", path: "/v1/catalog" }, // first page only
     listCountries: null, // not documented – derived from catalog
     listRegions: null, // not documented – derived from catalog
-    listPlans: { method: "GET", path: "/v1/catalog" }, // TODO(ESIMERGE): paging params from real response
+    listPlans: { method: "GET", path: "/v1/catalog" },
     getPlan: { method: "GET", path: "/v1/catalog/:planId" },
     checkAvailability: { method: "GET", path: "/v1/catalog/:planId" }, // plan exists and is active
     createOrder: { method: "POST", path: "/v1/orders" }, // body { plan_id }
     getOrder: { method: "GET", path: "/v1/orders/:orderId" },
     getEsim: { method: "GET", path: "/v1/esims/:esimId" },
-    getUsage: { method: "GET", path: "/v1/esims/:esimId/usage" },
+    getUsage: { method: "GET", path: "/v1/esims/:esimId/usage" }, // cached 5 min
     topUp: null, // not documented
     cancel: null, // not documented
   },
-  paging: { style: null, pageSize: null }, // TODO(ESIMERGE): from real catalog response
+  // Catalog response: limit/offset/has_more/next_offset; default limit 1000 (sandbox: 8 plans, one page).
+  paging: { style: "offset", pageSize: 1000 },
   capabilities: {
     usage: true, topUp: false, cancel: false, webhooks: false,
     directInstallLink: false,
-    unlimitedPlans: false, // TODO(ESIMERGE): determine from catalog
-    idempotencyKey: false, // not documented – own DB lock only
+    unlimitedPlans: true, // catalog has type "unlimited" (data_mb 0 + fair_usage text)
+    // Verified 2026-10-08: POST /v1/orders REQUIRES "Idempotency-Key"; the same key replays the
+    // same order (header "idempotent-replayed: true"). Our DB claim lock stays in place as well.
+    idempotencyKey: true,
   },
   webhook: { signatureHeader: null, algorithm: null, secretEnv: "ESIMERGE_WEBHOOK_SECRET", eventIdField: null }, // no webhooks documented
-  currency: { cost: null }, // TODO(ESIMERGE): cost currency from real catalog response
+  currency: { cost: "USD" }, // catalog: currency "USD", cost field price_usd
   limits: { rateLimitPerMinute: null, timeoutMs: 8000 },
 };
 
