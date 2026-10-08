@@ -1,4 +1,5 @@
 import { FixtureBadge } from "./brand";
+import { CompatCheck } from "./compat-check";
 import { NoThrottleClaim, UnlimitedLabel } from "./unlimited-claim";
 import { showsNoThrottle } from "@/lib/throttle";
 import { useMemo, useState } from "react";
@@ -71,6 +72,7 @@ export function DestinationPage({ slug }: { slug: string }) {
       </section>
 
       <section className="container-page mt-10" aria-labelledby="plans-h">
+        <CompatCheck hint className="mb-5" />
         {d.fixturePlans && <div className="mb-4 flex items-center gap-2 text-sm text-ink-muted"><FixtureBadge /> Beispieltarife nur in der Vorschau, nicht kaufbar.</div>}
         <h2 id="plans-h" className="sr-only">Tarife</h2>
         {!hasPlans ? (

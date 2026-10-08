@@ -32,6 +32,7 @@ const tabs = [
   { to: "/admin/unlimited", label: "Unlimited-Prüfung" },
   { to: "/admin/content", label: "Inhalte" },
   { to: "/admin/compare", label: "Inhalte › Vergleich" },
+  { to: "/admin/devices", label: "Geräte" },
   { to: "/admin/seo", label: "SEO" },
   { to: "/admin/logs", label: "Logs" },
   { to: "/admin/explorer", label: "API-Explorer" },
