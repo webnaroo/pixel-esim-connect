@@ -25,6 +25,9 @@ import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authentic
 import { Route as AuthenticatedAdminExplorerRouteImport } from './routes/_authenticated/admin.explorer'
 import { Route as AuthenticatedAdminPricingRouteImport } from './routes/_authenticated/admin.pricing'
 import { Route as ApiPublicCronCatalogSyncRouteImport } from './routes/api/public/cron/catalog-sync'
+import { Route as ApiPublicCronFulfillmentRetryRouteImport } from './routes/api/public/cron/fulfillment-retry'
+import { Route as ApiPublicWebhooksEsimergeRouteImport } from './routes/api/public/webhooks/esimerge'
+import { Route as ApiPublicWebhooksStripeRouteImport } from './routes/api/public/webhooks/stripe'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -108,6 +111,23 @@ const ApiPublicCronCatalogSyncRoute =
     path: '/api/public/cron/catalog-sync',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicCronFulfillmentRetryRoute =
+  ApiPublicCronFulfillmentRetryRouteImport.update({
+    id: '/api/public/cron/fulfillment-retry',
+    path: '/api/public/cron/fulfillment-retry',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicWebhooksEsimergeRoute =
+  ApiPublicWebhooksEsimergeRouteImport.update({
+    id: '/api/public/webhooks/esimerge',
+    path: '/api/public/webhooks/esimerge',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicWebhooksStripeRoute = ApiPublicWebhooksStripeRouteImport.update({
+  id: '/api/public/webhooks/stripe',
+  path: '/api/public/webhooks/stripe',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -125,6 +145,9 @@ export interface FileRoutesByFullPath {
   '/admin/pricing': typeof AuthenticatedAdminPricingRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
   '/api/public/cron/catalog-sync': typeof ApiPublicCronCatalogSyncRoute
+  '/api/public/cron/fulfillment-retry': typeof ApiPublicCronFulfillmentRetryRoute
+  '/api/public/webhooks/esimerge': typeof ApiPublicWebhooksEsimergeRoute
+  '/api/public/webhooks/stripe': typeof ApiPublicWebhooksStripeRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -141,6 +164,9 @@ export interface FileRoutesByTo {
   '/admin/pricing': typeof AuthenticatedAdminPricingRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
   '/api/public/cron/catalog-sync': typeof ApiPublicCronCatalogSyncRoute
+  '/api/public/cron/fulfillment-retry': typeof ApiPublicCronFulfillmentRetryRoute
+  '/api/public/webhooks/esimerge': typeof ApiPublicWebhooksEsimergeRoute
+  '/api/public/webhooks/stripe': typeof ApiPublicWebhooksStripeRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -160,6 +186,9 @@ export interface FileRoutesById {
   '/_authenticated/admin/pricing': typeof AuthenticatedAdminPricingRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
   '/api/public/cron/catalog-sync': typeof ApiPublicCronCatalogSyncRoute
+  '/api/public/cron/fulfillment-retry': typeof ApiPublicCronFulfillmentRetryRoute
+  '/api/public/webhooks/esimerge': typeof ApiPublicWebhooksEsimergeRoute
+  '/api/public/webhooks/stripe': typeof ApiPublicWebhooksStripeRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -179,6 +208,9 @@ export interface FileRouteTypes {
     | '/admin/pricing'
     | '/admin/'
     | '/api/public/cron/catalog-sync'
+    | '/api/public/cron/fulfillment-retry'
+    | '/api/public/webhooks/esimerge'
+    | '/api/public/webhooks/stripe'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -195,6 +227,9 @@ export interface FileRouteTypes {
     | '/admin/pricing'
     | '/admin'
     | '/api/public/cron/catalog-sync'
+    | '/api/public/cron/fulfillment-retry'
+    | '/api/public/webhooks/esimerge'
+    | '/api/public/webhooks/stripe'
   id:
     | '__root__'
     | '/'
@@ -213,6 +248,9 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/pricing'
     | '/_authenticated/admin/'
     | '/api/public/cron/catalog-sync'
+    | '/api/public/cron/fulfillment-retry'
+    | '/api/public/webhooks/esimerge'
+    | '/api/public/webhooks/stripe'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -228,6 +266,9 @@ export interface RootRouteChildren {
   CountriesSlugRoute: typeof CountriesSlugRoute
   RegionsSlugRoute: typeof RegionsSlugRoute
   ApiPublicCronCatalogSyncRoute: typeof ApiPublicCronCatalogSyncRoute
+  ApiPublicCronFulfillmentRetryRoute: typeof ApiPublicCronFulfillmentRetryRoute
+  ApiPublicWebhooksEsimergeRoute: typeof ApiPublicWebhooksEsimergeRoute
+  ApiPublicWebhooksStripeRoute: typeof ApiPublicWebhooksStripeRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -344,6 +385,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicCronCatalogSyncRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/cron/fulfillment-retry': {
+      id: '/api/public/cron/fulfillment-retry'
+      path: '/api/public/cron/fulfillment-retry'
+      fullPath: '/api/public/cron/fulfillment-retry'
+      preLoaderRoute: typeof ApiPublicCronFulfillmentRetryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/webhooks/esimerge': {
+      id: '/api/public/webhooks/esimerge'
+      path: '/api/public/webhooks/esimerge'
+      fullPath: '/api/public/webhooks/esimerge'
+      preLoaderRoute: typeof ApiPublicWebhooksEsimergeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/webhooks/stripe': {
+      id: '/api/public/webhooks/stripe'
+      path: '/api/public/webhooks/stripe'
+      fullPath: '/api/public/webhooks/stripe'
+      preLoaderRoute: typeof ApiPublicWebhooksStripeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -386,6 +448,9 @@ const rootRouteChildren: RootRouteChildren = {
   CountriesSlugRoute: CountriesSlugRoute,
   RegionsSlugRoute: RegionsSlugRoute,
   ApiPublicCronCatalogSyncRoute: ApiPublicCronCatalogSyncRoute,
+  ApiPublicCronFulfillmentRetryRoute: ApiPublicCronFulfillmentRetryRoute,
+  ApiPublicWebhooksEsimergeRoute: ApiPublicWebhooksEsimergeRoute,
+  ApiPublicWebhooksStripeRoute: ApiPublicWebhooksStripeRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
