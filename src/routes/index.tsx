@@ -1,7 +1,10 @@
 import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { DeviceMobile } from "@phosphor-icons/react";
+import { DeviceMobile, CaretRight } from "@phosphor-icons/react";
+import { Flag } from "@/components/brand";
+import { formatPrice } from "@/lib/format";
+import destinationPhotos from "@/assets/mobile-destinations.jpg";
 import { SiteLayout } from "@/components/layout";
 import { ComparisonSection } from "@/components/comparison";
 import { NoThrottleClaim } from "@/components/unlimited-claim";
@@ -73,10 +76,12 @@ function Hero() {
             <img src={speedIcon.url} alt="" className="size-6 object-contain" aria-hidden />
             GlobeSIM · Deine Reise-eSIM
           </p>
-          <h1 id="home-title" className="!tracking-normal">GlobeSIM Reise-eSIM</h1>
-          <p className="mt-3 max-w-lg text-base text-ink-muted lg:mt-4 lg:text-lg">eSIM kaufen, in Minuten installieren, ohne Roaming-Überraschung. Bleibe weltweit verbunden – einfach und schnell.</p>
+          <h1 id="home-title" className="!tracking-normal"><span className="sm:hidden">Online, sobald<br />du landest.</span><span className="hidden sm:inline">GlobeSIM Reise-eSIM</span></h1>
+          <p className="home-hero-description mt-3 max-w-lg text-base text-ink-muted lg:mt-4 lg:text-lg"><span className="sm:hidden">eSIM für deine Reise. Einfach kaufen, installieren und weltweit verbunden bleiben.</span><span className="hidden sm:inline">eSIM kaufen, in Minuten installieren, ohne Roaming-Überraschung. Bleibe weltweit verbunden – einfach und schnell.</span></p>
           <div className="mt-5 lg:mt-7" data-hero-search>
             <SearchBox />
+            <span className="home-search-hint pointer-events-none absolute text-xs" aria-hidden>Land oder Region suchen</span>
+            <CaretRight className="home-search-arrow pointer-events-none absolute" size={20} aria-hidden />
           </div>
           <ul className="mt-5 grid grid-cols-3 gap-2 lg:mt-6 lg:gap-3" aria-label="Deine Vorteile">
             {benefits.map((benefit) => (
@@ -89,7 +94,7 @@ function Hero() {
               </li>
             ))}
           </ul>
-          <div className="mt-5 flex items-center gap-3 border-t border-line pt-4 lg:mt-7">
+          <div className="home-world-benefit mt-5 flex items-center gap-3 border-t border-line pt-4 lg:mt-7">
             <img src={worldIcon.url} alt="" aria-hidden className="size-9 shrink-0 object-contain" />
             <div>
               <p className="text-sm font-medium">Weltweit verbunden</p>
@@ -113,7 +118,24 @@ function Popular() {
       : all.filter((d) => d.type === tab).slice(0, 8);
 
   return (
-    <section className="container-page py-12 lg:py-16" aria-labelledby="popular-h">
+    <section className="home-popular container-page py-12 lg:py-16" aria-labelledby="popular-h">
+      <div className="mb-3 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2 sm:hidden">
+        <h2 className="min-w-0 text-lg">Beliebte Reiseziele</h2>
+        <Link to="/destinations" className="flex shrink-0 items-center text-xs font-medium text-mobile-action">Alle anzeigen <CaretRight size={14} aria-hidden /></Link>
+      </div>
+      <div className="grid grid-cols-4 gap-2 sm:hidden">
+        {popular.map((slug) => bySlug.get(slug)).filter((d) => d && d.type === "country").slice(0, 4).map((d) => {
+          if (!d) return null;
+          const photo = ({ turkey: "turkey", turkei: "turkey", "tuerkei": "turkey", "united-states": "usa", usa: "usa", thailand: "thailand", japan: "japan" } as Record<string, string>)[d.slug];
+          return <Link key={d.id} to="/countries/$slug" params={{ slug: d.slug }} className="home-destination-tile min-w-0 overflow-hidden rounded-lg border border-line bg-surface">
+            <div className={`home-destination-photo ${photo ? `home-photo-${photo}` : "home-photo-fallback"}`}>
+              {photo ? <img src={destinationPhotos} alt="" loading="lazy" width={1600} height={800} /> : <Flag code={d.flagCode} size={32} />}
+            </div>
+            <div className="px-2 pb-2 pt-1"><Flag code={d.flagCode} size={18} /><p className="mt-1 truncate text-xs font-semibold">{d.name}</p>{d.fromPrice != null && <p className="mt-1 text-[10px] tabular">ab {formatPrice(d.fromPrice)}</p>}</div>
+          </Link>;
+        })}
+      </div>
+      <div className="hidden sm:block">
       <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
         <h2 id="popular-h">Beliebte Reiseziele</h2>
         <SegmentedControl label="Art des Reiseziels" value={tab} onChange={setTab} options={[{ value: "country", label: "Länder" }, { value: "region", label: "Regionen" }, { value: "global", label: "Global" }]} />
@@ -123,6 +145,7 @@ function Popular() {
       </div>
       <div className="mt-6">
         <LinkButton to="/destinations" variant="secondary">Alle Reiseziele</LinkButton>
+      </div>
       </div>
     </section>
   );
