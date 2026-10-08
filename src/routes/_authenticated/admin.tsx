@@ -51,7 +51,7 @@ function AdminLayout() {
 export function AdminError({ error }: ErrorComponentProps) {
   return (
     <div role="alert" className="rounded-lg border border-line border-l-4 border-l-danger bg-surface p-4 text-sm">
-      {error.message.includes("Admin") ? "Kein Zugriff: Dieses Konto hat keine Admin-Rolle." : error.message}
+      {String((error as Error)?.message).includes("Admin") ? "Kein Zugriff: Dieses Konto hat keine Admin-Rolle." : String((error as Error)?.message)}
     </div>
   );
 }
