@@ -1,5 +1,14 @@
 export const SITE_URL = "https://globesim.de";
 
+export function privateHead(title: string, description: string) {
+  return { meta: [
+    { title: `${title} | GlobeSIM` }, { name: "description", content: description },
+    { property: "og:title", content: `${title} | GlobeSIM` }, { property: "og:description", content: description },
+    { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" },
+    { name: "robots", content: "noindex, nofollow" },
+  ] };
+}
+
 export function pageUrl(path: string) {
   return `${SITE_URL}${path === "/" ? "/" : path.replace(/\/$/, "")}`;
 }
