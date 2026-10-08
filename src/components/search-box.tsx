@@ -1,4 +1,5 @@
 import { useEffect, useId, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { useNavigate, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { MagnifyingGlass, X, CaretRight, ArrowLeft } from "@phosphor-icons/react";
@@ -224,7 +225,8 @@ export function SearchBox({ size = "lg", autoFocus }: { size?: "lg" | "sm"; auto
             </div>
           </div>
           <div className="flex-1 overflow-auto">{panel}</div>
-        </div>
+        </div>,
+        document.body,
       )}
     </div>
   );
