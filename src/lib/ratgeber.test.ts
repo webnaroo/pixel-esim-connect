@@ -153,7 +153,7 @@ describe("quality score rules", () => {
 
 describe("generator", () => {
   const ctx: AiContext = { destinations: [{ iso: "TR", name: "Türkei", path: "/countries/turkey", unlimited_confirmed: false }], posts: [] };
-  const req = aiRequestSchema.parse({ mode: "generate", topic: "eSIM Türkei", country: "tr", type: "guide", length: "normal" });
+  const req = aiRequestSchema.parse({ mode: "generate", topic: "eSIM Türkei", country: "tr", type: "guide", length: "normal" }) as Extract<ReturnType<typeof aiRequestSchema.parse>, { mode: "generate" }>;
   const out = { title: "eSIM Türkei", slug: "eSIM Türkei!", meta_title: "m", meta_description: "d", answer_summary: "Ohne Drosselung für 9,99 €", sections: [{ heading: "Wie geht das?", level: "h2" as const, body_md: "[Tarife](/countries/turkey) und [fremd](/admin)" }], faq: [], cover_image_alt: "Alt", internal_links: [{ label: "Tarife", path: "/countries/turkey" }, { label: "Admin", path: "/admin" }], missing_sources: [] };
   it("always saves as draft, never published", () => {
     const row = draftRow(out, ctx, req, 1400);

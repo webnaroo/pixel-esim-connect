@@ -185,13 +185,15 @@ async function loadWordlist(db: Awaited<ReturnType<typeof admin>>) {
   const { data } = await db.from("app_settings").select("value").eq("key", "blog_wordlist").maybeSingle();
   return Array.isArray(data?.value) ? (data.value as string[]) : DEFAULT_WORDLIST;
 }
-type PostRow = { [k: string]: any } & { id: string; slug: string; title: string; status: string; published_at: string | null; updated_at: string };
-function toScoreInput(p: PostRow) {
+type PostRow = { id: string; slug: string; title: string; status: string; published_at: string | null; updated_at: string };
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function toScoreInput(row: PostRow) {
+  const p = row as unknown as { focus_keyword: string | null; meta_title: string | null; meta_description: string | null; answer_summary: string | null; body_md: string | null; sections: unknown; faq: unknown; sources: unknown; internal_links: unknown; cover_url: string | null; cover_image_alt: string | null; author_name: string | null; target_words: number };
   return {
-    title: p.title, slug: p.slug, focus_keyword: p.focus_keyword as string | null, meta_title: p.meta_title as string | null, meta_description: p.meta_description as string | null,
-    answer_summary: p.answer_summary as string | null, body_md: p.body_md as string | null, sections: parseSections(p.sections), faq: parseFaq(p.faq), sources: parseSources(p.sources),
-    internal_links: parseLinks(p.internal_links), cover_url: p.cover_url as string | null, cover_image_alt: p.cover_image_alt as string | null, author_name: p.author_name as string | null,
-    target_words: (p.target_words as number) || 1400, published_at: p.published_at, updated_at: p.updated_at,
+    title: row.title, slug: row.slug, focus_keyword: p.focus_keyword, meta_title: p.meta_title, meta_description: p.meta_description,
+    answer_summary: p.answer_summary, body_md: p.body_md, sections: parseSections(p.sections), faq: parseFaq(p.faq), sources: parseSources(p.sources),
+    internal_links: parseLinks(p.internal_links), cover_url: p.cover_url, cover_image_alt: p.cover_image_alt, author_name: p.author_name,
+    target_words: p.target_words || 1400, published_at: row.published_at, updated_at: row.updated_at,
   };
 }
 async function snapshot(db: Awaited<ReturnType<typeof admin>>, postId: string, actor: string) {
