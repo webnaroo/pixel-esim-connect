@@ -1,4 +1,5 @@
 import { Link } from "@tanstack/react-router";
+import { Globe } from "@phosphor-icons/react";
 import { cn } from "@/lib/utils";
 
 export function Wordmark({ className }: { className?: string }) {
@@ -13,7 +14,11 @@ export function Wordmark({ className }: { className?: string }) {
 export function Flag({ code, size = 32, className }: { code: string | null | undefined; size?: number; className?: string }) {
   const style = { width: size, height: size };
   if (!code || code.length !== 2) {
-    return <span aria-hidden className={cn("flag-round bg-muted", className)} style={style} />;
+    return (
+      <span aria-hidden className={cn("flag-round inline-flex items-center justify-center bg-muted text-primary", className)} style={style}>
+        <Globe size={Math.round(size * 0.62)} weight="regular" />
+      </span>
+    );
   }
   return <span aria-hidden className={cn("fi fis flag-round", `fi-${code.toLowerCase()}`, className)} style={style} />;
 }
