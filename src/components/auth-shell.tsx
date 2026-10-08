@@ -18,7 +18,7 @@ export function authHead(title: string, description: string) {
   };
 }
 
-export function AuthShell({ title, intro, children }: { title: string; intro?: string; children: ReactNode }) {
+export function AuthShell({ title, intro, children }: { title: string; intro?: string | undefined; children: ReactNode }) {
   return (
     <SiteLayout>
       <section className="container-page max-w-md pb-20 pt-12">
