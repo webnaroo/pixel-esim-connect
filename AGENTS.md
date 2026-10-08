@@ -28,3 +28,4 @@
 - Account deletion anonymises orders (kept for tax) and clears eSIM installation data before deleting the login (src/lib/anonymize.ts) — GDPR without losing bookkeeping records.
 - Admin list views (admin-lists.functions.ts) never select activation code, LPA or QR columns — installation data is visible only to the owner via getMyInstallData.
 - Exchange rates are fetched only from official ECB data (ECB XML, Frankfurter as ECB-based fallback; never scraping) by src/lib/fx.server.ts; every price calculation uses loadFx().lookup, whose rules (review threshold, max age, manual override, buffer) are pure functions in src/lib/fx.ts with tests — one source of truth for "no rate, no price".
+- plans is closed to client roles; public pages read public.public_plans (released columns, active+priced only); admin code reads plans only via supabaseAdmin after has_role — keeps cost prices and raw provider data server-only.

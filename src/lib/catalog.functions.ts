@@ -40,7 +40,7 @@ export const getShopState = createServerFn({ method: "GET" }).handler(async (): 
   if (!status.configured) return { state: "not_configured" };
   const db = publicDb();
   const [{ count }, { data: setting }] = await Promise.all([
-    db.from("plans").select("id", { count: "exact", head: true }).eq("is_active", true),
+    db.from("public_plans").select("id", { count: "exact", head: true }),
     db.from("app_settings").select("value").eq("key", "shop_enabled").maybeSingle(),
   ]);
   if (!count) return { state: "catalog_empty" };
@@ -96,7 +96,7 @@ export const getDestinationDetail = createServerFn({ method: "GET" })
     if (!d) return null;
 
     const [{ data: plans }, { data: content }, { data: members }, { data: parents }] = await Promise.all([
-      db.from("plans").select("id,type,data_mb,validity_days,network_type,networks,hotspot,voice_sms,fair_use,top_upable,sell_price,currency,badge,throttle_claim").eq("destination_id", d.id).eq("is_active", true),
+      db.from("public_plans").select("id,type,data_mb,validity_days,network_type,networks,hotspot,voice_sms,fair_use,top_upable,sell_price,currency,badge,throttle_claim").eq("destination_id", d.id),
       db.from("destinations_content").select("intro,faq,network_info,seo_title,seo_description").eq("destination_id", d.id).maybeSingle(),
       d.type !== "country"
         ? db.from("destination_countries").select("country:destinations!destination_countries_country_id_fkey(slug,name_de,flag_code)").eq("region_id", d.id)
@@ -113,10 +113,10 @@ export const getDestinationDetail = createServerFn({ method: "GET" })
     }
 
     const planItems: PlanItem[] = (plans ?? []).map((p) => ({
-      id: p.id,
-      type: p.type,
+      id: p.id!,
+      type: p.type!,
       dataMb: p.data_mb,
-      validityDays: p.validity_days,
+      validityDays: p.validity_days!,
       networkType: p.network_type,
       networks: p.networks,
       hotspot: p.hotspot,
@@ -125,7 +125,7 @@ export const getDestinationDetail = createServerFn({ method: "GET" })
       topUpable: p.top_upable,
       throttleClaim: p.throttle_claim as PlanItem["throttleClaim"],
       price: Number(p.sell_price),
-      currency: p.currency,
+      currency: p.currency ?? "EUR",
       badge: p.badge,
     }));
 
@@ -164,7 +164,7 @@ export const getFaqs = createServerFn({ method: "GET" }).handler(async () => {
   const db = publicDb();
   const [{ data }, { data: plans }, { data: claimRow }] = await Promise.all([
     db.from("faqs").select("id,question,answer,category").order("sort_order"),
-    db.from("plans").select("sell_price,currency,destination_id,type,throttle_claim").eq("is_active", true).gt("sell_price", 0),
+    db.from("public_plans").select("sell_price,currency,destination_id,type,throttle_claim").gt("sell_price", 0),
     db.from("app_settings").select("value").eq("key", "unlimited_claim").maybeSingle(),
   ]);
   const ps = plans ?? [];
@@ -172,7 +172,7 @@ export const getFaqs = createServerFn({ method: "GET" }).handler(async () => {
   const texts = parseClaimTexts(claimRow?.value);
   const confirmed = ps.some((p) => p.type === "unlimited" && p.throttle_claim === "none_confirmed");
   const ctx = {
-    minPrice: min ? formatPrice(Number(min.sell_price), min.currency) : null,
+    minPrice: min ? formatPrice(Number(min.sell_price), min.currency ?? "EUR") : null,
     destinationCount: new Set(ps.map((p) => p.destination_id)).size || null,
     unlimitedClaim: confirmed && texts ? `Unlimited ${texts.label}${texts.qualifier ? ` ${texts.qualifier}` : ""}` : null,
   };
@@ -190,7 +190,7 @@ export const getUnlimitedClaim = createServerFn({ method: "GET" }).handler(async
   const { parseClaimTexts } = await import("./throttle");
   const db = publicDb();
   const [{ count }, { data: row }] = await Promise.all([
-    db.from("plans").select("id", { count: "exact", head: true }).eq("is_active", true).eq("type", "unlimited").eq("throttle_claim", "none_confirmed"),
+    db.from("public_plans").select("id", { count: "exact", head: true }).eq("type", "unlimited").eq("throttle_claim", "none_confirmed"),
     db.from("app_settings").select("value").eq("key", "unlimited_claim").maybeSingle(),
   ]);
   const texts = parseClaimTexts(row?.value);

@@ -657,6 +657,13 @@ export type Database = {
             referencedRelation: "plans"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "orders_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "public_plans"
+            referencedColumns: ["id"]
+          },
         ]
       }
       plans: {
@@ -979,6 +986,71 @@ export type Database = {
           has_data: boolean | null
           has_unlimited: boolean | null
           plan_count: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "plans_destination_id_fkey"
+            columns: ["destination_id"]
+            isOneToOne: false
+            referencedRelation: "destinations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      public_plans: {
+        Row: {
+          badge: string | null
+          currency: string | null
+          data_mb: number | null
+          destination_id: string | null
+          fair_use: Json | null
+          hotspot: boolean | null
+          id: string | null
+          network_type: string | null
+          networks: string[] | null
+          sell_price: number | null
+          throttle_claim: string | null
+          top_upable: boolean | null
+          type: Database["public"]["Enums"]["plan_type"] | null
+          updated_at: string | null
+          validity_days: number | null
+          voice_sms: Json | null
+        }
+        Insert: {
+          badge?: string | null
+          currency?: string | null
+          data_mb?: number | null
+          destination_id?: string | null
+          fair_use?: Json | null
+          hotspot?: boolean | null
+          id?: string | null
+          network_type?: string | null
+          networks?: string[] | null
+          sell_price?: number | null
+          throttle_claim?: never
+          top_upable?: boolean | null
+          type?: Database["public"]["Enums"]["plan_type"] | null
+          updated_at?: string | null
+          validity_days?: number | null
+          voice_sms?: Json | null
+        }
+        Update: {
+          badge?: string | null
+          currency?: string | null
+          data_mb?: number | null
+          destination_id?: string | null
+          fair_use?: Json | null
+          hotspot?: boolean | null
+          id?: string | null
+          network_type?: string | null
+          networks?: string[] | null
+          sell_price?: number | null
+          throttle_claim?: never
+          top_upable?: boolean | null
+          type?: Database["public"]["Enums"]["plan_type"] | null
+          updated_at?: string | null
+          validity_days?: number | null
+          voice_sms?: Json | null
         }
         Relationships: [
           {
