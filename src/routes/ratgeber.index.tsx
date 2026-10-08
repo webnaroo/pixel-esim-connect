@@ -7,7 +7,7 @@ import { blogListQuery } from "@/lib/content.functions";
 import { breadcrumbScript, pageIdentity } from "@/lib/seo";
 
 export const Route = createFileRoute("/ratgeber/")({
-  loader: ({ context }) => context.queryClient.ensureQueryData(blogListQuery()),
+  loader: ({ context }) => context.queryClient.ensureQueryData({ ...blogListQuery(), revalidateIfStale: true }),
   head: ({ loaderData }) => ({
     meta: [
       { title: "Ratgeber: eSIM auf Reisen | GlobeSIM" },
