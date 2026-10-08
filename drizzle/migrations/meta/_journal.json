@@ -99,6 +99,13 @@
       "when": 1791482987017,
       "tag": "0013_fx_auto_rates",
       "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1791483803099,
+      "tag": "0014_plans_public_view_lockdown",
+      "breakpoints": true
     }
   ]
 }
