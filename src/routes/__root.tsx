@@ -20,6 +20,7 @@ import { reportLovableError } from "../lib/lovable-error-reporting";
 import { supabase } from "@/integrations/supabase/client";
 import { Toaster } from "@/components/ui/sonner";
 import { SearchBox } from "@/components/search-box";
+import { legalIndexQuery } from "@/lib/content.functions";
 
 function NotFoundComponent() {
   return (
@@ -72,6 +73,7 @@ function ErrorComponent({ error, reset }: ErrorComponentProps) {
 }
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
+  loader: ({ context }) => context.queryClient.ensureQueryData(legalIndexQuery()),
   head: () => ({
     meta: [
       { charSet: "utf-8" },
