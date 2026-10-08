@@ -358,6 +358,48 @@ export type Database = {
           },
         ]
       }
+      esim_devices: {
+        Row: {
+          active: boolean
+          checked_at: string
+          created_at: string
+          esim_supported: boolean
+          id: string
+          manufacturer: string
+          model: string
+          notes: string | null
+          release_year: number | null
+          source_url: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          checked_at: string
+          created_at?: string
+          esim_supported?: boolean
+          id?: string
+          manufacturer: string
+          model: string
+          notes?: string | null
+          release_year?: number | null
+          source_url: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          checked_at?: string
+          created_at?: string
+          esim_supported?: boolean
+          id?: string
+          manufacturer?: string
+          model?: string
+          notes?: string | null
+          release_year?: number | null
+          source_url?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       esims: {
         Row: {
           activation_code: string | null
