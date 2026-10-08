@@ -65,3 +65,29 @@ export function computePrice(input: PriceInput, rules: PricingRule[], fx: FxLook
   const vat = toCents(gross - net) / 100;
   return { ok: true, net, vat, gross, currency, ruleId: rule.id };
 }
+
+// ---------- Margin / net result (admin view) ----------
+export type FeeSettings = { percent: number; fixed: number };
+export const DEFAULT_STRIPE_FEES: FeeSettings = { percent: 2.9, fixed: 0.3 };
+export const DEFAULT_MIN_NET_RESULT = 1.5;
+export type Margin = { costEur: number; fee: number; result: number; resultPercent: number; belowMin: boolean };
+
+/** Payment fee on the gross amount; net result = net sell price − EUR cost − fee. Percent is relative to EUR cost. */
+export function computeMargin(costEur: number, net: number, gross: number, fees: FeeSettings, minNet: number): Margin {
+  const r2 = (v: number) => Math.round(v * 100) / 100;
+  const c = r2(costEur);
+  const fee = r2((gross * fees.percent) / 100 + fees.fixed);
+  const result = r2(net - c - fee);
+  const resultPercent = c > 0 ? Math.round((result / c) * 1000) / 10 : 0;
+  return { costEur: c, fee, result, resultPercent, belowMin: result < minNet };
+}
+
+export function parseFeeSettings(v: unknown): FeeSettings {
+  const o = (v ?? {}) as { percent?: unknown; fixed?: unknown };
+  const p = Number(o.percent), f = Number(o.fixed);
+  return { percent: Number.isFinite(p) && p >= 0 ? p : DEFAULT_STRIPE_FEES.percent, fixed: Number.isFinite(f) && f >= 0 ? f : DEFAULT_STRIPE_FEES.fixed };
+}
+export function parseMinNet(v: unknown): number {
+  const n = Number(v);
+  return v != null && Number.isFinite(n) ? n : DEFAULT_MIN_NET_RESULT;
+}
