@@ -1,5 +1,5 @@
 // Rule-based quality score (SEO / GEO / trust). No AI judgement. Quality score, not a ranking prediction.
-import { allText, articleJsonLd, faqJsonLd, openMarkers, schemaValid, wordCount, type FaqItem, type InternalLink, type Section, type Source } from "./ratgeber";
+import { allText, articleJsonLd, faqJsonLd, schemaValid, wordCount, type FaqItem, type InternalLink, type Section, type Source } from "./ratgeber";
 
 export type CheckState = "ok" | "partial" | "missing";
 export type Check = { id: string; group: "seo" | "geo" | "trust"; label: string; state: CheckState; tip: string; penalty?: number };
@@ -85,7 +85,6 @@ export function computeScore(p: ScoreInput, wordlist: string[] = DEFAULT_WORDLIS
   add({ id: "words_forbidden", group: "trust", label: "Keine Superlative oder Wettbewerber-Namen", state: bad.length ? "missing" : "ok", penalty: 30, tip: bad.length ? `Gefunden: ${bad.join(", ")}.` : "Keine Treffer aus der Wortliste." });
   const price = hasFixedPrice(text);
   add({ id: "prices", group: "trust", label: "Keine festen Preise im Text", state: price ? "missing" : "ok", penalty: 30, tip: "Preise nur über {{LIVE_PREISE:XX}} einbinden." });
-  const m = openMarkers(text);
   const ref = p.updated_at ? new Date(p.updated_at) : now;
   const old = (now.getTime() - ref.getTime()) / 86_400_000 > 180;
   add({ id: "fresh", group: "trust", label: "Aktualität (≤ 180 Tage)", state: old ? "missing" : "ok", penalty: 10, tip: old ? "Beitrag ist älter als 180 Tage – Inhalte prüfen und aktualisieren." : "Aktuell." });
