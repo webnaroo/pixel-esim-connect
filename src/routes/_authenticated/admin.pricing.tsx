@@ -134,7 +134,7 @@ function Pricing() {
 
       <section className="rounded-lg border border-line bg-surface p-6">
         <h2 className="text-xl">Gebühren & Mindestergebnis</h2>
-        <p className="mt-1 text-sm text-warning-ink">Bitte prüfen: Stripe-Gebühren hängen von Kartenart und Vertrag ab. Standard 2,9 % + 0,30 € ist nur eine Annahme.</p>
+        <p className="mt-1 text-sm text-ink-muted">Bitte prüfen: Stripe-Gebühren hängen von Kartenart und Vertrag ab. Standard 2,9 % + 0,30 € ist nur eine Annahme.</p>
         <form className="mt-4 grid grid-cols-2 gap-3" onSubmit={async (e) => {
           e.preventDefault();
           const f = new FormData(e.currentTarget);
