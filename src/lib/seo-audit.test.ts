@@ -43,7 +43,7 @@ describe("public canonical and structured data validation", () => {
 
 // Live regression: every public sitemap URL, including database-driven pages.
 it("audits canonical URLs and structured data on all current public pages", async () => {
-  const results = await auditPublicPages(process.env.SEO_TEST_ORIGIN ?? "http://localhost:8080");
+  const results = await auditPublicPages(process.env["SEO_TEST_ORIGIN"] ?? "http://localhost:8080");
   const failures = results.filter((page) => page.errors.length).map((page) => ({ page: page.path, errors: page.errors }));
   expect(results.length).toBeGreaterThan(4);
   expect(failures, JSON.stringify(failures, null, 2)).toEqual([]);
