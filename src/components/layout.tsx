@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
-import { Link, useRouterState } from "@tanstack/react-router";
-import { List, X, MagnifyingGlass, UserCircle, LockSimple } from "@phosphor-icons/react";
+import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
+import { List, X, MagnifyingGlass, UserCircle, LockSimple, SignOut } from "@phosphor-icons/react";
 import { Wordmark } from "./brand";
 import { SearchBox } from "./search-box";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
-import { useSuspenseQuery } from "@tanstack/react-query";
+import { useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { legalIndexQuery } from "@/lib/content.functions";
 
 const NAV = [
@@ -75,6 +75,7 @@ export function Header() {
             <UserCircle size={20} aria-hidden />
             {user ? "Konto" : "Anmelden"}
           </Link>
+          {user && <SignOutButton className="hidden h-10 items-center gap-2 rounded-md px-3 text-[15px] font-medium text-ink-muted hover:bg-muted hover:text-ink lg:inline-flex" />}
           <button aria-label="Suche öffnen" onClick={() => setMobileSearch((v) => !v)} className="flex size-12 items-center justify-center rounded-md text-ink lg:hidden">
             <MagnifyingGlass size={22} />
           </button>
@@ -106,6 +107,9 @@ export function Header() {
             <Link to={user ? "/account" : "/login"} className="py-4 font-display text-2xl font-semibold tracking-[-0.02em] text-primary">
               {user ? "Mein Konto" : "Anmelden"}
             </Link>
+            {user && (
+              <SignOutButton className="flex items-center gap-2 py-4 text-left font-display text-2xl font-semibold tracking-[-0.02em] text-ink-muted" />
+            )}
           </nav>
         </div>
       )}
@@ -172,6 +176,29 @@ export function SiteLayout({ children }: { children: React.ReactNode }) {
 
 export async function signOut() {
   await supabase.auth.signOut();
+}
+
+function SignOutButton({ className }: { className?: string }) {
+  const queryClient = useQueryClient();
+  const navigate = useNavigate();
+  const [busy, setBusy] = useState(false);
+  return (
+    <button
+      type="button"
+      disabled={busy}
+      onClick={async () => {
+        setBusy(true);
+        await queryClient.cancelQueries();
+        queryClient.clear();
+        await supabase.auth.signOut();
+        navigate({ to: "/", replace: true });
+      }}
+      className={className}
+    >
+      <SignOut size={20} aria-hidden />
+      Abmelden
+    </button>
+  );
 }
 
 function LegalLinks() {
