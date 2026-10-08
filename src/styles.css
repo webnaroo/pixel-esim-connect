@@ -179,3 +179,37 @@
   box-shadow: inset 0 0 0 1px var(--line);
   flex-shrink: 0;
 }
+
+/* Live homepage text remains separate from the reference artwork. */
+.home-hero {
+  background: var(--paper);
+  display: flex;
+  flex-direction: column;
+}
+.home-hero-image {
+  order: 2;
+  width: 100%;
+  height: 230px;
+  object-fit: cover;
+  object-position: right 42%;
+}
+.home-hero-copy {
+  max-width: 540px;
+  margin-inline: auto;
+}
+@media (min-width: 1024px) {
+  .home-hero {
+    min-height: 580px;
+  }
+  .home-hero-image {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    height: 100%;
+    object-position: center;
+  }
+  .home-hero-copy {
+    max-width: 440px;
+    margin-inline: 0;
+  }
+}
