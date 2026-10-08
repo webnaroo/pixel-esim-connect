@@ -9,8 +9,9 @@ import { contentAdminQuery, deleteBlogPost, deleteFaq, saveBlogPost, saveCompany
 import { COMPANY_FIELDS, type CompanyInfo } from "@/lib/legal";
 import { FAQ_PLACEHOLDERS } from "@/lib/faq-rules";
 import { AdminError } from "./admin";
+import { privateHead } from "@/lib/seo";
 
-export const Route = createFileRoute("/_authenticated/admin/content")({ component: Content, errorComponent: AdminError });
+export const Route = createFileRoute("/_authenticated/admin/content")({ head: () => privateHead("Inhalte verwalten", "Rechtsseiten, Firmendaten, FAQ und Blog im GlobeSIM-Admin."), component: Content, errorComponent: AdminError });
 
 type Data = NonNullable<Awaited<ReturnType<typeof import("@/lib/content.functions").getContentAdmin>>>;
 type Sec = "legal" | "company" | "faq" | "blog" | "email";

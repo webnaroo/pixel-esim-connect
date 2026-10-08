@@ -9,8 +9,10 @@ import { Button } from "@/components/ui-kit";
 import { Chip } from "@/components/brand";
 import { AdminError } from "./admin";
 import { ComparisonRecheckHint } from "@/components/admin-comparison";
+import { privateHead } from "@/lib/seo";
 
 export const Route = createFileRoute("/_authenticated/admin/")({
+  head: () => privateHead("Admin-Übersicht", "Shop-Checkliste und Katalogstatus im GlobeSIM-Admin."),
   loader: ({ context }) => context.queryClient.ensureQueryData(adminOverviewQuery()),
   errorComponent: AdminError,
   component: Overview,
