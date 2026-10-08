@@ -35,3 +35,4 @@
 - SEO AI streams through an admin-verified route with durable access blocks; admin history stores analyses, audits and content-trigger/manual changes — no private report leaks or false application claims.
 - SEO tests and admin audits share one sitemap-driven validator; shared Markdown wraps long words — consistent checks, no overflow.
 - esim_devices: public read (active) via RLS, writes only via admin server fns; rules in src/lib/devices.ts — no invented device data.
+- Ratgeber posts (blog_posts) are public only with status=published (RLS + server fns); src/lib/ratgeber.ts publishBlockers() refuses publishing with open [PRÜFEN] markers or superlatives — drafts never leak, unsure claims stay unpublished.
