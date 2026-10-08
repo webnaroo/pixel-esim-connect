@@ -29,6 +29,10 @@ export type ProviderOrderResult = {
 };
 
 export type EsimDetails = {
+  providerEsimId?: string;
+  providerStatus?: string;
+  iosInstallUrl?: string;
+  androidInstallUrl?: string;
   iccid?: string;
   smdpAddress?: string;
   activationCode?: string;
@@ -53,11 +57,14 @@ export interface ProviderAdapter {
   ping(): Promise<ProviderHealth>;
   listCountries(): Promise<ProviderCountry[]>;
   listRegions(): Promise<ProviderRegion[]>;
+  /** Plans plus entries that could not be mapped (with reason). */
+  listPlansDetailed?(): Promise<{ plans: NormalizedPlan[]; unmapped: { providerPlanId: string | null; reason: string }[] }>;
   listPlans(scope?: { countryIso2?: string; regionCode?: string }): Promise<NormalizedPlan[]>;
   checkAvailability(providerPlanId: string): Promise<{ available: boolean; reason?: string }>;
   createOrder(input: { providerPlanId: string; customerEmail: string; idempotencyKey: string }): Promise<ProviderOrderResult>;
   getEsim(providerOrderId: string): Promise<EsimDetails>;
-  getUsage?(iccid: string): Promise<EsimUsage>;
+  getOrder?(providerOrderId: string): Promise<ProviderOrderResult>;
+  getUsage?(providerEsimId: string): Promise<EsimUsage>;
   topUp?(iccid: string, providerPlanId: string, idempotencyKey: string): Promise<void>;
   cancel?(providerOrderId: string): Promise<void>;
   verifyWebhook(rawBody: string, headers: Headers): Promise<boolean>;

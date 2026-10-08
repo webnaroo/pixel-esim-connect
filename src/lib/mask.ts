@@ -2,11 +2,12 @@
 
 const SENSITIVE_KEY_PARTS = [
   "token", "apikey", "secret", "password", "authorization", "auth", "cookie",
-  "activationcode", "matchingid", "lpa", "qr", "smdp", "pin", "puk", "iccid",
+  "activationcode", "matchingid", "lpa", "qr", "smdp", "pin", "puk", "iccid", "installurl", "carddata",
 ];
 
 const VALUE_PATTERNS: RegExp[] = [
   /LPA:1\$[^\s"']+/gi, // full eSIM activation string
+  /\besm_sk_[A-Za-z0-9_]+/g, // eSIMerge keys
   /Bearer\s+[A-Za-z0-9._~+/=-]+/gi,
   /\b(sk|pk|rk|whsec|sb_secret)_[A-Za-z0-9_]{8,}\b/g, // Stripe / backend keys
   /\beyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\b/g, // JWTs

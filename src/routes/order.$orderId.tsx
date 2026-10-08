@@ -15,7 +15,8 @@ export const Route = createFileRoute("/order/$orderId")({
 const STATUS: Record<string, string> = {
   pending: "Zahlung ausstehend",
   paid: "Bezahlt – eSIM wird erstellt",
-  fulfilling: "eSIM wird erstellt",
+  fulfilling: "Wir richten deine eSIM gerade ein",
+  needs_review: "Wir prüfen deine Bestellung – wir melden uns per E-Mail",
   fulfilled: "eSIM bereit",
   fulfillment_failed: "Verzögert – unser Support meldet sich",
   refunded: "Erstattet",
