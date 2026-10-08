@@ -1,3 +1,6 @@
+import { FixtureBadge } from "./brand";
+import { NoThrottleClaim, UnlimitedLabel } from "./unlimited-claim";
+import { showsNoThrottle } from "@/lib/throttle";
 import { useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
@@ -29,7 +32,7 @@ export function DestinationPage({ slug }: { slug: string }) {
     (p) => (filters.days == null || p.validityDays === filters.days) && (filters.minGb == null || p.type === "unlimited" || (p.dataMb ?? 0) >= filters.minGb * 1024),
   );
   const selectedPlan = d.plans.find((p) => p.id === selected) ?? null;
-  const canBuy = shop?.state === "live";
+  const canBuy = shop?.state === "live" && !d.fixturePlans;
   const isCountry = d.type === "country";
   const fromPrice = hasPlans ? Math.min(...d.plans.map((p) => p.price)) : null;
   const allDays = [...new Set((tab === "data" ? dataPlans : unlimitedPlans).map((p) => p.validityDays))].sort((a, b) => a - b);
@@ -59,6 +62,7 @@ export function DestinationPage({ slug }: { slug: string }) {
               {sample?.networkType && <Chip>{sample.networkType}</Chip>}
               {fromPrice != null && <Chip tone="muted">ab {formatPrice(fromPrice)}</Chip>}
               {!isCountry && d.countries.length > 0 && <Chip tone="muted">{d.countries.length} Länder</Chip>}
+              <NoThrottleClaim when={unlimitedPlans.some(showsNoThrottle)} className="inline-flex items-center rounded-full border border-line-strong px-3 py-1 text-xs font-medium text-ink" />
             </div>
             <p className="mt-3 max-w-xl text-ink-muted">{d.content?.intro ?? "Sofort per E-Mail, in Minuten installiert. Deine bisherige SIM bleibt aktiv."}</p>
           </div>
@@ -66,6 +70,7 @@ export function DestinationPage({ slug }: { slug: string }) {
       </section>
 
       <section className="container-page mt-10" aria-labelledby="plans-h">
+        {d.fixturePlans && <div className="mb-4 flex items-center gap-2 text-sm text-ink-muted"><FixtureBadge /> Beispieltarife nur in der Vorschau, nicht kaufbar.</div>}
         <h2 id="plans-h" className="sr-only">Tarife</h2>
         {!hasPlans ? (
           <EmptyState
@@ -96,7 +101,7 @@ export function DestinationPage({ slug }: { slug: string }) {
                   </DrawerContent>
                 </Drawer>
               </div>
-              <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+              <div className="mt-5 grid items-start gap-3 sm:grid-cols-2 xl:grid-cols-3">
                 {plans.map((p) => (
                   <PlanCard key={p.id} plan={p} selected={selected === p.id} onSelect={() => setSelected(p.id)} />
                 ))}
@@ -108,7 +113,7 @@ export function DestinationPage({ slug }: { slug: string }) {
         )}
       </section>
 
-      {hasPlans && sample && (
+      {hasPlans && sample && (sample.hotspot != null || sample.voiceSms != null || sample.topUpable != null || !!sample.networks?.length || (tab === "unlimited" && !!unlimitedPlans[0]?.fairUse && !showsNoThrottle(unlimitedPlans[0]))) && (
         <section className="container-page mt-14">
           <h2>Gut zu wissen</h2>
           <dl className="mt-5 grid gap-px overflow-hidden rounded-lg border border-line bg-line sm:grid-cols-2">
@@ -116,7 +121,7 @@ export function DestinationPage({ slug }: { slug: string }) {
             {sample.voiceSms != null && <Info k="Telefonie / SMS" v={Object.keys(sample.voiceSms as object).length ? "Je nach Tarif" : "Nein, nur Daten"} />}
             {sample.topUpable != null && <Info k="Nachbuchen" v={sample.topUpable ? "Möglich" : "Nicht möglich"} />}
             {sample.networks?.length ? <Info k="Netze" v={sample.networks.join(", ")} /> : null}
-            {tab === "unlimited" && unlimitedPlans[0]?.fairUse && <Info k="Fair-Use" v={fairUseText(unlimitedPlans[0])} />}
+            {tab === "unlimited" && unlimitedPlans[0]?.fairUse && !showsNoThrottle(unlimitedPlans[0]) && <Info k="Fair-Use" v={fairUseText(unlimitedPlans[0])} />}
           </dl>
         </section>
       )}
@@ -196,7 +201,7 @@ function BuyBar({ plan, canBuy, inline }: { plan: PlanItem; canBuy: boolean; inl
   return (
     <div className={inline ? "flex items-center justify-between gap-4 rounded-lg border border-line bg-surface p-4" : "flex items-center justify-between gap-4"}>
       <div>
-        <div className="text-sm text-ink-muted">{plan.type === "unlimited" ? "Unlimited" : formatData(plan.dataMb)} · {formatDays(plan.validityDays)}</div>
+        <div className="text-sm text-ink-muted">{plan.type === "unlimited" ? <UnlimitedLabel throttleClaim={plan.throttleClaim} /> : formatData(plan.dataMb)} · {formatDays(plan.validityDays)}</div>
         <div className="tabular text-lg font-semibold">{formatPrice(plan.price, plan.currency)}</div>
       </div>
       <div className="text-right">

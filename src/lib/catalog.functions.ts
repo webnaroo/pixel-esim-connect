@@ -28,6 +28,7 @@ export type PlanItem = {
   voiceSms: { voice?: boolean; sms?: boolean; note?: string } | null;
   fairUse: { throttleAfterMb?: number; throttledSpeedKbps?: number; note?: string } | null;
   topUpable: boolean | null;
+  throttleClaim: "unknown" | "none_confirmed" | "conflict";
   price: number;
   currency: string;
   badge: string | null;
@@ -95,7 +96,7 @@ export const getDestinationDetail = createServerFn({ method: "GET" })
     if (!d) return null;
 
     const [{ data: plans }, { data: content }, { data: members }, { data: parents }] = await Promise.all([
-      db.from("plans").select("id,type,data_mb,validity_days,network_type,networks,hotspot,voice_sms,fair_use,top_upable,sell_price,currency,badge").eq("destination_id", d.id).eq("is_active", true),
+      db.from("plans").select("id,type,data_mb,validity_days,network_type,networks,hotspot,voice_sms,fair_use,top_upable,sell_price,currency,badge,throttle_claim").eq("destination_id", d.id).eq("is_active", true),
       db.from("destinations_content").select("intro,faq,network_info,seo_title,seo_description").eq("destination_id", d.id).maybeSingle(),
       d.type !== "country"
         ? db.from("destination_countries").select("country:destinations!destination_countries_country_id_fkey(slug,name_de,flag_code)").eq("region_id", d.id)
@@ -122,6 +123,7 @@ export const getDestinationDetail = createServerFn({ method: "GET" })
       voiceSms: (p.voice_sms as PlanItem["voiceSms"]) ?? null,
       fairUse: (p.fair_use as PlanItem["fairUse"]) ?? null,
       topUpable: p.top_upable,
+      throttleClaim: p.throttle_claim as PlanItem["throttleClaim"],
       price: Number(p.sell_price),
       currency: p.currency,
       badge: p.badge,
@@ -133,13 +135,21 @@ export const getDestinationDetail = createServerFn({ method: "GET" })
       slug: d.slug,
       name: d.name_de,
       flagCode: d.flag_code,
-      plans: planItems,
+      ...(await withPreviewPlans(d.slug, planItems)),
       content: content ? { intro: content.intro, seoTitle: content.seo_title, seoDescription: content.seo_description, faq: (Array.isArray(content.faq) ? content.faq : []) as { q: string; a: string }[] } : null,
       countries: (members ?? []).flatMap((m) => (m.country ? [{ slug: m.country.slug, name: m.country.name_de, flagCode: m.country.flag_code }] : [])).sort((a, b) => a.name.localeCompare(b.name, "de")),
       regions: (parents ?? []).flatMap((p) => (p.region ? [{ slug: p.region.slug, name: p.region.name_de }] : [])),
       related,
     };
   });
+
+/** Preview-only sample plans (VITE_USE_FIXTURES=true, never in the published build), labelled "Testdaten". */
+async function withPreviewPlans(slug: string, plans: PlanItem[]): Promise<{ plans: PlanItem[]; fixturePlans: boolean }> {
+  const { USE_FIXTURES } = await import("./format");
+  if (plans.length || !USE_FIXTURES) return { plans, fixturePlans: false };
+  const { previewPlans } = await import("./fixtures/plans");
+  return { plans: previewPlans(slug), fixturePlans: true };
+}
 
 export type DestinationDetail = NonNullable<Awaited<ReturnType<typeof getDestinationDetail>>>;
 
@@ -152,3 +162,16 @@ export const getFaqs = createServerFn({ method: "GET" }).handler(async () => {
 });
 
 export const faqsQuery = () => queryOptions({ queryKey: ["faqs"], queryFn: () => getFaqs(), staleTime: 60 * 60 * 1000 });
+
+/** Editable claim texts; returned only when at least one active plan is confirmed throttle-free. */
+export const getUnlimitedClaim = createServerFn({ method: "GET" }).handler(async () => {
+  const { parseClaimTexts } = await import("./throttle");
+  const db = publicDb();
+  const [{ count }, { data: row }] = await Promise.all([
+    db.from("plans").select("id", { count: "exact", head: true }).eq("is_active", true).eq("type", "unlimited").eq("throttle_claim", "none_confirmed"),
+    db.from("app_settings").select("value").eq("key", "unlimited_claim").maybeSingle(),
+  ]);
+  const texts = parseClaimTexts(row?.value);
+  return { texts, anyConfirmed: (count ?? 0) > 0 };
+});
+export const unlimitedClaimQuery = () => queryOptions({ queryKey: ["unlimited-claim"], queryFn: () => getUnlimitedClaim(), staleTime: 5 * 60_000 });

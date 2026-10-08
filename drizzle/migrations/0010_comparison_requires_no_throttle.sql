@@ -1,0 +1,2 @@
+ALTER TABLE public.comparison_rows DROP CONSTRAINT comparison_rows_requires_check;
+ALTER TABLE public.comparison_rows ADD CONSTRAINT comparison_rows_requires_check CHECK (requires IS NULL OR requires IN ('unlimited_plans','support_hours','destination_count','unlimited_no_throttle'));

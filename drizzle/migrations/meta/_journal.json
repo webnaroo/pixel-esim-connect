@@ -64,6 +64,20 @@
       "when": 1791479333289,
       "tag": "0008_comparison_section",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1791479660605,
+      "tag": "0009_unlimited_throttle_claim",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1791479677223,
+      "tag": "0010_comparison_requires_no_throttle",
+      "breakpoints": true
     }
   ]
 }

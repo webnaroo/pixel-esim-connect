@@ -11,7 +11,7 @@ export type OrderView = {
   currency: string;
   createdAt: string;
   isTest: boolean;
-  plan: { destination?: string; type?: string; data_mb?: number | null; validity_days?: number };
+  plan: { destination?: string; type?: string; data_mb?: number | null; validity_days?: number; throttle_claim?: "unknown" | "none_confirmed" | "conflict" };
   esim: { status: string; iccid: string | null; lpa: string | null; smdp: string | null; activationCode: string | null; directInstallUrl: string | null } | null;
 };
 

@@ -4,6 +4,7 @@ import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
 import { DeviceMobile } from "@phosphor-icons/react";
 import { SiteLayout } from "@/components/layout";
 import { ComparisonSection } from "@/components/comparison";
+import { NoThrottleClaim } from "@/components/unlimited-claim";
 import { SearchBox } from "@/components/search-box";
 import { DestinationRow, DestinationRowSkeleton } from "@/components/catalog";
 import { SegmentedControl, LinkButton } from "@/components/ui-kit";
@@ -54,7 +55,7 @@ function Hero() {
         <div className="mt-8 max-w-xl" data-hero-search>
           <SearchBox />
         </div>
-        <p className="mt-3 text-sm text-ink-muted">Sofort per E-Mail · Deine SIM bleibt aktiv · Preise inkl. MwSt.</p>
+        <p className="mt-3 text-sm text-ink-muted">Sofort per E-Mail · Deine SIM bleibt aktiv · Preise inkl. MwSt.<NoThrottleClaim className="before:content-['_·_']" /></p>
       </div>
       {/* Placeholder until a real photo is supplied */}
       <div

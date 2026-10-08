@@ -25,7 +25,20 @@ export function DestinationRowSkeleton() {
   return <div className="h-16 animate-pulse rounded-lg border border-line bg-surface" />;
 }
 
-export function PlanCard({ plan, selected, onSelect, disabled }: { plan: PlanItem; selected: boolean; onSelect: () => void; disabled?: boolean }) {
+import { UnlimitedLabel, UnlimitedNote } from "./unlimited-claim";
+import { showsNoThrottle } from "@/lib/throttle";
+
+export function PlanCard(props: { plan: PlanItem; selected: boolean; onSelect: () => void; disabled?: boolean }) {
+  if (!showsNoThrottle(props.plan)) return <PlanCardButton {...props} />;
+  return (
+    <div className="flex flex-col gap-1">
+      <PlanCardButton {...props} />
+      <div className="px-1"><UnlimitedNote throttleClaim={props.plan.throttleClaim} /></div>
+    </div>
+  );
+}
+
+function PlanCardButton({ plan, selected, onSelect, disabled }: { plan: PlanItem; selected: boolean; onSelect: () => void; disabled?: boolean }) {
   const perUnit =
     plan.type === "data" && plan.dataMb && plan.dataMb >= 1024
       ? `${formatPrice(plan.price / (plan.dataMb / 1024))} pro GB`
@@ -44,13 +57,13 @@ export function PlanCard({ plan, selected, onSelect, disabled }: { plan: PlanIte
       )}
     >
       <div className="flex items-start justify-between gap-3">
-        <span className="font-display text-xl font-semibold tracking-[-0.02em] text-ink lg:text-2xl">{plan.type === "unlimited" ? "Unlimited" : formatData(plan.dataMb)}</span>
+        {plan.type === "unlimited" ? <UnlimitedLabel stacked throttleClaim={plan.throttleClaim} className="font-display text-xl font-semibold tracking-[-0.02em] text-ink lg:text-2xl" /> : <span className="font-display text-xl font-semibold tracking-[-0.02em] text-ink lg:text-2xl">{formatData(plan.dataMb)}</span>}
         <span className="tabular text-xl font-semibold text-ink">{formatPrice(plan.price, plan.currency)}</span>
       </div>
       <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-ink-muted">
         <span>{formatDays(plan.validityDays)}</span>
         {plan.networkType && <span className="text-xs">{plan.networkType}</span>}
-        {plan.type === "unlimited" && plan.fairUse && <span className="text-xs underline decoration-dotted underline-offset-4" title={plan.fairUse.note ?? undefined}>Fair-Use-Regeln</span>}
+        {plan.type === "unlimited" && plan.fairUse && !showsNoThrottle(plan) && <span className="text-xs underline decoration-dotted underline-offset-4" title={plan.fairUse.note ?? undefined}>Fair-Use-Regeln</span>}
         {perUnit && <span className="text-xs">{perUnit}</span>}
       </div>
       <div className="flex items-center justify-between">

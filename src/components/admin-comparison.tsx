@@ -144,7 +144,7 @@ function RowEditor({ r, onSaved }: { r: RowRec | null; onSaved: () => void }) {
       <div className="flex flex-wrap items-center gap-3 sm:col-span-3">
         <select aria-label="GlobeSIM-Status" className={sel} value={v.globesim_status} onChange={(e) => setV({ ...v, globesim_status: e.target.value })}><option value="check">Haken</option><option value="neutral">Neutral</option></select>
         <select aria-label="Bedingung" className={sel} value={v.requires} onChange={(e) => setV({ ...v, requires: e.target.value })}>
-          <option value="">Keine Bedingung</option><option value="unlimited_plans">Aktive Unlimited-Tarife</option><option value="support_hours">Support-Zeiten gesetzt</option><option value="destination_count">Anzahl Ziele</option>
+          <option value="">Keine Bedingung</option><option value="unlimited_plans">Aktive Unlimited-Tarife</option><option value="unlimited_no_throttle">Drosselfrei bestätigte Unlimited-Tarife</option><option value="support_hours">Support-Zeiten gesetzt</option><option value="destination_count">Anzahl Ziele</option>
         </select>
         <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={v.enabled} onChange={(e) => setV({ ...v, enabled: e.target.checked })} /> freigegeben</label>
         <Button variant="secondary" onClick={save}>{r ? "Speichern" : "Zeile anlegen"}</Button>

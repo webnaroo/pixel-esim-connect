@@ -1,3 +1,4 @@
+import { UnlimitedLabel, UnlimitedNote } from "@/components/unlimited-claim";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { useState } from "react";
@@ -99,7 +100,8 @@ function CheckoutPage() {
           <Flag code={plan.destination.flagCode} size={40} />
           <div className="min-w-0 flex-1">
             <div className="font-medium text-ink">{plan.destination.name}</div>
-            <div className="text-sm text-ink-muted">{plan.type === "unlimited" ? "Unlimited" : formatData(plan.dataMb)} · {formatDays(plan.validityDays)}</div>
+            <div className="text-sm text-ink-muted">{plan.type === "unlimited" ? <UnlimitedLabel throttleClaim={plan.throttleClaim} /> : formatData(plan.dataMb)} · {formatDays(plan.validityDays)}</div>
+            {plan.type === "unlimited" && <UnlimitedNote throttleClaim={plan.throttleClaim} />}
           </div>
           <Link to="/countries/$slug" params={{ slug: plan.destination.slug }} className="text-sm font-medium text-primary">Ändern</Link>
         </div>

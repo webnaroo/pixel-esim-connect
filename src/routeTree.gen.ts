@@ -29,6 +29,7 @@ import { Route as AuthenticatedAdminCompareRouteImport } from './routes/_authent
 import { Route as AuthenticatedAdminExplorerRouteImport } from './routes/_authenticated/admin.explorer'
 import { Route as AuthenticatedAdminOrdersRouteImport } from './routes/_authenticated/admin.orders'
 import { Route as AuthenticatedAdminPricingRouteImport } from './routes/_authenticated/admin.pricing'
+import { Route as AuthenticatedAdminUnlimitedRouteImport } from './routes/_authenticated/admin.unlimited'
 import { Route as ApiPublicCronCatalogSyncRouteImport } from './routes/api/public/cron/catalog-sync'
 import { Route as ApiPublicCronEsimStatusPollRouteImport } from './routes/api/public/cron/esim-status-poll'
 import { Route as ApiPublicCronFulfillmentRetryRouteImport } from './routes/api/public/cron/fulfillment-retry'
@@ -138,6 +139,12 @@ const AuthenticatedAdminPricingRoute =
     path: '/pricing',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
+const AuthenticatedAdminUnlimitedRoute =
+  AuthenticatedAdminUnlimitedRouteImport.update({
+    id: '/unlimited',
+    path: '/unlimited',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
 const ApiPublicCronCatalogSyncRoute =
   ApiPublicCronCatalogSyncRouteImport.update({
     id: '/api/public/cron/catalog-sync',
@@ -188,6 +195,7 @@ export interface FileRoutesByFullPath {
   '/admin/explorer': typeof AuthenticatedAdminExplorerRoute
   '/admin/orders': typeof AuthenticatedAdminOrdersRoute
   '/admin/pricing': typeof AuthenticatedAdminPricingRoute
+  '/admin/unlimited': typeof AuthenticatedAdminUnlimitedRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
   '/api/public/cron/catalog-sync': typeof ApiPublicCronCatalogSyncRoute
   '/api/public/cron/esim-status-poll': typeof ApiPublicCronEsimStatusPollRoute
@@ -213,6 +221,7 @@ export interface FileRoutesByTo {
   '/admin/explorer': typeof AuthenticatedAdminExplorerRoute
   '/admin/orders': typeof AuthenticatedAdminOrdersRoute
   '/admin/pricing': typeof AuthenticatedAdminPricingRoute
+  '/admin/unlimited': typeof AuthenticatedAdminUnlimitedRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
   '/api/public/cron/catalog-sync': typeof ApiPublicCronCatalogSyncRoute
   '/api/public/cron/esim-status-poll': typeof ApiPublicCronEsimStatusPollRoute
@@ -241,6 +250,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/explorer': typeof AuthenticatedAdminExplorerRoute
   '/_authenticated/admin/orders': typeof AuthenticatedAdminOrdersRoute
   '/_authenticated/admin/pricing': typeof AuthenticatedAdminPricingRoute
+  '/_authenticated/admin/unlimited': typeof AuthenticatedAdminUnlimitedRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
   '/api/public/cron/catalog-sync': typeof ApiPublicCronCatalogSyncRoute
   '/api/public/cron/esim-status-poll': typeof ApiPublicCronEsimStatusPollRoute
@@ -269,6 +279,7 @@ export interface FileRouteTypes {
     | '/admin/explorer'
     | '/admin/orders'
     | '/admin/pricing'
+    | '/admin/unlimited'
     | '/admin/'
     | '/api/public/cron/catalog-sync'
     | '/api/public/cron/esim-status-poll'
@@ -294,6 +305,7 @@ export interface FileRouteTypes {
     | '/admin/explorer'
     | '/admin/orders'
     | '/admin/pricing'
+    | '/admin/unlimited'
     | '/admin'
     | '/api/public/cron/catalog-sync'
     | '/api/public/cron/esim-status-poll'
@@ -321,6 +333,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/explorer'
     | '/_authenticated/admin/orders'
     | '/_authenticated/admin/pricing'
+    | '/_authenticated/admin/unlimited'
     | '/_authenticated/admin/'
     | '/api/public/cron/catalog-sync'
     | '/api/public/cron/esim-status-poll'
@@ -493,6 +506,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminPricingRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/_authenticated/admin/unlimited': {
+      id: '/_authenticated/admin/unlimited'
+      path: '/unlimited'
+      fullPath: '/admin/unlimited'
+      preLoaderRoute: typeof AuthenticatedAdminUnlimitedRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
     '/api/public/cron/catalog-sync': {
       id: '/api/public/cron/catalog-sync'
       path: '/api/public/cron/catalog-sync'
@@ -536,6 +556,7 @@ interface AuthenticatedAdminRouteChildren {
   AuthenticatedAdminExplorerRoute: typeof AuthenticatedAdminExplorerRoute
   AuthenticatedAdminOrdersRoute: typeof AuthenticatedAdminOrdersRoute
   AuthenticatedAdminPricingRoute: typeof AuthenticatedAdminPricingRoute
+  AuthenticatedAdminUnlimitedRoute: typeof AuthenticatedAdminUnlimitedRoute
   AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
 }
 
@@ -544,6 +565,7 @@ const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
   AuthenticatedAdminExplorerRoute: AuthenticatedAdminExplorerRoute,
   AuthenticatedAdminOrdersRoute: AuthenticatedAdminOrdersRoute,
   AuthenticatedAdminPricingRoute: AuthenticatedAdminPricingRoute,
+  AuthenticatedAdminUnlimitedRoute: AuthenticatedAdminUnlimitedRoute,
   AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
 }
 
