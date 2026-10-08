@@ -19,4 +19,4 @@ export function formatDays(days: number): string {
   return days === 1 ? "1 Tag" : `${days} Tage`;
 }
 
-export const USE_FIXTURES = import.meta.env.VITE_USE_FIXTURES === "true";
+export const USE_FIXTURES = import.meta.env['VITE_USE_FIXTURES'] === "true";

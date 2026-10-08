@@ -13,7 +13,7 @@ async function listAll(name: keyof typeof ep, query: Record<string, string | und
     const q: Record<string, string | number | undefined> = { ...query };
     // TODO(ESIMERGE): confirm paging parameter names
     if (style && pageSize) q[style === "cursor" ? "cursor" : style === "page" ? "page" : "offset"] = cursor ?? (style === "cursor" ? undefined : style === "page" ? 1 : 0);
-    if (pageSize) q.limit = pageSize;
+    if (pageSize) q['limit'] = pageSize;
     const { body } = await providerRequest(name, ep[name], { query: q });
     items.push(...m.extractList(body, name));
     if (!style) break;
