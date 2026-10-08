@@ -9,7 +9,7 @@
 > the editor, so keep the branch in a working state.
 <!-- LOVABLE:END -->
 
-- Every server route under src/routes/api/public/* must call guardPublicRoute() (src/lib/public-route-guard.server.ts) before any work — these routes bypass auth, so signature/token check and DB-backed rate limiting are the only protection.
+- Every src/routes/api/public/* route calls guardPublicRoute() first — they bypass auth; signature/token and rate limit are the only protection.
 - eSIM activation columns are not granted to client roles; read them only server-side after verifying ownership — prevents leaking installable eSIMs.
 - The shop_enabled setting is writable only by the server (RLS excludes it for clients); setShopEnabled re-checks the checklist before enabling — the switch must not be bypassable from the browser.
 - Pricing, sync-threshold and shop-checklist rules live as pure functions (src/lib/pricing.ts, src/lib/admin-rules.ts) with tests; server code calls them — keeps business rules testable without I/O.
@@ -26,13 +26,12 @@
 - The root loader preloads legalIndexQuery into the shared query cache and the footer consumes it with useSuspenseQuery — published legal links must match during SSR and hydration.
 - FAQ texts may state prices, coverage or throttling only through DB placeholders (src/lib/faq-rules.ts, checked on save; unfillable entries are hidden) — keeps public claims tied to real data.
 - Customer emails go only through src/lib/email.server.ts and only with a verified sender domain (email-rules.ts); otherwise orders get email_status pending_domain — no mail from an unverified domain.
-- Managed email templates and synchronous transport live in src/lib/email-templates; /lovable/* routes authenticate themselves and bypass app redirects and CSRF checks — dashboard previews must remain accessible without opening a public send endpoint.
+- Email templates live in src/lib/email-templates; /lovable/* routes self-authenticate and bypass app redirects/CSRF — previews work without a public send endpoint.
 - Account deletion anonymises orders (kept for tax) and clears eSIM installation data before deleting the login (src/lib/anonymize.ts) — GDPR without losing bookkeeping records.
 - Admin list views (admin-lists.functions.ts) never select activation code, LPA or QR columns — installation data is visible only to the owner via getMyInstallData.
 - FX uses only ECB XML or ECB-based Frankfurter fallback; all prices use loadFx().lookup and tested fx.ts rules — no rate, no price.
 - plans is closed to client roles; public pages read public.public_plans (released columns, active+priced only); admin code reads plans only via supabaseAdmin after has_role — keeps cost prices and raw provider data server-only.
-- Homepage hero crop stays mobile-scoped; country photo tiles work at all sizes; prices stay catalog-backed — consistent imagery, no invented offers.
-- Public page identities and structured data use the shared SEO helpers with leaf-only canonical links; the sitemap uses the same public origin, paginated RLS-limited reads and fails with 503 on source errors — prevents preview URLs, duplicate schemas and incomplete crawler inventories.
+- Public pages use shared SEO helpers with leaf-only canonicals; sitemap uses the public origin, paginated reads, 503 on errors — no preview URLs or incomplete inventories.
 - SEO AI streams through an admin-verified route with durable access blocks; admin history stores analyses, audits and content-trigger/manual changes — no private report leaks or false application claims.
-- Public SEO tests and admin audits share a sitemap-driven HTML validator — checks canonical and JSON-LD on every public page.
-- Shared Markdown wraps long links and words — prevents horizontal page overflow.
+- SEO tests and admin audits share one sitemap-driven validator; shared Markdown wraps long words — consistent checks, no overflow.
+- esim_devices: public read (active) via RLS, writes only via admin server fns; rules in src/lib/devices.ts — no invented device data.

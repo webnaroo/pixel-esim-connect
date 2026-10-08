@@ -1,3 +1,4 @@
+import { CompatCheck } from "@/components/compat-check";
 import { UnlimitedLabel, UnlimitedNote } from "@/components/unlimited-claim";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
@@ -105,6 +106,8 @@ function CheckoutPage() {
           </div>
           <Link to="/countries/$slug" params={{ slug: plan.destination.slug }} className="text-sm font-medium text-primary">Ändern</Link>
         </div>
+        <CompatCheck className="mt-3" />
+        {/* TODO(LEGAL): Offene Frage – soll im Widerrufs-/Bestelltext eine Bestätigung der Gerätekompatibilität stehen? Juristische Prüfung ausstehend; bewusst keine Pflicht-Checkbox. */}
 
         <dl className="mt-4 space-y-1 text-sm">
           {plan.price ? (

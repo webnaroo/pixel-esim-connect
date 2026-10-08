@@ -127,6 +127,13 @@
       "when": 1791486819445,
       "tag": "0017_admin_seo_history",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1791495737832,
+      "tag": "0018_esim_devices",
+      "breakpoints": true
     }
   ]
 }
