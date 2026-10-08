@@ -63,6 +63,7 @@ export function SearchBox({ size = "lg", autoFocus }: { size?: "lg" | "sm"; auto
         document.body.style.overflow = "";
       };
     }
+    return undefined;
   }, [open, isMobile]);
 
   const search = useMemo(
