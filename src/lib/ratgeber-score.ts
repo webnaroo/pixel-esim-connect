@@ -86,7 +86,6 @@ export function computeScore(p: ScoreInput, wordlist: string[] = DEFAULT_WORDLIS
   const price = hasFixedPrice(text);
   add({ id: "prices", group: "trust", label: "Keine festen Preise im Text", state: price ? "missing" : "ok", penalty: 30, tip: "Preise nur über {{LIVE_PREISE:XX}} einbinden." });
   const m = openMarkers(text);
-  add({ id: "markers", group: "trust", label: "Keine offenen [PRÜFEN]/[QUELLE FEHLT]", state: m.pruefen + m.quelle ? "missing" : "ok", penalty: 30, tip: `${m.pruefen} × [PRÜFEN], ${m.quelle} × [QUELLE FEHLT] offen.` });
   const ref = p.updated_at ? new Date(p.updated_at) : now;
   const old = (now.getTime() - ref.getTime()) / 86_400_000 > 180;
   add({ id: "fresh", group: "trust", label: "Aktualität (≤ 180 Tage)", state: old ? "missing" : "ok", penalty: 10, tip: old ? "Beitrag ist älter als 180 Tage – Inhalte prüfen und aktualisieren." : "Aktuell." });
