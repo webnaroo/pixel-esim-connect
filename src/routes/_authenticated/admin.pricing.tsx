@@ -3,7 +3,10 @@ import { useSuspenseQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 import { toast } from "sonner";
-import { deletePricingRule, pricingQuery, saveFxRate, savePricingRule } from "@/lib/admin.functions";
+import { deletePricingRule, pricingQuery, savePricingRule } from "@/lib/admin.functions";
+import { fxAdminQuery } from "@/lib/fx.functions";
+import { FxSection } from "@/components/fx-admin";
+import { useQuery } from "@tanstack/react-query";
 import { computePrice, type PricingRule } from "@/lib/pricing";
 import { Button, Input } from "@/components/ui-kit";
 import { AdminError } from "./admin";
@@ -27,7 +30,7 @@ function Pricing() {
   const qc = useQueryClient();
   const save = useServerFn(savePricingRule);
   const del = useServerFn(deletePricingRule);
-  const saveFx = useServerFn(saveFxRate);
+  const fxq = useQuery(fxAdminQuery());
   const refresh = () => qc.invalidateQueries({ queryKey: ["admin", "pricing"] });
   const [scope, setScope] = useState<string>("global");
   const [test, setTest] = useState({ cost: "5", currency: "USD", slug: "turkey", type: "data" as "data" | "unlimited", planId: "" });
@@ -52,19 +55,7 @@ function Pricing() {
     }
   }
 
-  async function addFx(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    const f = new FormData(e.currentTarget);
-    try {
-      await saveFx({ data: { from: String(f.get("from")).toUpperCase().trim(), rate: Number(String(f.get("rate")).replace(",", ".")) } });
-      toast.success("Kurs gespeichert.");
-      refresh();
-    } catch {
-      toast.error("Bitte Währungscode (3 Buchstaben) und Kurs prüfen.");
-    }
-  }
-
-  const latestFx = (from: string) => data.fx.find((x) => x.from_currency === from && x.to_currency === "EUR")?.rate ?? null;
+  const latestFx = (from: string) => fxq.data?.current.find((x) => x.currency === from)?.effective?.usedRate ?? null;
   const preview = computePrice(
     { providerPlanId: test.planId, destinationSlug: test.slug, planType: test.type, costPrice: Number(test.cost.replace(",", ".")), costCurrency: test.currency.toUpperCase() },
     data.rules as PricingRule[], (from) => latestFx(from), 0.19,
@@ -104,21 +95,7 @@ function Pricing() {
         </form>
       </section>
 
-      <section className="rounded-lg border border-line bg-surface p-6">
-        <h2 className="text-xl">Wechselkurse nach EUR</h2>
-        <p className="mt-1 text-sm text-ink-muted">Fehlt ein Kurs, bekommt der Tarif keinen Preis und bleibt unsichtbar.</p>
-        <ul className="mt-4 divide-y divide-line text-sm tabular">
-          {data.fx.length === 0 && <li className="py-2 text-ink-muted">Noch keine Kurse.</li>}
-          {data.fx.slice(0, 10).map((x) => (
-            <li key={x.id} className="flex justify-between py-2"><span>1 {x.from_currency} = {x.rate} {x.to_currency}</span><span className="text-ink-muted">{new Date(x.valid_from).toLocaleDateString("de-DE")}</span></li>
-          ))}
-        </ul>
-        <form onSubmit={addFx} className="mt-4 grid grid-cols-[1fr_1fr_auto] gap-3">
-          <Input name="from" placeholder="USD" maxLength={3} aria-label="Währung" required />
-          <Input name="rate" placeholder="0,92" aria-label="Kurs" required />
-          <Button type="submit">Speichern</Button>
-        </form>
-      </section>
+      <FxSection />
 
       <section className="rounded-lg border border-line bg-surface p-6">
         <h2 className="text-xl">Preis testen</h2>
