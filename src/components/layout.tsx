@@ -11,6 +11,7 @@ import { legalIndexQuery } from "@/lib/content.functions";
 const NAV = [
   { to: "/destinations", label: "Reiseziele" },
   { to: "/how-it-works", label: "So funktioniert's" },
+  { to: "/ratgeber", label: "Ratgeber" },
   { to: "/faq", label: "FAQ" },
   { to: "/help", label: "Hilfe" },
 ] as const;
