@@ -1,4 +1,4 @@
-import { createFileRoute, Link, Outlet } from "@tanstack/react-router";
+import { createFileRoute, Link, Outlet, type ErrorComponentProps } from "@tanstack/react-router";
 import { SiteLayout } from "@/components/layout";
 
 export const Route = createFileRoute("/_authenticated/admin")({
@@ -48,7 +48,7 @@ function AdminLayout() {
   );
 }
 
-export function AdminError({ error }: { error: Error }) {
+export function AdminError({ error }: ErrorComponentProps) {
   return (
     <div role="alert" className="rounded-lg border border-line border-l-4 border-l-danger bg-surface p-4 text-sm">
       {error.message.includes("Admin") ? "Kein Zugriff: Dieses Konto hat keine Admin-Rolle." : error.message}
