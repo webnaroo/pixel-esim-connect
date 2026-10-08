@@ -3,7 +3,7 @@ import { unlimitedClaimQuery } from "@/lib/catalog.functions";
 import { showsNoThrottle, type ThrottleClaim } from "@/lib/throttle";
 
 /** "Unlimited · ohne Drosselung · laut Anbieter" — texts from settings, only for confirmed plans. */
-export function UnlimitedLabel({ throttleClaim, className }: { throttleClaim?: ThrottleClaim | null; className?: string }) {
+export function UnlimitedLabel({ throttleClaim, className }: { throttleClaim?: ThrottleClaim | null | undefined; className?: string }) {
   const { data } = useQuery(unlimitedClaimQuery());
   const t = data?.texts;
   if (!t || !showsNoThrottle({ type: "unlimited", throttleClaim })) return <span className={className}>Unlimited</span>;
@@ -16,7 +16,7 @@ export function UnlimitedLabel({ throttleClaim, className }: { throttleClaim?: T
 }
 
 /** Expandable caption under the claim. Native details/summary: keyboard + screen reader friendly. */
-export function UnlimitedNote({ throttleClaim }: { throttleClaim?: ThrottleClaim | null }) {
+export function UnlimitedNote({ throttleClaim }: { throttleClaim?: ThrottleClaim | null | undefined }) {
   const { data } = useQuery(unlimitedClaimQuery());
   const t = data?.texts;
   if (!t?.note || !showsNoThrottle({ type: "unlimited", throttleClaim })) return null;

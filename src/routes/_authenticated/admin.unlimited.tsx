@@ -40,9 +40,9 @@ function UnlimitedReview() {
   const conflicts = data.plans.filter((p) => p.throttle_claim === "conflict");
 
   async function onConfirm() {
-    if (!ids.length) return toast.error("Bitte Tarife auswählen.");
-    if (source.trim().length < 3) return toast.error("Quelle ist Pflicht.");
-    if (!date) return toast.error("Datum ist Pflicht.");
+    if (!ids.length) { toast.error("Bitte Tarife auswählen."); return; }
+    if (source.trim().length < 3) { toast.error("Quelle ist Pflicht."); return; }
+    if (!date) { toast.error("Datum ist Pflicht."); return; }
     setBusy(true);
     try {
       const r = await confirm({ data: { planIds: ids, source, date, acceptHint } });
@@ -51,7 +51,7 @@ function UnlimitedReview() {
     } catch (e) { toast.error((e as Error).message); } finally { setBusy(false); }
   }
   async function onRevoke() {
-    if (!ids.length) return toast.error("Bitte Tarife auswählen.");
+    if (!ids.length) { toast.error("Bitte Tarife auswählen."); return; }
     await revoke({ data: { planIds: ids } }); toast.success("Bestätigung zurückgenommen."); setPicked(new Set()); refresh();
   }
 

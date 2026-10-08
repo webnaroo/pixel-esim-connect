@@ -42,7 +42,7 @@ export function confirmClaim(fairUse: FairUse, input: { source: string; date: st
   return { claim: hint && !input.acceptHint ? "conflict" : "none_confirmed", confirmation };
 }
 
-export function showsNoThrottle(p: { type: string; throttleClaim?: ThrottleClaim | null }): boolean {
+export function showsNoThrottle(p: { type: string; throttleClaim?: ThrottleClaim | null | undefined }): boolean {
   return p.type === "unlimited" && p.throttleClaim === "none_confirmed";
 }
 
