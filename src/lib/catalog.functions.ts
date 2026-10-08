@@ -113,10 +113,10 @@ export const getDestinationDetail = createServerFn({ method: "GET" })
     }
 
     const planItems: PlanItem[] = (plans ?? []).map((p) => ({
-      id: p.id,
-      type: p.type,
+      id: p.id!,
+      type: p.type!,
       dataMb: p.data_mb,
-      validityDays: p.validity_days,
+      validityDays: p.validity_days!,
       networkType: p.network_type,
       networks: p.networks,
       hotspot: p.hotspot,
@@ -125,7 +125,7 @@ export const getDestinationDetail = createServerFn({ method: "GET" })
       topUpable: p.top_upable,
       throttleClaim: p.throttle_claim as PlanItem["throttleClaim"],
       price: Number(p.sell_price),
-      currency: p.currency,
+      currency: p.currency ?? "EUR",
       badge: p.badge,
     }));
 
@@ -172,7 +172,7 @@ export const getFaqs = createServerFn({ method: "GET" }).handler(async () => {
   const texts = parseClaimTexts(claimRow?.value);
   const confirmed = ps.some((p) => p.type === "unlimited" && p.throttle_claim === "none_confirmed");
   const ctx = {
-    minPrice: min ? formatPrice(Number(min.sell_price), min.currency) : null,
+    minPrice: min ? formatPrice(Number(min.sell_price), min.currency ?? "EUR") : null,
     destinationCount: new Set(ps.map((p) => p.destination_id)).size || null,
     unlimitedClaim: confirmed && texts ? `Unlimited ${texts.label}${texts.qualifier ? ` ${texts.qualifier}` : ""}` : null,
   };
