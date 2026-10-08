@@ -72,8 +72,7 @@ export function publishBlockers(p: PostDraft, score?: number | null, overrideRea
   const out: string[] = [];
   if (p.meta_title && p.meta_title.length > 60) out.push("Meta-Title länger als 60 Zeichen.");
   if (p.meta_description && p.meta_description.length > 155) out.push("Meta-Description länger als 155 Zeichen.");
-  if (!p.cover_url) out.push("Titelbild fehlt.");
-  if (!p.cover_image_alt?.trim()) out.push("Alt-Text fürs Titelbild fehlt.");
+  if (p.cover_url && !p.cover_image_alt?.trim()) out.push("Alt-Text fürs Titelbild fehlt.");
   if (!p.author_name?.trim()) out.push("Autor fehlt.");
   if (score != null && score < MIN_PUBLISH_SCORE && (overrideReason?.trim().length ?? 0) < 10) out.push(`Qualitätswertung unter ${MIN_PUBLISH_SCORE} (übergehen nur mit Begründung).`);
   return out;

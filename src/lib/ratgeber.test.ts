@@ -13,7 +13,8 @@ describe("publish guard", () => {
     expect(publishBlockers({ ...ready, answer_summary: "[QUELLE FEHLT: Roaming]" })).not.toContain("Offener [QUELLE FEHLT]-Hinweis im Text.");
     expect(publishBlockers(ready, 80)).toEqual([]);
   });
-  it("blocks missing alt text and missing author", () => {
+  it("cover image is optional; alt text only required when a cover exists", () => {
+    expect(publishBlockers({ ...ready, cover_url: null, cover_image_alt: null })).toEqual([]);
     expect(publishBlockers({ ...ready, cover_image_alt: "" })).toContain("Alt-Text fürs Titelbild fehlt.");
     expect(publishBlockers({ ...ready, author_name: null })).toContain("Autor fehlt.");
   });
