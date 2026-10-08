@@ -129,7 +129,7 @@ export function Footer() {
         <FooterCol title="Reiseziele" links={[{ to: "/destinations", label: "Alle Reiseziele" }, { to: "/regions/europe", label: "Europa" }, { to: "/regions/asia", label: "Asien" }, { to: "/regions/global", label: "Weltweit" }]} />
         <FooterCol title="Service" links={[{ to: "/how-it-works", label: "So funktioniert's" }, { to: "/faq", label: "FAQ" }, { to: "/help", label: "Hilfe & Kontakt" }]} />
         <LegalLinks />
-        <FooterCol title="Konto" links={[{ to: user ? "/account" : "/login", label: user ? "Mein Konto" : "Anmelden" }, { to: "/blog", label: "Blog" }]} />
+        <FooterCol title="Konto" links={[{ to: user ? "/account" : "/login", label: user ? "Mein Konto" : "Anmelden" }, { to: "/ratgeber", label: "Ratgeber" }]} />
       </div>
       <div className="container-page flex flex-wrap items-center gap-x-2 border-t border-line py-6 text-xs text-ink-muted">
         <span>© {new Date().getFullYear()} GlobeSIM · Alle Preise inkl. MwSt.</span>

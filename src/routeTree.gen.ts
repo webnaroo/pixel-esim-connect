@@ -29,6 +29,8 @@ import { Route as CountriesSlugRouteImport } from './routes/countries.$slug'
 import { Route as InstallOrderIdRouteImport } from './routes/install.$orderId'
 import { Route as LegalSlugRouteImport } from './routes/legal.$slug'
 import { Route as OrderOrderIdRouteImport } from './routes/order.$orderId'
+import { Route as RatgeberIndexRouteImport } from './routes/ratgeber.index'
+import { Route as RatgeberSlugRouteImport } from './routes/ratgeber.$slug'
 import { Route as RegionsSlugRouteImport } from './routes/regions.$slug'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
 import { Route as AuthenticatedAdminCompareRouteImport } from './routes/_authenticated/admin.compare'
@@ -148,6 +150,16 @@ const LegalSlugRoute = LegalSlugRouteImport.update({
 const OrderOrderIdRoute = OrderOrderIdRouteImport.update({
   id: '/order/$orderId',
   path: '/order/$orderId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RatgeberIndexRoute = RatgeberIndexRouteImport.update({
+  id: '/ratgeber/',
+  path: '/ratgeber/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RatgeberSlugRoute = RatgeberSlugRouteImport.update({
+  id: '/ratgeber/$slug',
+  path: '/ratgeber/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RegionsSlugRoute = RegionsSlugRouteImport.update({
@@ -289,8 +301,10 @@ export interface FileRoutesByFullPath {
   '/install/$orderId': typeof InstallOrderIdRoute
   '/legal/$slug': typeof LegalSlugRoute
   '/order/$orderId': typeof OrderOrderIdRoute
+  '/ratgeber/$slug': typeof RatgeberSlugRoute
   '/regions/$slug': typeof RegionsSlugRoute
   '/blog/': typeof BlogIndexRoute
+  '/ratgeber/': typeof RatgeberIndexRoute
   '/admin/compare': typeof AuthenticatedAdminCompareRoute
   '/admin/content': typeof AuthenticatedAdminContentRoute
   '/admin/customers': typeof AuthenticatedAdminCustomersRoute
@@ -330,8 +344,10 @@ export interface FileRoutesByTo {
   '/install/$orderId': typeof InstallOrderIdRoute
   '/legal/$slug': typeof LegalSlugRoute
   '/order/$orderId': typeof OrderOrderIdRoute
+  '/ratgeber/$slug': typeof RatgeberSlugRoute
   '/regions/$slug': typeof RegionsSlugRoute
   '/blog': typeof BlogIndexRoute
+  '/ratgeber': typeof RatgeberIndexRoute
   '/admin/compare': typeof AuthenticatedAdminCompareRoute
   '/admin/content': typeof AuthenticatedAdminContentRoute
   '/admin/customers': typeof AuthenticatedAdminCustomersRoute
@@ -374,8 +390,10 @@ export interface FileRoutesById {
   '/install/$orderId': typeof InstallOrderIdRoute
   '/legal/$slug': typeof LegalSlugRoute
   '/order/$orderId': typeof OrderOrderIdRoute
+  '/ratgeber/$slug': typeof RatgeberSlugRoute
   '/regions/$slug': typeof RegionsSlugRoute
   '/blog/': typeof BlogIndexRoute
+  '/ratgeber/': typeof RatgeberIndexRoute
   '/_authenticated/admin/compare': typeof AuthenticatedAdminCompareRoute
   '/_authenticated/admin/content': typeof AuthenticatedAdminContentRoute
   '/_authenticated/admin/customers': typeof AuthenticatedAdminCustomersRoute
@@ -418,8 +436,10 @@ export interface FileRouteTypes {
     | '/install/$orderId'
     | '/legal/$slug'
     | '/order/$orderId'
+    | '/ratgeber/$slug'
     | '/regions/$slug'
     | '/blog/'
+    | '/ratgeber/'
     | '/admin/compare'
     | '/admin/content'
     | '/admin/customers'
@@ -459,8 +479,10 @@ export interface FileRouteTypes {
     | '/install/$orderId'
     | '/legal/$slug'
     | '/order/$orderId'
+    | '/ratgeber/$slug'
     | '/regions/$slug'
     | '/blog'
+    | '/ratgeber'
     | '/admin/compare'
     | '/admin/content'
     | '/admin/customers'
@@ -502,8 +524,10 @@ export interface FileRouteTypes {
     | '/install/$orderId'
     | '/legal/$slug'
     | '/order/$orderId'
+    | '/ratgeber/$slug'
     | '/regions/$slug'
     | '/blog/'
+    | '/ratgeber/'
     | '/_authenticated/admin/compare'
     | '/_authenticated/admin/content'
     | '/_authenticated/admin/customers'
@@ -544,8 +568,10 @@ export interface RootRouteChildren {
   InstallOrderIdRoute: typeof InstallOrderIdRoute
   LegalSlugRoute: typeof LegalSlugRoute
   OrderOrderIdRoute: typeof OrderOrderIdRoute
+  RatgeberSlugRoute: typeof RatgeberSlugRoute
   RegionsSlugRoute: typeof RegionsSlugRoute
   BlogIndexRoute: typeof BlogIndexRoute
+  RatgeberIndexRoute: typeof RatgeberIndexRoute
   ApiPublicCronCatalogSyncRoute: typeof ApiPublicCronCatalogSyncRoute
   ApiPublicCronEsimStatusPollRoute: typeof ApiPublicCronEsimStatusPollRoute
   ApiPublicCronFulfillmentRetryRoute: typeof ApiPublicCronFulfillmentRetryRoute
@@ -695,6 +721,20 @@ declare module '@tanstack/react-router' {
       path: '/order/$orderId'
       fullPath: '/order/$orderId'
       preLoaderRoute: typeof OrderOrderIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ratgeber/': {
+      id: '/ratgeber/'
+      path: '/ratgeber'
+      fullPath: '/ratgeber/'
+      preLoaderRoute: typeof RatgeberIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ratgeber/$slug': {
+      id: '/ratgeber/$slug'
+      path: '/ratgeber/$slug'
+      fullPath: '/ratgeber/$slug'
+      preLoaderRoute: typeof RatgeberSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/regions/$slug': {
@@ -913,8 +953,10 @@ const rootRouteChildren: RootRouteChildren = {
   InstallOrderIdRoute: InstallOrderIdRoute,
   LegalSlugRoute: LegalSlugRoute,
   OrderOrderIdRoute: OrderOrderIdRoute,
+  RatgeberSlugRoute: RatgeberSlugRoute,
   RegionsSlugRoute: RegionsSlugRoute,
   BlogIndexRoute: BlogIndexRoute,
+  RatgeberIndexRoute: RatgeberIndexRoute,
   ApiPublicCronCatalogSyncRoute: ApiPublicCronCatalogSyncRoute,
   ApiPublicCronEsimStatusPollRoute: ApiPublicCronEsimStatusPollRoute,
   ApiPublicCronFulfillmentRetryRoute: ApiPublicCronFulfillmentRetryRoute,

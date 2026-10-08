@@ -1,3 +1,4 @@
+import { guideForCountryQuery } from "@/lib/content.functions";
 import { FixtureBadge } from "./brand";
 import { CompatCheck } from "./compat-check";
 import { NoThrottleClaim, UnlimitedLabel } from "./unlimited-claim";
@@ -67,6 +68,7 @@ export function DestinationPage({ slug }: { slug: string }) {
               <NoThrottleClaim when={unlimitedPlans.some(showsNoThrottle)} className="inline-flex items-center rounded-full border border-line-strong px-3 py-1 text-xs font-medium text-ink" />
             </div>
             <p className="mt-3 max-w-xl text-ink-muted">{d.content?.intro ?? "Sofort per E-Mail, in Minuten installiert. Deine bisherige SIM bleibt aktiv."}</p>
+            {isCountry && d.flagCode && <GuideLink iso={d.flagCode} />}
           </div>
         </div>
       </section>
@@ -286,3 +288,9 @@ export function DestinationPending() {
 }
 
 export { CaretRight };
+
+function GuideLink({ iso }: { iso: string }) {
+  const { data } = useQuery(guideForCountryQuery(iso));
+  if (!data) return null;
+  return <Link to="/ratgeber/$slug" params={{ slug: data.slug }} className="mt-2 inline-block text-sm text-primary underline">Ratgeber: {data.title}</Link>;
+}
