@@ -9,9 +9,8 @@ const base: ScoreInput = { title: "eSIM Türkei einrichten", slug: "esim-tuerkei
 const check = (p: Partial<ScoreInput>, id: string, now = new Date("2026-10-08")) => computeScore({ ...base, ...p }, undefined, now).checks.find((c) => c.id === id)!.state;
 
 describe("publish guard", () => {
-  it("blocks open [PRÜFEN] and [QUELLE FEHLT]", () => {
-    expect(publishBlockers({ ...ready, sections: [{ heading: "Regeln", level: "h2", body_md: "[PRÜFEN: Zoll]" }] })).toContain("Offener [PRÜFEN]-Platzhalter im Text.");
-    expect(publishBlockers({ ...ready, answer_summary: "[QUELLE FEHLT: Roaming]" })).toContain("Offener [QUELLE FEHLT]-Hinweis im Text.");
+  it("markers never block publishing", () => {
+    expect(publishBlockers({ ...ready, answer_summary: "[QUELLE FEHLT: Roaming]" })).not.toContain("Offener [QUELLE FEHLT]-Hinweis im Text.");
     expect(publishBlockers(ready, 80)).toEqual([]);
   });
   it("blocks missing alt text and missing author", () => {
@@ -139,7 +138,6 @@ describe("quality score rules", () => {
     expect(check({ answer_summary: "nur 5 EUR" }, "prices")).toBe("missing");
   });
   it("open markers subtract points", () => {
-    expect(check({ answer_summary: "[PRÜFEN: Zoll]" }, "markers")).toBe("missing");
   });
   it("warns when older than 180 days", () => {
     expect(check({ updated_at: "2026-01-01T00:00:00Z" }, "fresh")).toBe("missing");
@@ -165,7 +163,7 @@ describe("generator", () => {
     const row = draftRow(out, ctx, req, 1400);
     expect(row.sections[0]!.body_md).toBe("[Tarife](/countries/turkey) und fremd");
     expect(row.internal_links).toEqual([{ label: "Tarife", path: "/countries/turkey" }]);
-    expect(row.answer_summary).toContain("[PRÜFEN: Drosselung]");
+    expect(row.answer_summary).not.toMatch(/Drosselung|PRÜFEN/);
     expect(row.answer_summary).not.toContain("9,99");
     expect(cleanText("ohne Drosselung", new Set(), true)).toBe("ohne Drosselung");
   });

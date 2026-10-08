@@ -62,14 +62,14 @@ export function allText(p: PostDraft) {
 }
 export const openMarkers = (text: string) => ({ pruefen: (text.match(/\[PRÜFEN[^\]]*\]/gi) ?? []).length, quelle: (text.match(/\[QUELLE FEHLT[^\]]*\]/gi) ?? []).length });
 
+/** Removes any leftover [PRÜFEN…]/[QUELLE FEHLT…] markers – the owner does not want them. */
+export const stripMarkers = (text: string) => text.replace(/\s*\[(?:PRÜFEN|QUELLE FEHLT)[^\]]*\]/gi, "");
+
 export const MIN_PUBLISH_SCORE = 70;
 
 /** Everything that blocks publishing. Score below 70 can only be overridden with a reason (≥ 10 chars). */
 export function publishBlockers(p: PostDraft, score?: number | null, overrideReason?: string | null): string[] {
   const out: string[] = [];
-  const m = openMarkers(allText(p));
-  if (m.pruefen) out.push("Offener [PRÜFEN]-Platzhalter im Text.");
-  if (m.quelle) out.push("Offener [QUELLE FEHLT]-Hinweis im Text.");
   if (p.meta_title && p.meta_title.length > 60) out.push("Meta-Title länger als 60 Zeichen.");
   if (p.meta_description && p.meta_description.length > 155) out.push("Meta-Description länger als 155 Zeichen.");
   if (!p.cover_url) out.push("Titelbild fehlt.");

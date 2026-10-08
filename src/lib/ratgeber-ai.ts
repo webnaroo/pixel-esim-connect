@@ -1,3 +1,4 @@
+import { stripMarkers } from "./ratgeber";
 // Ratgeber AI: request/response schemas, fixed rules and post-processing (pure, testable).
 import { z } from "zod";
 import { POST_TYPES, slugify, type InternalLink } from "./ratgeber";
@@ -27,10 +28,10 @@ export const AI_RULES = `Du schreibst Ratgeber-Beiträge für GlobeSIM (deutsche
 Feste Regeln, die du niemals brichst:
 - Sachlich auf Deutsch in Du-Form. Keine Superlative ("beste", "Nr. 1", "garantiert", "günstigste"). Keine Wettbewerber mit Namen.
 - Erfinde keine Zahlen, Preise, Netzabdeckungen, Gesetze oder Regeln. Nenne nie Preise im Text; setze stattdessen den Platzhalter {{LIVE_PREISE:<ISO-Ländercode>}} (z. B. {{LIVE_PREISE:TR}}) als eigenen Absatz.
-- Alles, was nicht aus den beigelegten Daten stammt oder rechtlich/regional ist (Einreise-, Handy-, Zollregeln, Roaming-Preise, Netzbetreiber), markierst du als [PRÜFEN: Thema].
+- Aussagen, die nicht aus den beigelegten Daten stammen und rechtlich/regional unsicher sind (Einreise-, Handy-, Zollregeln, Roaming-Preise, Netzbetreiber), lässt du einfach weg oder formulierst sie allgemein (z. B. "informiere dich vor der Reise bei offiziellen Stellen"). Keine Marker wie [PRÜFEN] oder [QUELLE FEHLT].
 - "ohne Drosselung" nur erwähnen, wenn im Kontext unlimited_confirmed = true ist; sonst Drosselung gar nicht erwähnen.
 - Keine Behauptungen über Kundenzahlen, Bewertungen oder Tests.
-- Keine Quellen-URLs erfinden. Wo eine Aussage eine Quelle braucht, schreibe [QUELLE FEHLT: Thema] und nenne das Thema in missing_sources.
+- Keine Quellen-URLs erfinden. Aussagen, die eine Quelle bräuchten, lässt du weg; missing_sources bleibt leer.
 - Interne Links nur auf Pfade aus allowed_links, im Markdown als [Text](/pfad).
 - Meta-Title max. 60 Zeichen, Meta-Description 120–155 Zeichen, Kurzantwort 40–60 Wörter.
 - Abschnitte als H2/H3 mit Überschriften als Fragen im Wortlaut typischer Suchanfragen. Tabellen (Markdown mit |) und nummerierte Schritte (1. 2. 3.), wo sinnvoll.
@@ -46,8 +47,8 @@ const PRICE = /\d+(?:[.,]\d{1,2})?\s?(?:€|EUR\b|Euro\b)|€\s?\d+(?:[.,]\d{1,2
 /** Server-side safety net after the model: drops unknown links, neutralises unconfirmed throttle claims and fixed prices. */
 export function cleanText(text: string, allowedPaths: Set<string>, unlimitedConfirmed: boolean) {
   let t = text.replace(/\[([^\]]+)\]\((\/[^)\s]*)\)/g, (all, label: string, path: string) => (allowedPaths.has(path) ? all : label));
-  if (!unlimitedConfirmed) t = t.replace(THROTTLE, "[PRÜFEN: Drosselung]");
-  return t.replace(PRICE, "[PRÜFEN: Preis – nur {{LIVE_PREISE}} verwenden]").replace(/<[^>]+>/g, "");
+  if (!unlimitedConfirmed) t = t.replace(THROTTLE, "");
+  return stripMarkers(t.replace(PRICE, "").replace(/<[^>]+>/g, ""));
 }
 
 export function allowedPaths(ctx: AiContext) {

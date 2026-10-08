@@ -93,7 +93,7 @@ function Generator({ countries, onCreated }: { countries: AdminData["countries"]
   return (
     <section className="space-y-3 rounded-[14px] border border-line bg-surface p-4">
       <h3 className="text-lg font-semibold">Beitrag mit KI entwerfen</h3>
-      <p className="text-sm text-ink-muted">Die KI erstellt nur einen Entwurf – nie direkt veröffentlicht. Unsichere Stellen werden mit [PRÜFEN] oder [QUELLE FEHLT] markiert.</p>
+      <p className="text-sm text-ink-muted">Die KI erstellt nur einen Entwurf – nie direkt veröffentlicht. Unsichere Aussagen lässt die KI einfach weg.</p>
       <div className="grid gap-3 md:grid-cols-2">
         <label className="text-sm font-medium md:col-span-2">Titel oder Thema *<Input className="mt-1" value={f.topic} onChange={(e) => setF({ ...f, topic: e.target.value })} placeholder="z. B. eSIM für Japan einrichten" /></label>
         <label className="text-sm font-medium">Fokus-Suchbegriff<Input className="mt-1" value={f.keyword} onChange={(e) => setF({ ...f, keyword: e.target.value })} placeholder="z. B. eSIM Japan" /></label>
