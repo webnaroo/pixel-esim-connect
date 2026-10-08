@@ -19,7 +19,7 @@ describe("grouping", () => {
       { manufacturer: "Apple", model: "iPhone 12", release_year: 2020 },
       { manufacturer: "Apple", model: "iPhone 15", release_year: 2023 },
     ]);
-    expect(g[0].models.map((m) => m.model)).toEqual(["iPhone 15", "iPhone 12"]);
+    expect(g[0]!.models.map((m) => m.model)).toEqual(["iPhone 15", "iPhone 12"]);
   });
 });
 
@@ -46,6 +46,6 @@ describe("csv import", () => {
     expect(p.errors.map((e) => e.line)).toEqual([4, 5]);
   });
   it("reports missing columns", () => {
-    expect(previewImport("manufacturer,model\nA,B", new Set()).errors[0].error).toContain("source_url");
+    expect(previewImport("manufacturer,model\nA,B", new Set()).errors[0]!.error).toContain("source_url");
   });
 });
