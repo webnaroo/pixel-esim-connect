@@ -10,12 +10,36 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as DestinationsRouteImport } from './routes/destinations'
+import { Route as FaqRouteImport } from './routes/faq'
+import { Route as HelpRouteImport } from './routes/help'
+import { Route as HowItWorksRouteImport } from './routes/how-it-works'
 import { Route as CountriesSlugRouteImport } from './routes/countries.$slug'
 import { Route as RegionsSlugRouteImport } from './routes/regions.$slug'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DestinationsRoute = DestinationsRouteImport.update({
+  id: '/destinations',
+  path: '/destinations',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FaqRoute = FaqRouteImport.update({
+  id: '/faq',
+  path: '/faq',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HelpRoute = HelpRouteImport.update({
+  id: '/help',
+  path: '/help',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HowItWorksRoute = HowItWorksRouteImport.update({
+  id: '/how-it-works',
+  path: '/how-it-works',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CountriesSlugRoute = CountriesSlugRouteImport.update({
@@ -31,30 +55,68 @@ const RegionsSlugRoute = RegionsSlugRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/destinations': typeof DestinationsRoute
+  '/faq': typeof FaqRoute
+  '/help': typeof HelpRoute
+  '/how-it-works': typeof HowItWorksRoute
   '/countries/$slug': typeof CountriesSlugRoute
   '/regions/$slug': typeof RegionsSlugRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/destinations': typeof DestinationsRoute
+  '/faq': typeof FaqRoute
+  '/help': typeof HelpRoute
+  '/how-it-works': typeof HowItWorksRoute
   '/countries/$slug': typeof CountriesSlugRoute
   '/regions/$slug': typeof RegionsSlugRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/destinations': typeof DestinationsRoute
+  '/faq': typeof FaqRoute
+  '/help': typeof HelpRoute
+  '/how-it-works': typeof HowItWorksRoute
   '/countries/$slug': typeof CountriesSlugRoute
   '/regions/$slug': typeof RegionsSlugRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/countries/$slug' | '/regions/$slug'
+  fullPaths:
+    | '/'
+    | '/destinations'
+    | '/faq'
+    | '/help'
+    | '/how-it-works'
+    | '/countries/$slug'
+    | '/regions/$slug'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/countries/$slug' | '/regions/$slug'
-  id: '__root__' | '/' | '/countries/$slug' | '/regions/$slug'
+  to:
+    | '/'
+    | '/destinations'
+    | '/faq'
+    | '/help'
+    | '/how-it-works'
+    | '/countries/$slug'
+    | '/regions/$slug'
+  id:
+    | '__root__'
+    | '/'
+    | '/destinations'
+    | '/faq'
+    | '/help'
+    | '/how-it-works'
+    | '/countries/$slug'
+    | '/regions/$slug'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  DestinationsRoute: typeof DestinationsRoute
+  FaqRoute: typeof FaqRoute
+  HelpRoute: typeof HelpRoute
+  HowItWorksRoute: typeof HowItWorksRoute
   CountriesSlugRoute: typeof CountriesSlugRoute
   RegionsSlugRoute: typeof RegionsSlugRoute
 }
@@ -66,6 +128,34 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/destinations': {
+      id: '/destinations'
+      path: '/destinations'
+      fullPath: '/destinations'
+      preLoaderRoute: typeof DestinationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/faq': {
+      id: '/faq'
+      path: '/faq'
+      fullPath: '/faq'
+      preLoaderRoute: typeof FaqRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/help': {
+      id: '/help'
+      path: '/help'
+      fullPath: '/help'
+      preLoaderRoute: typeof HelpRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/how-it-works': {
+      id: '/how-it-works'
+      path: '/how-it-works'
+      fullPath: '/how-it-works'
+      preLoaderRoute: typeof HowItWorksRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/countries/$slug': {
@@ -87,6 +177,10 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  DestinationsRoute: DestinationsRoute,
+  FaqRoute: FaqRoute,
+  HelpRoute: HelpRoute,
+  HowItWorksRoute: HowItWorksRoute,
   CountriesSlugRoute: CountriesSlugRoute,
   RegionsSlugRoute: RegionsSlugRoute,
 }
