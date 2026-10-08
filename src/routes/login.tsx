@@ -5,6 +5,7 @@ import { Button, Input, SegmentedControl } from "@/components/ui-kit";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { AuthShell, GoogleButton, authHead, isEmail } from "@/components/auth-shell";
+import { getMyRole } from "@/lib/account.functions";
 
 export const Route = createFileRoute("/login")({
   head: () => authHead("Anmelden", "Melde dich bei GlobeSIM an, um deine eSIMs und Bestellungen zu sehen."),
@@ -39,12 +40,14 @@ function Login() {
     }
     const password = String(f.get("password") ?? "");
     const { error } = await supabase.auth.signInWithPassword({ email, password });
-    setBusy(false);
     if (error) {
+      setBusy(false);
       toast.error("Anmeldung fehlgeschlagen. Bitte Daten prüfen.");
       return;
     }
-    navigate({ to: "/account" });
+    const { isAdmin } = await getMyRole();
+    setBusy(false);
+    navigate({ to: isAdmin ? "/admin" : "/account" });
   }
 
   if (user) {

@@ -33,6 +33,14 @@ export const getMyAccount = createServerFn({ method: "GET" })
 
 export const myAccountQuery = () => queryOptions({ queryKey: ["account"], queryFn: () => getMyAccount() });
 
+/** Own role check after sign-in — decides the landing page (admins go to /admin). */
+export const getMyRole = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { data: isAdmin } = await context.supabase.rpc("has_role", { _user_id: context.userId, _role: "admin" });
+    return { isAdmin: Boolean(isAdmin) };
+  });
+
 /** Installation data only for the owner, only on request; never logged. */
 export const getMyInstallData = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
