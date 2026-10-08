@@ -94,34 +94,61 @@ export type Database = {
       }
       blog_posts: {
         Row: {
+          answer_summary: string | null
+          author_name: string | null
           body_md: string
+          country_code: string | null
           cover_url: string | null
           created_at: string
+          faq: Json
           id: string
+          meta_description: string | null
+          meta_title: string | null
           published_at: string | null
+          sections: Json
           seo: Json | null
           slug: string
+          status: string
           title: string
+          updated_at: string
         }
         Insert: {
+          answer_summary?: string | null
+          author_name?: string | null
           body_md?: string
+          country_code?: string | null
           cover_url?: string | null
           created_at?: string
+          faq?: Json
           id?: string
+          meta_description?: string | null
+          meta_title?: string | null
           published_at?: string | null
+          sections?: Json
           seo?: Json | null
           slug: string
+          status?: string
           title: string
+          updated_at?: string
         }
         Update: {
+          answer_summary?: string | null
+          author_name?: string | null
           body_md?: string
+          country_code?: string | null
           cover_url?: string | null
           created_at?: string
+          faq?: Json
           id?: string
+          meta_description?: string | null
+          meta_title?: string | null
           published_at?: string | null
+          sections?: Json
           seo?: Json | null
           slug?: string
+          status?: string
           title?: string
+          updated_at?: string
         }
         Relationships: []
       }
