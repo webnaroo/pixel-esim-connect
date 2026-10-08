@@ -58,9 +58,9 @@ export const listAdminOrders = createServerFn({ method: "GET" })
     const { supabaseAdmin: db } = await import("@/integrations/supabase/client.server");
     const { data } = await db
       .from("orders")
-      .select("id,status,guest_email,amount,currency,fulfillment_attempts,last_error,is_test,created_at,plan_snapshot")
+      .select("id,status,guest_email,amount,currency,fulfillment_attempts,last_error,is_test,created_at,plan_snapshot,email_status")
       .order("created_at", { ascending: false })
-      .limit(100);
+      .limit(500);
     return data ?? [];
   });
 

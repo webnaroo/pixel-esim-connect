@@ -246,7 +246,15 @@ function FilterChip({ active, onClick, children }: { active: boolean; onClick: (
   );
 }
 
-export function destinationHead(d: { name: string; plans: { price: number }[] } | null | undefined, path: string) {
+/** Structured offer data only with real prices (never preview/test plans). */
+function offerLd(d: { name: string; plans: { price: number }[]; fixturePlans?: boolean }) {
+  if (d.fixturePlans || !d.plans.length) return [];
+  const prices = d.plans.map((p) => p.price).filter((p) => p > 0);
+  if (!prices.length) return [];
+  return [{ type: "application/ld+json", children: JSON.stringify({ "@context": "https://schema.org", "@type": "Product", name: `eSIM ${d.name}`, brand: { "@type": "Brand", name: "GlobeSIM" }, offers: { "@type": "AggregateOffer", priceCurrency: "EUR", lowPrice: Math.min(...prices).toFixed(2), highPrice: Math.max(...prices).toFixed(2), offerCount: prices.length } }) }];
+}
+
+export function destinationHead(d: { name: string; plans: { price: number }[]; fixturePlans?: boolean } | null | undefined, path: string) {
   if (!d) return { meta: [{ title: "Reiseziel nicht gefunden | GlobeSIM" }, { name: "robots", content: "noindex" }] };
   const from = d.plans.length ? Math.min(...d.plans.map((p) => p.price)) : null;
   const title = from != null ? `eSIM für ${d.name} – ab ${formatPrice(from)} | GlobeSIM` : `eSIM für ${d.name} | GlobeSIM`;
@@ -259,9 +267,10 @@ export function destinationHead(d: { name: string; plans: { price: number }[] } 
       { property: "og:description", content: description },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
-      ...(d.plans.length ? [] : [{ name: "robots", content: "noindex, follow" }]),
+      ...(d.plans.length && !d.fixturePlans ? [] : [{ name: "robots", content: "noindex, follow" }]),
     ],
     scripts: [
+      ...offerLd(d),
       {
         type: "application/ld+json",
         children: JSON.stringify({
