@@ -21,6 +21,7 @@ import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as AuthenticatedAccountRouteImport } from './routes/_authenticated/account'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
+import { Route as ApiSeoAnalysisRouteImport } from './routes/api/seo-analysis'
 import { Route as BlogIndexRouteImport } from './routes/blog.index'
 import { Route as BlogSlugRouteImport } from './routes/blog.$slug'
 import { Route as CheckoutPlanIdRouteImport } from './routes/checkout.$planId'
@@ -106,6 +107,11 @@ const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
   id: '/admin',
   path: '/admin',
   getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const ApiSeoAnalysisRoute = ApiSeoAnalysisRouteImport.update({
+  id: '/api/seo-analysis',
+  path: '/api/seo-analysis',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const BlogIndexRoute = BlogIndexRouteImport.update({
   id: '/blog/',
@@ -263,6 +269,7 @@ export interface FileRoutesByFullPath {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/account': typeof AuthenticatedAccountRoute
   '/admin': typeof AuthenticatedAdminRouteWithChildren
+  '/api/seo-analysis': typeof ApiSeoAnalysisRoute
   '/blog/$slug': typeof BlogSlugRoute
   '/checkout/$planId': typeof CheckoutPlanIdRoute
   '/countries/$slug': typeof CountriesSlugRoute
@@ -301,6 +308,7 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/account': typeof AuthenticatedAccountRoute
+  '/api/seo-analysis': typeof ApiSeoAnalysisRoute
   '/blog/$slug': typeof BlogSlugRoute
   '/checkout/$planId': typeof CheckoutPlanIdRoute
   '/countries/$slug': typeof CountriesSlugRoute
@@ -342,6 +350,7 @@ export interface FileRoutesById {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/_authenticated/account': typeof AuthenticatedAccountRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
+  '/api/seo-analysis': typeof ApiSeoAnalysisRoute
   '/blog/$slug': typeof BlogSlugRoute
   '/checkout/$planId': typeof CheckoutPlanIdRoute
   '/countries/$slug': typeof CountriesSlugRoute
@@ -383,6 +392,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/account'
     | '/admin'
+    | '/api/seo-analysis'
     | '/blog/$slug'
     | '/checkout/$planId'
     | '/countries/$slug'
@@ -421,6 +431,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/sitemap.xml'
     | '/account'
+    | '/api/seo-analysis'
     | '/blog/$slug'
     | '/checkout/$planId'
     | '/countries/$slug'
@@ -461,6 +472,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/_authenticated/account'
     | '/_authenticated/admin'
+    | '/api/seo-analysis'
     | '/blog/$slug'
     | '/checkout/$planId'
     | '/countries/$slug'
@@ -500,6 +512,7 @@ export interface RootRouteChildren {
   RegisterRoute: typeof RegisterRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
+  ApiSeoAnalysisRoute: typeof ApiSeoAnalysisRoute
   BlogSlugRoute: typeof BlogSlugRoute
   CheckoutPlanIdRoute: typeof CheckoutPlanIdRoute
   CountriesSlugRoute: typeof CountriesSlugRoute
@@ -602,6 +615,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/admin'
       preLoaderRoute: typeof AuthenticatedAdminRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/api/seo-analysis': {
+      id: '/api/seo-analysis'
+      path: '/api/seo-analysis'
+      fullPath: '/api/seo-analysis'
+      preLoaderRoute: typeof ApiSeoAnalysisRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/blog/': {
       id: '/blog/'
@@ -843,6 +863,7 @@ const rootRouteChildren: RootRouteChildren = {
   RegisterRoute: RegisterRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
+  ApiSeoAnalysisRoute: ApiSeoAnalysisRoute,
   BlogSlugRoute: BlogSlugRoute,
   CheckoutPlanIdRoute: CheckoutPlanIdRoute,
   CountriesSlugRoute: CountriesSlugRoute,
