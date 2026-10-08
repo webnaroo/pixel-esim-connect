@@ -1,10 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
-import { adminListQuery, type ListKind } from "@/lib/admin-lists.functions";
+import { adminListQuery, type ListKind, type Row } from "@/lib/admin-lists.functions";
 import { EmptyState } from "./brand";
 import { Button, Input } from "./ui-kit";
 
-export type Col = { key: string; label: string; render?: (row: Record<string, unknown>) => React.ReactNode };
+export type Col = { key: string; label: string; render?: (row: Row) => React.ReactNode };
 
 const fmt = (v: unknown) => {
   if (v === null || v === undefined || v === "") return "–";
@@ -41,7 +41,7 @@ export function AdminList({ kind, cols, filters, searchLabel = "Suchen" }: { kin
           <table className="w-full min-w-[640px] text-sm">
             <thead className="bg-muted text-left text-ink-muted"><tr>{cols.map((c) => <th key={c.key} className="p-3 font-medium">{c.label}</th>)}</tr></thead>
             <tbody className="divide-y divide-line bg-surface">
-              {rows.map((r, i) => <tr key={String(r.id ?? r.order_id ?? i)}>{cols.map((c) => <td key={c.key} className="p-3 align-top">{c.render ? c.render(r) : fmt(r[c.key])}</td>)}</tr>)}
+              {rows.map((r: Row, i: number) => <tr key={String(r["id"] ?? r["order_id"] ?? i)}>{cols.map((c) => <td key={c.key} className="p-3 align-top">{c.render ? c.render(r) : fmt(r[c.key])}</td>)}</tr>)}
             </tbody>
           </table>
         </div>

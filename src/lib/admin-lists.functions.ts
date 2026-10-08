@@ -5,6 +5,7 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 export const PAGE_SIZE = 50;
+export type Row = Record<string, string | number | boolean | null>;
 const ListInput = z.object({ kind: z.enum(["customers", "esims", "plans", "api_logs", "sync_runs", "webhooks", "audit"]), q: z.string().trim().max(100).default(""), filter: z.string().max(40).default(""), page: z.number().int().min(0).default(0) });
 export type ListKind = z.infer<typeof ListInput>["kind"];
 
@@ -21,7 +22,7 @@ export const adminList = createServerFn({ method: "GET" })
     const { supabaseAdmin: db } = await import("@/integrations/supabase/client.server");
     const from = data.page * PAGE_SIZE, to = from + PAGE_SIZE - 1;
     const { q, filter } = data;
-    let rows: Record<string, unknown>[] = [];
+    let rows: Row[] = [];
     let count = 0;
     switch (data.kind) {
       case "customers": {
@@ -33,8 +34,8 @@ export const adminList = createServerFn({ method: "GET" })
           ids.length ? db.from("user_roles").select("user_id,role").in("user_id", ids) : Promise.resolve({ data: [] as { user_id: string; role: string }[] }),
           ids.length ? db.from("orders").select("user_id").in("user_id", ids) : Promise.resolve({ data: [] as { user_id: string | null }[] }),
         ]);
-        rows = (r.data ?? []).map((p) => ({ ...p, roles: (roles ?? []).filter((x) => x.user_id === p.id).map((x) => x.role).join(", "), orders: (orders ?? []).filter((o) => o.user_id === p.id).length }));
-        if (filter) rows = rows.filter((x) => String(x.roles).includes(filter));
+        rows = (r.data ?? []).map((p): Row => ({ ...p, roles: (roles ?? []).filter((x) => x.user_id === p.id).map((x) => x.role).join(", "), orders: (orders ?? []).filter((o) => o.user_id === p.id).length }));
+        if (filter) rows = rows.filter((x) => String(x["roles"]).includes(filter));
         count = r.count ?? 0;
         break;
       }
@@ -43,7 +44,7 @@ export const adminList = createServerFn({ method: "GET" })
         if (filter) s = s.eq("status", filter);
         if (q) s = s.or(`iccid.ilike.${like(q)},provider_order_id.ilike.${like(q)}`);
         const r = await s;
-        rows = (r.data ?? []).map((e) => ({ ...e, iccid: e.iccid ? `…${e.iccid.slice(-4)}` : null }));
+        rows = (r.data ?? []).map((e): Row => ({ ...e, iccid: e.iccid ? `…${e.iccid.slice(-4)}` : null }));
         count = r.count ?? 0;
         break;
       }
@@ -54,7 +55,7 @@ export const adminList = createServerFn({ method: "GET" })
         if (filter === "unlimited" || filter === "data") s = s.eq("type", filter);
         if (q) s = s.ilike("provider_plan_id", like(q));
         const r = await s;
-        rows = (r.data ?? []).map((p) => ({ ...p, destination: (p.destination as { name_de?: string } | null)?.name_de ?? "" }));
+        rows = (r.data ?? []).map((p): Row => ({ ...p, destination: (p.destination as { name_de?: string } | null)?.name_de ?? "" }));
         count = r.count ?? 0;
         break;
       }
@@ -62,27 +63,27 @@ export const adminList = createServerFn({ method: "GET" })
         let s = db.from("api_logs").select("id,provider,endpoint,status,latency_ms,error,created_at", { count: "exact" }).order("created_at", { ascending: false }).range(from, to);
         if (filter === "errors") s = s.or("status.gte.400,error.not.is.null");
         if (q) s = s.ilike("endpoint", like(q));
-        const r = await s; rows = r.data ?? []; count = r.count ?? 0;
+        const r = await s; rows = (r.data ?? []) as Row[]; count = r.count ?? 0;
         break;
       }
       case "sync_runs": {
         let s = db.from("sync_runs").select("id,started_at,finished_at,status,plans_added,plans_updated,plans_deactivated,error", { count: "exact" }).order("started_at", { ascending: false }).range(from, to);
         if (filter) s = s.eq("status", filter);
-        const r = await s; rows = r.data ?? []; count = r.count ?? 0;
+        const r = await s; rows = (r.data ?? []) as Row[]; count = r.count ?? 0;
         break;
       }
       case "webhooks": {
         let s = db.from("webhook_events").select("id,source,event_id,processed_at,created_at", { count: "exact" }).order("created_at", { ascending: false }).range(from, to);
         if (filter === "stripe" || filter === "provider") s = s.eq("source", filter);
         if (q) s = s.ilike("event_id", like(q));
-        const r = await s; rows = r.data ?? []; count = r.count ?? 0;
+        const r = await s; rows = (r.data ?? []) as Row[]; count = r.count ?? 0;
         break;
       }
       case "audit": {
         let s = db.from("audit_log").select("id,actor_id,action,entity,entity_id,created_at", { count: "exact" }).order("created_at", { ascending: false }).range(from, to);
         if (filter) s = s.eq("entity", filter);
         if (q) s = s.or(`action.ilike.${like(q)},entity_id.ilike.${like(q)}`);
-        const r = await s; rows = r.data ?? []; count = r.count ?? 0;
+        const r = await s; rows = (r.data ?? []) as Row[]; count = r.count ?? 0;
         break;
       }
     }
