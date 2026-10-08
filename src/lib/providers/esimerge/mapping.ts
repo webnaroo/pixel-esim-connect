@@ -1,3 +1,4 @@
+import { maskSensitive } from "@/lib/mask";
 // eSIMerge -> internal type mapping. << Fill in once example responses arrive. >>
 // Pure functions only. Until filled they throw ProviderNotConfiguredError,
 // so nothing invented can ever reach the database or the UI.
@@ -83,16 +84,5 @@ export const SENSITIVE_KEYS = [
 ];
 
 export function sanitize(value: unknown): unknown {
-  if (Array.isArray(value)) return value.map(sanitize);
-  if (value && typeof value === "object") {
-    return Object.fromEntries(
-      Object.entries(value as Record<string, unknown>).map(([k, v]) => [
-        k,
-        SENSITIVE_KEYS.some((s) => k.toLowerCase().replace(/[-_]/g, "").includes(s.replace(/_/g, "")))
-          ? "***"
-          : sanitize(v),
-      ]),
-    );
-  }
-  return value;
+  return maskSensitive(value);
 }

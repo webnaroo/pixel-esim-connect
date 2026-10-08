@@ -43,7 +43,7 @@ const toCents = (v: number) => Math.round(v * 100);
 
 /** Rounds a gross amount UP to the next x,49 or x,99. */
 export function roundTo4999(gross: number): number {
-  const cents = Math.ceil(toCents(gross * 100) / 100); // tolerate float noise
+  const cents = Math.ceil(Math.round(gross * 1000) / 10); // tolerate float noise
   const euros = Math.floor(cents / 100);
   const rest = cents - euros * 100;
   const target = rest <= 49 ? 49 : 99;
