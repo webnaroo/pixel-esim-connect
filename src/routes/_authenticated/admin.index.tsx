@@ -76,12 +76,12 @@ function Overview() {
         </div>
       )}
       <ComparisonRecheckHint />
-      {lastStats?.missingFx?.length ? (
+      {!c.fxValid || lastStats?.missingFx?.length ? (
         <div role="alert" className="flex gap-3 rounded-lg border border-warning bg-surface p-4 lg:col-span-2">
           <Warning size={22} className="shrink-0 text-warning" weight="fill" />
           <div>
-            <p className="font-medium">Wechselkurs fehlt: {lastStats.missingFx.map((c) => `${c} → EUR`).join(", ")}</p>
-            <p className="text-sm text-ink-muted">Ohne Kurs wird kein Preis angezeigt. Die Tarife bleiben inaktiv, bis du unter „Preise“ einen Kurs einträgst und neu synchronisierst.</p>
+            <p className="font-medium">Kein gültiger Wechselkurs{lastStats?.missingFx?.length ? `: ${lastStats.missingFx.map((x) => `${x} → EUR`).join(", ")}` : ""}</p>
+            <p className="text-sm text-ink-muted">Ohne Kurs wird kein Preis angezeigt. Die Tarife bleiben unsichtbar, bis ein gültiger Kurs vorliegt. Unter „Preise“ kannst du jetzt aktualisieren.</p>
           </div>
         </div>
       ) : null}
