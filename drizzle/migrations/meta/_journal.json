@@ -113,6 +113,13 @@
       "when": 1791484473010,
       "tag": "0015_margin_settings_fx_last_checked",
       "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1791484963395,
+      "tag": "0016_airalo_facts_from_holafly_page",
+      "breakpoints": true
     }
   ]
 }
