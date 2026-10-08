@@ -120,6 +120,13 @@
       "when": 1791484963395,
       "tag": "0016_airalo_facts_from_holafly_page",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1791486819445,
+      "tag": "0017_admin_seo_history",
+      "breakpoints": true
     }
   ]
 }

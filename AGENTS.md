@@ -29,7 +29,9 @@
 - Managed email templates and synchronous transport live in src/lib/email-templates; /lovable/* routes authenticate themselves and bypass app redirects and CSRF checks — dashboard previews must remain accessible without opening a public send endpoint.
 - Account deletion anonymises orders (kept for tax) and clears eSIM installation data before deleting the login (src/lib/anonymize.ts) — GDPR without losing bookkeeping records.
 - Admin list views (admin-lists.functions.ts) never select activation code, LPA or QR columns — installation data is visible only to the owner via getMyInstallData.
-- Exchange rates are fetched only from official ECB data (ECB XML, Frankfurter as ECB-based fallback; never scraping) by src/lib/fx.server.ts; every price calculation uses loadFx().lookup, whose rules (review threshold, max age, manual override, buffer) are pure functions in src/lib/fx.ts with tests — one source of truth for "no rate, no price".
+- FX uses only ECB XML or ECB-based Frankfurter fallback; all prices use loadFx().lookup and tested fx.ts rules — no rate, no price.
 - plans is closed to client roles; public pages read public.public_plans (released columns, active+priced only); admin code reads plans only via supabaseAdmin after has_role — keeps cost prices and raw provider data server-only.
 - Homepage reference artwork is a background with live search and benefit text; uploaded promotional artwork must not expose unverified embedded prices — keeps the experience usable and offers tied to catalog data.
 - Public page identities and structured data use the shared SEO helpers with leaf-only canonical links; the sitemap uses the same public origin, paginated RLS-limited reads and fails with 503 on source errors — prevents preview URLs, duplicate schemas and incomplete crawler inventories.
+- SEO AI streams through an admin-verified route with durable access blocks; admin history stores analyses, audits and content-trigger/manual changes — no private report leaks or false application claims.
+- Public SEO tests and admin audits share one sitemap-driven HTML validator — every public inventory page receives canonical and JSON-LD checks.

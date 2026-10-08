@@ -860,6 +860,69 @@ export type Database = {
         }
         Relationships: []
       }
+      seo_ai_state: {
+        Row: {
+          blocked: boolean
+          id: boolean
+          reason: string | null
+          status_code: number | null
+          updated_at: string
+        }
+        Insert: {
+          blocked?: boolean
+          id?: boolean
+          reason?: string | null
+          status_code?: number | null
+          updated_at?: string
+        }
+        Update: {
+          blocked?: boolean
+          id?: boolean
+          reason?: string | null
+          status_code?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      seo_runs: {
+        Row: {
+          actor_id: string | null
+          created_at: string
+          error: string | null
+          id: string
+          input_report: string | null
+          kind: string
+          pages: string[]
+          result: Json | null
+          status: string
+          title: string
+        }
+        Insert: {
+          actor_id?: string | null
+          created_at?: string
+          error?: string | null
+          id?: string
+          input_report?: string | null
+          kind: string
+          pages?: string[]
+          result?: Json | null
+          status?: string
+          title: string
+        }
+        Update: {
+          actor_id?: string | null
+          created_at?: string
+          error?: string | null
+          id?: string
+          input_report?: string | null
+          kind?: string
+          pages?: string[]
+          result?: Json | null
+          status?: string
+          title?: string
+        }
+        Relationships: []
+      }
       support_tickets: {
         Row: {
           created_at: string

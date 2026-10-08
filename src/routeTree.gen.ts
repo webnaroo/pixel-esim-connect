@@ -21,6 +21,7 @@ import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as AuthenticatedAccountRouteImport } from './routes/_authenticated/account'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
+import { Route as ApiSeoAnalysisRouteImport } from './routes/api/seo-analysis'
 import { Route as BlogIndexRouteImport } from './routes/blog.index'
 import { Route as BlogSlugRouteImport } from './routes/blog.$slug'
 import { Route as CheckoutPlanIdRouteImport } from './routes/checkout.$planId'
@@ -39,6 +40,7 @@ import { Route as AuthenticatedAdminLogsRouteImport } from './routes/_authentica
 import { Route as AuthenticatedAdminOrdersRouteImport } from './routes/_authenticated/admin.orders'
 import { Route as AuthenticatedAdminPlansRouteImport } from './routes/_authenticated/admin.plans'
 import { Route as AuthenticatedAdminPricingRouteImport } from './routes/_authenticated/admin.pricing'
+import { Route as AuthenticatedAdminSeoRouteImport } from './routes/_authenticated/admin.seo'
 import { Route as AuthenticatedAdminUnlimitedRouteImport } from './routes/_authenticated/admin.unlimited'
 import { Route as ApiPublicCronCatalogSyncRouteImport } from './routes/api/public/cron/catalog-sync'
 import { Route as ApiPublicCronEsimStatusPollRouteImport } from './routes/api/public/cron/esim-status-poll'
@@ -106,6 +108,11 @@ const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
   id: '/admin',
   path: '/admin',
   getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const ApiSeoAnalysisRoute = ApiSeoAnalysisRouteImport.update({
+  id: '/api/seo-analysis',
+  path: '/api/seo-analysis',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const BlogIndexRoute = BlogIndexRouteImport.update({
   id: '/blog/',
@@ -203,6 +210,11 @@ const AuthenticatedAdminPricingRoute =
     path: '/pricing',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
+const AuthenticatedAdminSeoRoute = AuthenticatedAdminSeoRouteImport.update({
+  id: '/seo',
+  path: '/seo',
+  getParentRoute: () => AuthenticatedAdminRoute,
+} as any)
 const AuthenticatedAdminUnlimitedRoute =
   AuthenticatedAdminUnlimitedRouteImport.update({
     id: '/unlimited',
@@ -263,6 +275,7 @@ export interface FileRoutesByFullPath {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/account': typeof AuthenticatedAccountRoute
   '/admin': typeof AuthenticatedAdminRouteWithChildren
+  '/api/seo-analysis': typeof ApiSeoAnalysisRoute
   '/blog/$slug': typeof BlogSlugRoute
   '/checkout/$planId': typeof CheckoutPlanIdRoute
   '/countries/$slug': typeof CountriesSlugRoute
@@ -280,6 +293,7 @@ export interface FileRoutesByFullPath {
   '/admin/orders': typeof AuthenticatedAdminOrdersRoute
   '/admin/plans': typeof AuthenticatedAdminPlansRoute
   '/admin/pricing': typeof AuthenticatedAdminPricingRoute
+  '/admin/seo': typeof AuthenticatedAdminSeoRoute
   '/admin/unlimited': typeof AuthenticatedAdminUnlimitedRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
   '/api/public/cron/catalog-sync': typeof ApiPublicCronCatalogSyncRoute
@@ -301,6 +315,7 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/account': typeof AuthenticatedAccountRoute
+  '/api/seo-analysis': typeof ApiSeoAnalysisRoute
   '/blog/$slug': typeof BlogSlugRoute
   '/checkout/$planId': typeof CheckoutPlanIdRoute
   '/countries/$slug': typeof CountriesSlugRoute
@@ -318,6 +333,7 @@ export interface FileRoutesByTo {
   '/admin/orders': typeof AuthenticatedAdminOrdersRoute
   '/admin/plans': typeof AuthenticatedAdminPlansRoute
   '/admin/pricing': typeof AuthenticatedAdminPricingRoute
+  '/admin/seo': typeof AuthenticatedAdminSeoRoute
   '/admin/unlimited': typeof AuthenticatedAdminUnlimitedRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
   '/api/public/cron/catalog-sync': typeof ApiPublicCronCatalogSyncRoute
@@ -342,6 +358,7 @@ export interface FileRoutesById {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/_authenticated/account': typeof AuthenticatedAccountRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
+  '/api/seo-analysis': typeof ApiSeoAnalysisRoute
   '/blog/$slug': typeof BlogSlugRoute
   '/checkout/$planId': typeof CheckoutPlanIdRoute
   '/countries/$slug': typeof CountriesSlugRoute
@@ -359,6 +376,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/orders': typeof AuthenticatedAdminOrdersRoute
   '/_authenticated/admin/plans': typeof AuthenticatedAdminPlansRoute
   '/_authenticated/admin/pricing': typeof AuthenticatedAdminPricingRoute
+  '/_authenticated/admin/seo': typeof AuthenticatedAdminSeoRoute
   '/_authenticated/admin/unlimited': typeof AuthenticatedAdminUnlimitedRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
   '/api/public/cron/catalog-sync': typeof ApiPublicCronCatalogSyncRoute
@@ -383,6 +401,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/account'
     | '/admin'
+    | '/api/seo-analysis'
     | '/blog/$slug'
     | '/checkout/$planId'
     | '/countries/$slug'
@@ -400,6 +419,7 @@ export interface FileRouteTypes {
     | '/admin/orders'
     | '/admin/plans'
     | '/admin/pricing'
+    | '/admin/seo'
     | '/admin/unlimited'
     | '/admin/'
     | '/api/public/cron/catalog-sync'
@@ -421,6 +441,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/sitemap.xml'
     | '/account'
+    | '/api/seo-analysis'
     | '/blog/$slug'
     | '/checkout/$planId'
     | '/countries/$slug'
@@ -438,6 +459,7 @@ export interface FileRouteTypes {
     | '/admin/orders'
     | '/admin/plans'
     | '/admin/pricing'
+    | '/admin/seo'
     | '/admin/unlimited'
     | '/admin'
     | '/api/public/cron/catalog-sync'
@@ -461,6 +483,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/_authenticated/account'
     | '/_authenticated/admin'
+    | '/api/seo-analysis'
     | '/blog/$slug'
     | '/checkout/$planId'
     | '/countries/$slug'
@@ -478,6 +501,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/orders'
     | '/_authenticated/admin/plans'
     | '/_authenticated/admin/pricing'
+    | '/_authenticated/admin/seo'
     | '/_authenticated/admin/unlimited'
     | '/_authenticated/admin/'
     | '/api/public/cron/catalog-sync'
@@ -500,6 +524,7 @@ export interface RootRouteChildren {
   RegisterRoute: typeof RegisterRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
+  ApiSeoAnalysisRoute: typeof ApiSeoAnalysisRoute
   BlogSlugRoute: typeof BlogSlugRoute
   CheckoutPlanIdRoute: typeof CheckoutPlanIdRoute
   CountriesSlugRoute: typeof CountriesSlugRoute
@@ -602,6 +627,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/admin'
       preLoaderRoute: typeof AuthenticatedAdminRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/api/seo-analysis': {
+      id: '/api/seo-analysis'
+      path: '/api/seo-analysis'
+      fullPath: '/api/seo-analysis'
+      preLoaderRoute: typeof ApiSeoAnalysisRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/blog/': {
       id: '/blog/'
@@ -729,6 +761,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminPricingRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/_authenticated/admin/seo': {
+      id: '/_authenticated/admin/seo'
+      path: '/seo'
+      fullPath: '/admin/seo'
+      preLoaderRoute: typeof AuthenticatedAdminSeoRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
     '/_authenticated/admin/unlimited': {
       id: '/_authenticated/admin/unlimited'
       path: '/unlimited'
@@ -798,6 +837,7 @@ interface AuthenticatedAdminRouteChildren {
   AuthenticatedAdminOrdersRoute: typeof AuthenticatedAdminOrdersRoute
   AuthenticatedAdminPlansRoute: typeof AuthenticatedAdminPlansRoute
   AuthenticatedAdminPricingRoute: typeof AuthenticatedAdminPricingRoute
+  AuthenticatedAdminSeoRoute: typeof AuthenticatedAdminSeoRoute
   AuthenticatedAdminUnlimitedRoute: typeof AuthenticatedAdminUnlimitedRoute
   AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
 }
@@ -812,6 +852,7 @@ const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
   AuthenticatedAdminOrdersRoute: AuthenticatedAdminOrdersRoute,
   AuthenticatedAdminPlansRoute: AuthenticatedAdminPlansRoute,
   AuthenticatedAdminPricingRoute: AuthenticatedAdminPricingRoute,
+  AuthenticatedAdminSeoRoute: AuthenticatedAdminSeoRoute,
   AuthenticatedAdminUnlimitedRoute: AuthenticatedAdminUnlimitedRoute,
   AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
 }
@@ -843,6 +884,7 @@ const rootRouteChildren: RootRouteChildren = {
   RegisterRoute: RegisterRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
+  ApiSeoAnalysisRoute: ApiSeoAnalysisRoute,
   BlogSlugRoute: BlogSlugRoute,
   CheckoutPlanIdRoute: CheckoutPlanIdRoute,
   CountriesSlugRoute: CountriesSlugRoute,
