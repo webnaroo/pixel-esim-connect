@@ -151,7 +151,8 @@ export const getBlogList = createServerFn({ method: "GET" }).handler(async () =>
   const { data } = await publicDb().from("blog_posts").select("slug,title,meta_description,answer_summary,body_md,published_at,updated_at,country_code,cover_url,cover_image_alt").in("status", PUBLIC_STATUSES).not("published_at", "is", null).lte("published_at", nowIso()).order("published_at", { ascending: false });
   return (data ?? []).map((p) => ({ slug: p.slug, title: p.title, excerpt: p.meta_description || p.answer_summary || p.body_md.replace(/[#*_>`]/g, "").slice(0, 180), publishedAt: p.published_at!, updatedAt: p.updated_at, country: p.country_code, cover: p.cover_url, coverAlt: p.cover_image_alt }));
 });
-export const blogListQuery = () => queryOptions({ queryKey: ["blog"], queryFn: () => getBlogList(), staleTime: 5 * 60_000 });
+// Short staleTime: newly published posts must appear on /ratgeber without a reload.
+export const blogListQuery = () => queryOptions({ queryKey: ["blog"], queryFn: () => getBlogList(), staleTime: 15_000 });
 
 async function isoSlugMap(db: ReturnType<typeof publicDb>, isos: string[]) {
   if (!isos.length) return {} as Record<string, string>;
