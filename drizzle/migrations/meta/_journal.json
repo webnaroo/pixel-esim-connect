@@ -15,6 +15,13 @@
       "when": 1791475588222,
       "tag": "0001_globesim_seed",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1791476490470,
+      "tag": "0002_harden_sensitive_tables_and_rate_limit",
+      "breakpoints": true
     }
   ]
 }
