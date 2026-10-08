@@ -156,9 +156,31 @@ export type DestinationDetail = NonNullable<Awaited<ReturnType<typeof getDestina
 export const destinationQuery = (slug: string) =>
   queryOptions({ queryKey: ["destination", slug], queryFn: () => getDestinationDetail({ data: { slug } }) });
 
+/** FAQ answers: price/coverage/throttle statements come only from DB values via placeholders; unfillable entries are hidden. */
 export const getFaqs = createServerFn({ method: "GET" }).handler(async () => {
-  const { data } = await publicDb().from("faqs").select("id,question,answer,category").order("sort_order");
-  return data ?? [];
+  const { fillFaq } = await import("./faq-rules");
+  const { parseClaimTexts } = await import("./throttle");
+  const { formatPrice } = await import("./format");
+  const db = publicDb();
+  const [{ data }, { data: plans }, { data: claimRow }] = await Promise.all([
+    db.from("faqs").select("id,question,answer,category").order("sort_order"),
+    db.from("plans").select("sell_price,currency,destination_id,type,throttle_claim").eq("is_active", true).gt("sell_price", 0),
+    db.from("app_settings").select("value").eq("key", "unlimited_claim").maybeSingle(),
+  ]);
+  const ps = plans ?? [];
+  const min = ps.length ? ps.reduce((a, p) => (Number(p.sell_price) < Number(a.sell_price) ? p : a)) : null;
+  const texts = parseClaimTexts(claimRow?.value);
+  const confirmed = ps.some((p) => p.type === "unlimited" && p.throttle_claim === "none_confirmed");
+  const ctx = {
+    minPrice: min ? formatPrice(Number(min.sell_price), min.currency) : null,
+    destinationCount: new Set(ps.map((p) => p.destination_id)).size || null,
+    unlimitedClaim: confirmed && texts ? `Unlimited ${texts.label}${texts.qualifier ? ` ${texts.qualifier}` : ""}` : null,
+  };
+  return (data ?? []).flatMap((f) => {
+    const answer = fillFaq(f.answer, ctx);
+    const question = fillFaq(f.question, ctx);
+    return answer && question ? [{ ...f, answer, question }] : [];
+  });
 });
 
 export const faqsQuery = () => queryOptions({ queryKey: ["faqs"], queryFn: () => getFaqs(), staleTime: 60 * 60 * 1000 });

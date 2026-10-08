@@ -12,6 +12,7 @@ export const fixtureOrder: OrderView = {
   currency: "EUR",
   createdAt: "2026-01-01T10:00:00.000Z",
   isTest: true,
+  emailStatus: "pending_domain",
   plan: { destination: "Testland", type: "data", data_mb: 5120, validity_days: 30 },
   esim: {
     status: "ready",

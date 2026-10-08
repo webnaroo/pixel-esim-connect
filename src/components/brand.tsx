@@ -30,7 +30,7 @@ export function Chip({ children, tone = "default", className }: { children: Reac
         "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs font-medium leading-5",
         tone === "default" && "border-line-strong text-ink",
         tone === "muted" && "border-line text-ink-muted",
-        tone === "warning" && "border-warning text-warning",
+        tone === "warning" && "border-warning text-ink",
         tone === "active" && "border-line-strong text-ink",
         className,
       )}

@@ -19,9 +19,14 @@ export const Route = createFileRoute("/_authenticated/admin")({
 const tabs = [
   { to: "/admin", label: "Übersicht", exact: true },
   { to: "/admin/orders", label: "Bestellungen" },
+  { to: "/admin/customers", label: "Kunden" },
+  { to: "/admin/esims", label: "eSIMs" },
+  { to: "/admin/plans", label: "Tarife" },
   { to: "/admin/pricing", label: "Preise" },
   { to: "/admin/unlimited", label: "Unlimited-Prüfung" },
+  { to: "/admin/content", label: "Inhalte" },
   { to: "/admin/compare", label: "Inhalte › Vergleich" },
+  { to: "/admin/logs", label: "Logs" },
   { to: "/admin/explorer", label: "API-Explorer" },
 ] as const;
 

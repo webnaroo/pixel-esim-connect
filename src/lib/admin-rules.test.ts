@@ -14,5 +14,7 @@ describe("shop switch checklist", () => {
   it("blocks when the provider is unreachable", () => expect(shopChecklistMissing({ ...green, providerReachable: false })).toEqual(["Provider erreichbar"]));
   it("blocks with an empty catalog", () => expect(canEnableShop({ ...green, catalogCount: 0 })).toBe(false));
   it("blocks with an eSIMerge sandbox key", () => expect(canEnableShop({ ...green, providerSandbox: true })).toBe(false));
+  it("blocks without verified email domain", () => expect(canEnableShop({ ...green, emailVerified: false })).toBe(false));
+  it("blocks while legal pages are placeholders", () => expect(canEnableShop({ ...green, legalPublished: false })).toBe(false));
   it("blocks without Stripe", () => expect(canEnableShop({ ...green, stripeConfigured: false })).toBe(false));
 });

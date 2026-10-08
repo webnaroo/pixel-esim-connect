@@ -510,11 +510,40 @@ export type Database = {
         }
         Relationships: []
       }
+      legal_pages: {
+        Row: {
+          body_md: string
+          published: boolean
+          slug: string
+          title: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          body_md?: string
+          published?: boolean
+          slug: string
+          title: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          body_md?: string
+          published?: boolean
+          slug?: string
+          title?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       orders: {
         Row: {
           amount: number
+          anonymized_at: string | null
           created_at: string
           currency: string
+          email_status: string
           fulfillment_attempts: number
           guest_email: string
           id: string
@@ -537,8 +566,10 @@ export type Database = {
         }
         Insert: {
           amount: number
+          anonymized_at?: string | null
           created_at?: string
           currency?: string
+          email_status?: string
           fulfillment_attempts?: number
           guest_email: string
           id?: string
@@ -561,8 +592,10 @@ export type Database = {
         }
         Update: {
           amount?: number
+          anonymized_at?: string | null
           created_at?: string
           currency?: string
+          email_status?: string
           fulfillment_attempts?: number
           guest_email?: string
           id?: string
@@ -931,8 +964,10 @@ export type Database = {
         Args: { _max_attempts: number; _order_id: string }
         Returns: {
           amount: number
+          anonymized_at: string | null
           created_at: string
           currency: string
+          email_status: string
           fulfillment_attempts: number
           guest_email: string
           id: string

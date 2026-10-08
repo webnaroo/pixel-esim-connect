@@ -13,7 +13,7 @@ export function evaluateSyncThreshold(previousActive: number, fetched: number): 
   return { abort: false };
 }
 
-export type ShopChecklist = { providerReachable: boolean; providerSandbox: boolean; catalogCount: number; stripeConfigured: boolean };
+export type ShopChecklist = { providerReachable: boolean; providerSandbox: boolean; catalogCount: number; stripeConfigured: boolean; emailVerified?: boolean; legalPublished?: boolean };
 
 export function shopChecklistMissing(c: ShopChecklist): string[] {
   const missing: string[] = [];
@@ -22,6 +22,8 @@ export function shopChecklistMissing(c: ShopChecklist): string[] {
   if (c.providerSandbox) missing.push("eSIMerge Live-Zugang (aktuell Sandbox)");
   if (!(c.catalogCount > 0)) missing.push("Katalog größer 0");
   if (!c.stripeConfigured) missing.push("Stripe konfiguriert");
+  if (c.emailVerified === false) missing.push("E-Mail-Absender-Domain verifiziert");
+  if (c.legalPublished === false) missing.push("Rechtsseiten freigegeben");
   return missing;
 }
 

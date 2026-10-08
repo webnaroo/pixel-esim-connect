@@ -18,16 +18,26 @@ import { Route as HowItWorksRouteImport } from './routes/how-it-works'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as RegisterRouteImport } from './routes/register'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
+import { Route as AuthenticatedAccountRouteImport } from './routes/_authenticated/account'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
+import { Route as BlogIndexRouteImport } from './routes/blog.index'
+import { Route as BlogSlugRouteImport } from './routes/blog.$slug'
 import { Route as CheckoutPlanIdRouteImport } from './routes/checkout.$planId'
 import { Route as CountriesSlugRouteImport } from './routes/countries.$slug'
 import { Route as InstallOrderIdRouteImport } from './routes/install.$orderId'
+import { Route as LegalSlugRouteImport } from './routes/legal.$slug'
 import { Route as OrderOrderIdRouteImport } from './routes/order.$orderId'
 import { Route as RegionsSlugRouteImport } from './routes/regions.$slug'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
 import { Route as AuthenticatedAdminCompareRouteImport } from './routes/_authenticated/admin.compare'
+import { Route as AuthenticatedAdminContentRouteImport } from './routes/_authenticated/admin.content'
+import { Route as AuthenticatedAdminCustomersRouteImport } from './routes/_authenticated/admin.customers'
+import { Route as AuthenticatedAdminEsimsRouteImport } from './routes/_authenticated/admin.esims'
 import { Route as AuthenticatedAdminExplorerRouteImport } from './routes/_authenticated/admin.explorer'
+import { Route as AuthenticatedAdminLogsRouteImport } from './routes/_authenticated/admin.logs'
 import { Route as AuthenticatedAdminOrdersRouteImport } from './routes/_authenticated/admin.orders'
+import { Route as AuthenticatedAdminPlansRouteImport } from './routes/_authenticated/admin.plans'
 import { Route as AuthenticatedAdminPricingRouteImport } from './routes/_authenticated/admin.pricing'
 import { Route as AuthenticatedAdminUnlimitedRouteImport } from './routes/_authenticated/admin.unlimited'
 import { Route as ApiPublicCronCatalogSyncRouteImport } from './routes/api/public/cron/catalog-sync'
@@ -80,10 +90,30 @@ const ResetPasswordRoute = ResetPasswordRouteImport.update({
   path: '/reset-password',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedAccountRoute = AuthenticatedAccountRouteImport.update({
+  id: '/account',
+  path: '/account',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
   id: '/admin',
   path: '/admin',
   getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const BlogIndexRoute = BlogIndexRouteImport.update({
+  id: '/blog/',
+  path: '/blog/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BlogSlugRoute = BlogSlugRouteImport.update({
+  id: '/blog/$slug',
+  path: '/blog/$slug',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const CheckoutPlanIdRoute = CheckoutPlanIdRouteImport.update({
   id: '/checkout/$planId',
@@ -98,6 +128,11 @@ const CountriesSlugRoute = CountriesSlugRouteImport.update({
 const InstallOrderIdRoute = InstallOrderIdRouteImport.update({
   id: '/install/$orderId',
   path: '/install/$orderId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LegalSlugRoute = LegalSlugRouteImport.update({
+  id: '/legal/$slug',
+  path: '/legal/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
 const OrderOrderIdRoute = OrderOrderIdRouteImport.update({
@@ -121,18 +156,45 @@ const AuthenticatedAdminCompareRoute =
     path: '/compare',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
+const AuthenticatedAdminContentRoute =
+  AuthenticatedAdminContentRouteImport.update({
+    id: '/content',
+    path: '/content',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
+const AuthenticatedAdminCustomersRoute =
+  AuthenticatedAdminCustomersRouteImport.update({
+    id: '/customers',
+    path: '/customers',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
+const AuthenticatedAdminEsimsRoute = AuthenticatedAdminEsimsRouteImport.update({
+  id: '/esims',
+  path: '/esims',
+  getParentRoute: () => AuthenticatedAdminRoute,
+} as any)
 const AuthenticatedAdminExplorerRoute =
   AuthenticatedAdminExplorerRouteImport.update({
     id: '/explorer',
     path: '/explorer',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
+const AuthenticatedAdminLogsRoute = AuthenticatedAdminLogsRouteImport.update({
+  id: '/logs',
+  path: '/logs',
+  getParentRoute: () => AuthenticatedAdminRoute,
+} as any)
 const AuthenticatedAdminOrdersRoute =
   AuthenticatedAdminOrdersRouteImport.update({
     id: '/orders',
     path: '/orders',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
+const AuthenticatedAdminPlansRoute = AuthenticatedAdminPlansRouteImport.update({
+  id: '/plans',
+  path: '/plans',
+  getParentRoute: () => AuthenticatedAdminRoute,
+} as any)
 const AuthenticatedAdminPricingRoute =
   AuthenticatedAdminPricingRouteImport.update({
     id: '/pricing',
@@ -185,15 +247,25 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/account': typeof AuthenticatedAccountRoute
   '/admin': typeof AuthenticatedAdminRouteWithChildren
+  '/blog/$slug': typeof BlogSlugRoute
   '/checkout/$planId': typeof CheckoutPlanIdRoute
   '/countries/$slug': typeof CountriesSlugRoute
   '/install/$orderId': typeof InstallOrderIdRoute
+  '/legal/$slug': typeof LegalSlugRoute
   '/order/$orderId': typeof OrderOrderIdRoute
   '/regions/$slug': typeof RegionsSlugRoute
+  '/blog/': typeof BlogIndexRoute
   '/admin/compare': typeof AuthenticatedAdminCompareRoute
+  '/admin/content': typeof AuthenticatedAdminContentRoute
+  '/admin/customers': typeof AuthenticatedAdminCustomersRoute
+  '/admin/esims': typeof AuthenticatedAdminEsimsRoute
   '/admin/explorer': typeof AuthenticatedAdminExplorerRoute
+  '/admin/logs': typeof AuthenticatedAdminLogsRoute
   '/admin/orders': typeof AuthenticatedAdminOrdersRoute
+  '/admin/plans': typeof AuthenticatedAdminPlansRoute
   '/admin/pricing': typeof AuthenticatedAdminPricingRoute
   '/admin/unlimited': typeof AuthenticatedAdminUnlimitedRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
@@ -212,14 +284,24 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/account': typeof AuthenticatedAccountRoute
+  '/blog/$slug': typeof BlogSlugRoute
   '/checkout/$planId': typeof CheckoutPlanIdRoute
   '/countries/$slug': typeof CountriesSlugRoute
   '/install/$orderId': typeof InstallOrderIdRoute
+  '/legal/$slug': typeof LegalSlugRoute
   '/order/$orderId': typeof OrderOrderIdRoute
   '/regions/$slug': typeof RegionsSlugRoute
+  '/blog': typeof BlogIndexRoute
   '/admin/compare': typeof AuthenticatedAdminCompareRoute
+  '/admin/content': typeof AuthenticatedAdminContentRoute
+  '/admin/customers': typeof AuthenticatedAdminCustomersRoute
+  '/admin/esims': typeof AuthenticatedAdminEsimsRoute
   '/admin/explorer': typeof AuthenticatedAdminExplorerRoute
+  '/admin/logs': typeof AuthenticatedAdminLogsRoute
   '/admin/orders': typeof AuthenticatedAdminOrdersRoute
+  '/admin/plans': typeof AuthenticatedAdminPlansRoute
   '/admin/pricing': typeof AuthenticatedAdminPricingRoute
   '/admin/unlimited': typeof AuthenticatedAdminUnlimitedRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
@@ -240,15 +322,25 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/_authenticated/account': typeof AuthenticatedAccountRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
+  '/blog/$slug': typeof BlogSlugRoute
   '/checkout/$planId': typeof CheckoutPlanIdRoute
   '/countries/$slug': typeof CountriesSlugRoute
   '/install/$orderId': typeof InstallOrderIdRoute
+  '/legal/$slug': typeof LegalSlugRoute
   '/order/$orderId': typeof OrderOrderIdRoute
   '/regions/$slug': typeof RegionsSlugRoute
+  '/blog/': typeof BlogIndexRoute
   '/_authenticated/admin/compare': typeof AuthenticatedAdminCompareRoute
+  '/_authenticated/admin/content': typeof AuthenticatedAdminContentRoute
+  '/_authenticated/admin/customers': typeof AuthenticatedAdminCustomersRoute
+  '/_authenticated/admin/esims': typeof AuthenticatedAdminEsimsRoute
   '/_authenticated/admin/explorer': typeof AuthenticatedAdminExplorerRoute
+  '/_authenticated/admin/logs': typeof AuthenticatedAdminLogsRoute
   '/_authenticated/admin/orders': typeof AuthenticatedAdminOrdersRoute
+  '/_authenticated/admin/plans': typeof AuthenticatedAdminPlansRoute
   '/_authenticated/admin/pricing': typeof AuthenticatedAdminPricingRoute
   '/_authenticated/admin/unlimited': typeof AuthenticatedAdminUnlimitedRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
@@ -269,15 +361,25 @@ export interface FileRouteTypes {
     | '/login'
     | '/register'
     | '/reset-password'
+    | '/sitemap.xml'
+    | '/account'
     | '/admin'
+    | '/blog/$slug'
     | '/checkout/$planId'
     | '/countries/$slug'
     | '/install/$orderId'
+    | '/legal/$slug'
     | '/order/$orderId'
     | '/regions/$slug'
+    | '/blog/'
     | '/admin/compare'
+    | '/admin/content'
+    | '/admin/customers'
+    | '/admin/esims'
     | '/admin/explorer'
+    | '/admin/logs'
     | '/admin/orders'
+    | '/admin/plans'
     | '/admin/pricing'
     | '/admin/unlimited'
     | '/admin/'
@@ -296,14 +398,24 @@ export interface FileRouteTypes {
     | '/login'
     | '/register'
     | '/reset-password'
+    | '/sitemap.xml'
+    | '/account'
+    | '/blog/$slug'
     | '/checkout/$planId'
     | '/countries/$slug'
     | '/install/$orderId'
+    | '/legal/$slug'
     | '/order/$orderId'
     | '/regions/$slug'
+    | '/blog'
     | '/admin/compare'
+    | '/admin/content'
+    | '/admin/customers'
+    | '/admin/esims'
     | '/admin/explorer'
+    | '/admin/logs'
     | '/admin/orders'
+    | '/admin/plans'
     | '/admin/pricing'
     | '/admin/unlimited'
     | '/admin'
@@ -323,15 +435,25 @@ export interface FileRouteTypes {
     | '/login'
     | '/register'
     | '/reset-password'
+    | '/sitemap.xml'
+    | '/_authenticated/account'
     | '/_authenticated/admin'
+    | '/blog/$slug'
     | '/checkout/$planId'
     | '/countries/$slug'
     | '/install/$orderId'
+    | '/legal/$slug'
     | '/order/$orderId'
     | '/regions/$slug'
+    | '/blog/'
     | '/_authenticated/admin/compare'
+    | '/_authenticated/admin/content'
+    | '/_authenticated/admin/customers'
+    | '/_authenticated/admin/esims'
     | '/_authenticated/admin/explorer'
+    | '/_authenticated/admin/logs'
     | '/_authenticated/admin/orders'
+    | '/_authenticated/admin/plans'
     | '/_authenticated/admin/pricing'
     | '/_authenticated/admin/unlimited'
     | '/_authenticated/admin/'
@@ -352,11 +474,15 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   RegisterRoute: typeof RegisterRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
+  SitemapDotxmlRoute: typeof SitemapDotxmlRoute
+  BlogSlugRoute: typeof BlogSlugRoute
   CheckoutPlanIdRoute: typeof CheckoutPlanIdRoute
   CountriesSlugRoute: typeof CountriesSlugRoute
   InstallOrderIdRoute: typeof InstallOrderIdRoute
+  LegalSlugRoute: typeof LegalSlugRoute
   OrderOrderIdRoute: typeof OrderOrderIdRoute
   RegionsSlugRoute: typeof RegionsSlugRoute
+  BlogIndexRoute: typeof BlogIndexRoute
   ApiPublicCronCatalogSyncRoute: typeof ApiPublicCronCatalogSyncRoute
   ApiPublicCronEsimStatusPollRoute: typeof ApiPublicCronEsimStatusPollRoute
   ApiPublicCronFulfillmentRetryRoute: typeof ApiPublicCronFulfillmentRetryRoute
@@ -429,12 +555,40 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ResetPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/account': {
+      id: '/_authenticated/account'
+      path: '/account'
+      fullPath: '/account'
+      preLoaderRoute: typeof AuthenticatedAccountRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/admin': {
       id: '/_authenticated/admin'
       path: '/admin'
       fullPath: '/admin'
       preLoaderRoute: typeof AuthenticatedAdminRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/blog/': {
+      id: '/blog/'
+      path: '/blog'
+      fullPath: '/blog/'
+      preLoaderRoute: typeof BlogIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/blog/$slug': {
+      id: '/blog/$slug'
+      path: '/blog/$slug'
+      fullPath: '/blog/$slug'
+      preLoaderRoute: typeof BlogSlugRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/checkout/$planId': {
       id: '/checkout/$planId'
@@ -455,6 +609,13 @@ declare module '@tanstack/react-router' {
       path: '/install/$orderId'
       fullPath: '/install/$orderId'
       preLoaderRoute: typeof InstallOrderIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/legal/$slug': {
+      id: '/legal/$slug'
+      path: '/legal/$slug'
+      fullPath: '/legal/$slug'
+      preLoaderRoute: typeof LegalSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/order/$orderId': {
@@ -485,6 +646,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminCompareRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/_authenticated/admin/content': {
+      id: '/_authenticated/admin/content'
+      path: '/content'
+      fullPath: '/admin/content'
+      preLoaderRoute: typeof AuthenticatedAdminContentRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/admin/customers': {
+      id: '/_authenticated/admin/customers'
+      path: '/customers'
+      fullPath: '/admin/customers'
+      preLoaderRoute: typeof AuthenticatedAdminCustomersRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/admin/esims': {
+      id: '/_authenticated/admin/esims'
+      path: '/esims'
+      fullPath: '/admin/esims'
+      preLoaderRoute: typeof AuthenticatedAdminEsimsRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
     '/_authenticated/admin/explorer': {
       id: '/_authenticated/admin/explorer'
       path: '/explorer'
@@ -492,11 +674,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminExplorerRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/_authenticated/admin/logs': {
+      id: '/_authenticated/admin/logs'
+      path: '/logs'
+      fullPath: '/admin/logs'
+      preLoaderRoute: typeof AuthenticatedAdminLogsRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
     '/_authenticated/admin/orders': {
       id: '/_authenticated/admin/orders'
       path: '/orders'
       fullPath: '/admin/orders'
       preLoaderRoute: typeof AuthenticatedAdminOrdersRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/admin/plans': {
+      id: '/_authenticated/admin/plans'
+      path: '/plans'
+      fullPath: '/admin/plans'
+      preLoaderRoute: typeof AuthenticatedAdminPlansRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
     '/_authenticated/admin/pricing': {
@@ -553,8 +749,13 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedAdminRouteChildren {
   AuthenticatedAdminCompareRoute: typeof AuthenticatedAdminCompareRoute
+  AuthenticatedAdminContentRoute: typeof AuthenticatedAdminContentRoute
+  AuthenticatedAdminCustomersRoute: typeof AuthenticatedAdminCustomersRoute
+  AuthenticatedAdminEsimsRoute: typeof AuthenticatedAdminEsimsRoute
   AuthenticatedAdminExplorerRoute: typeof AuthenticatedAdminExplorerRoute
+  AuthenticatedAdminLogsRoute: typeof AuthenticatedAdminLogsRoute
   AuthenticatedAdminOrdersRoute: typeof AuthenticatedAdminOrdersRoute
+  AuthenticatedAdminPlansRoute: typeof AuthenticatedAdminPlansRoute
   AuthenticatedAdminPricingRoute: typeof AuthenticatedAdminPricingRoute
   AuthenticatedAdminUnlimitedRoute: typeof AuthenticatedAdminUnlimitedRoute
   AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
@@ -562,8 +763,13 @@ interface AuthenticatedAdminRouteChildren {
 
 const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
   AuthenticatedAdminCompareRoute: AuthenticatedAdminCompareRoute,
+  AuthenticatedAdminContentRoute: AuthenticatedAdminContentRoute,
+  AuthenticatedAdminCustomersRoute: AuthenticatedAdminCustomersRoute,
+  AuthenticatedAdminEsimsRoute: AuthenticatedAdminEsimsRoute,
   AuthenticatedAdminExplorerRoute: AuthenticatedAdminExplorerRoute,
+  AuthenticatedAdminLogsRoute: AuthenticatedAdminLogsRoute,
   AuthenticatedAdminOrdersRoute: AuthenticatedAdminOrdersRoute,
+  AuthenticatedAdminPlansRoute: AuthenticatedAdminPlansRoute,
   AuthenticatedAdminPricingRoute: AuthenticatedAdminPricingRoute,
   AuthenticatedAdminUnlimitedRoute: AuthenticatedAdminUnlimitedRoute,
   AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
@@ -573,10 +779,12 @@ const AuthenticatedAdminRouteWithChildren =
   AuthenticatedAdminRoute._addFileChildren(AuthenticatedAdminRouteChildren)
 
 interface AuthenticatedRouteRouteChildren {
+  AuthenticatedAccountRoute: typeof AuthenticatedAccountRoute
   AuthenticatedAdminRoute: typeof AuthenticatedAdminRouteWithChildren
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedAccountRoute: AuthenticatedAccountRoute,
   AuthenticatedAdminRoute: AuthenticatedAdminRouteWithChildren,
 }
 
@@ -593,11 +801,15 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   RegisterRoute: RegisterRoute,
   ResetPasswordRoute: ResetPasswordRoute,
+  SitemapDotxmlRoute: SitemapDotxmlRoute,
+  BlogSlugRoute: BlogSlugRoute,
   CheckoutPlanIdRoute: CheckoutPlanIdRoute,
   CountriesSlugRoute: CountriesSlugRoute,
   InstallOrderIdRoute: InstallOrderIdRoute,
+  LegalSlugRoute: LegalSlugRoute,
   OrderOrderIdRoute: OrderOrderIdRoute,
   RegionsSlugRoute: RegionsSlugRoute,
+  BlogIndexRoute: BlogIndexRoute,
   ApiPublicCronCatalogSyncRoute: ApiPublicCronCatalogSyncRoute,
   ApiPublicCronEsimStatusPollRoute: ApiPublicCronEsimStatusPollRoute,
   ApiPublicCronFulfillmentRetryRoute: ApiPublicCronFulfillmentRetryRoute,
