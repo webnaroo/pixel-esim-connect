@@ -9,7 +9,7 @@ export type EsimergeConfig = {
   auth: { type: AuthType | null; headerName: string | null; tokenEnv: string };
   endpoints: Record<
     | "ping" | "listCountries" | "listRegions" | "listPlans" | "getPlan" | "checkAvailability"
-    | "createOrder" | "getEsim" | "getUsage" | "topUp" | "cancel",
+    | "createOrder" | "getOrder" | "getEsim" | "getUsage" | "topUp" | "cancel",
     EndpointDef | null
   >;
   paging: { style: "page" | "cursor" | "offset" | null; pageSize: number | null };
@@ -23,31 +23,33 @@ export type EsimergeConfig = {
 };
 
 export const esimergeConfig: EsimergeConfig = {
+  // Documented sandbox base URL: https://portal.esimerge.com/api/public (paths carry /v1).
+  // If the connection test returns 404, try base .../v1 with paths without /v1 (record result in docs/INTEGRATION.md).
   baseUrlEnv: "ESIMERGE_BASE_URL",
-  // TODO(ESIMERGE): auth scheme (bearer | header | basic | oauth2) and header name
-  auth: { type: null, headerName: null, tokenEnv: "ESIMERGE_API_KEY" },
+  auth: { type: "bearer", headerName: null, tokenEnv: "ESIMERGE_API_KEY" },
   endpoints: {
-    ping: null, // TODO(ESIMERGE): { method: 'GET', path: '/...' }
-    listCountries: null, // TODO(ESIMERGE)
-    listRegions: null, // TODO(ESIMERGE)
-    listPlans: null, // TODO(ESIMERGE): paging / filter params
-    getPlan: null, // TODO(ESIMERGE)
-    checkAvailability: null, // TODO(ESIMERGE)
-    createOrder: null, // TODO(ESIMERGE)
-    getEsim: null, // TODO(ESIMERGE): path may contain ':orderId'
-    getUsage: null, // TODO(ESIMERGE): path may contain ':iccid'
-    topUp: null, // TODO(ESIMERGE)
-    cancel: null, // TODO(ESIMERGE)
+    ping: { method: "GET", path: "/v1/catalog" }, // first page only
+    listCountries: null, // not documented – derived from catalog
+    listRegions: null, // not documented – derived from catalog
+    listPlans: { method: "GET", path: "/v1/catalog" }, // TODO(ESIMERGE): paging params from real response
+    getPlan: { method: "GET", path: "/v1/catalog/:planId" },
+    checkAvailability: { method: "GET", path: "/v1/catalog/:planId" }, // plan exists and is active
+    createOrder: { method: "POST", path: "/v1/orders" }, // body { plan_id }
+    getOrder: { method: "GET", path: "/v1/orders/:orderId" },
+    getEsim: { method: "GET", path: "/v1/esims/:esimId" },
+    getUsage: { method: "GET", path: "/v1/esims/:esimId/usage" },
+    topUp: null, // not documented
+    cancel: null, // not documented
   },
-  paging: { style: null, pageSize: null }, // TODO(ESIMERGE)
+  paging: { style: null, pageSize: null }, // TODO(ESIMERGE): from real catalog response
   capabilities: {
-    // Controls which UI parts are shown. Switch on only once confirmed by eSIMerge.
-    usage: false, topUp: false, cancel: false, webhooks: false,
-    directInstallLink: false, unlimitedPlans: false, idempotencyKey: false,
+    usage: true, topUp: false, cancel: false, webhooks: false,
+    directInstallLink: false,
+    unlimitedPlans: false, // TODO(ESIMERGE): determine from catalog
+    idempotencyKey: false, // not documented – own DB lock only
   },
-  // TODO(ESIMERGE): signature header, algorithm, event id field
-  webhook: { signatureHeader: null, algorithm: null, secretEnv: "ESIMERGE_WEBHOOK_SECRET", eventIdField: null },
-  currency: { cost: null }, // TODO(ESIMERGE): 'USD' | 'EUR'
+  webhook: { signatureHeader: null, algorithm: null, secretEnv: "ESIMERGE_WEBHOOK_SECRET", eventIdField: null }, // no webhooks documented
+  currency: { cost: null }, // TODO(ESIMERGE): cost currency from real catalog response
   limits: { rateLimitPerMinute: null, timeoutMs: 8000 },
 };
 
