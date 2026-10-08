@@ -36,3 +36,4 @@
 - SEO AI streams through an admin-verified route with durable access blocks; admin history stores analyses, audits and content-trigger/manual changes — no private report leaks or false application claims.
 - Public SEO tests and admin audits share a sitemap-driven HTML validator — checks canonical and JSON-LD on every public page.
 - Shared Markdown wraps long links and words — prevents horizontal page overflow.
+- eSIM device list (esim_devices) is public read-only via RLS (active only); all writes go through admin server functions in devices.functions.ts with has_role, and search/CSV/staleness rules live in src/lib/devices.ts with tests — no device data is ever invented or scraped.

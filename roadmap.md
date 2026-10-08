@@ -16,3 +16,5 @@
 - [x] Stage D: account, legal pages, FAQ/blog admin, admin lists, SEO
 - [x] Managed email infrastructure and branded confirmation preview
 - [ ] Real order email sending (blocked: sender-domain DNS verification; order triggers still need wiring)
+
+- [ ] Offen (juristisch): Soll im Widerrufs-/Bestelltext eine Bestätigung der Gerätekompatibilität stehen? Wartet auf Rechtsprüfung.
