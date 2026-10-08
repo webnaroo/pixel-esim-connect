@@ -11,6 +11,7 @@ import { legalIndexQuery } from "@/lib/content.functions";
 const NAV = [
   { to: "/destinations", label: "Reiseziele" },
   { to: "/how-it-works", label: "So funktioniert's" },
+  { to: "/ratgeber", label: "Ratgeber" },
   { to: "/faq", label: "FAQ" },
   { to: "/help", label: "Hilfe" },
 ] as const;
@@ -57,9 +58,9 @@ export function Header() {
     <header className="sticky top-0 z-30 border-b border-line bg-paper">
       <div className="container-page flex h-14 items-center gap-3 lg:h-16 xl:gap-6">
         <Wordmark />
-        <nav aria-label="Hauptnavigation" className="hidden items-center gap-1 lg:flex">
+        <nav aria-label="Hauptnavigation" className="hidden shrink-0 items-center gap-0 lg:flex xl:gap-1">
           {NAV.map((n) => (
-            <Link key={n.to} to={n.to} className="rounded-md px-3 py-2 text-[15px] text-ink-muted hover:text-ink" activeProps={{ className: "text-ink font-medium" }}>
+            <Link key={n.to} to={n.to} className="shrink-0 rounded-md px-2 py-2 text-[15px] text-ink-muted hover:text-ink xl:px-3" activeProps={{ className: "text-ink font-medium" }}>
               {n.label}
             </Link>
           ))}
