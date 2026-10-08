@@ -5,12 +5,11 @@ import { useState } from "react";
 import { Chip, ErrorBox } from "@/components/brand";
 import { Button, Input, SegmentedControl } from "@/components/ui-kit";
 import { Textarea } from "@/components/ui/textarea";
-import { contentAdminQuery, deleteBlogPost, deleteFaq, saveBlogPost, saveCompanyInfo, saveEmailSettings, saveFaq, saveLegalPage } from "@/lib/content.functions";
+import { contentAdminQuery, deleteFaq, saveCompanyInfo, saveEmailSettings, saveFaq, saveLegalPage } from "@/lib/content.functions";
 import { COMPANY_FIELDS, type CompanyInfo } from "@/lib/legal";
 import { FAQ_PLACEHOLDERS } from "@/lib/faq-rules";
 import { AdminError } from "./admin";
-import { z } from "zod";
-import { faqItemSchema, publishBlockers, sectionSchema, wordCount, type FaqItem, type Section } from "@/lib/ratgeber";
+import { RatgeberAdmin } from "@/components/admin/ratgeber-admin";
 import { privateHead } from "@/lib/seo";
 
 export const Route = createFileRoute("/_authenticated/admin/content")({ head: () => privateHead("Inhalte verwalten", "Rechtsseiten, Firmendaten, FAQ und Blog im GlobeSIM-Admin."), component: Content, errorComponent: AdminError });
@@ -148,72 +147,8 @@ function FaqEditor({ f, onDone, sort }: { f?: Data["faqs"][number]; onDone: () =
   );
 }
 
-function Blog({ d }: { d: Data }) {
-  const [editing, setEditing] = useState<string | "new" | null>(null);
-  return (
-    <div className="space-y-4">
-      <Button onClick={() => setEditing("new")}>Neuer Beitrag</Button>
-      {editing === "new" && <BlogEditor onDone={() => setEditing(null)} />}
-      <ul className="divide-y divide-line rounded-[14px] border border-line bg-surface">
-        {d.posts.length === 0 && <li className="p-4 text-sm text-ink-muted">Noch keine Beiträge.</li>}
-        {d.posts.map((p) => (
-          <li key={p.id} className="p-4">
-            {editing === p.id ? <BlogEditor p={p} onDone={() => setEditing(null)} /> : (
-              <div className="flex items-start justify-between gap-3">
-                <div><div className="font-medium">{p.title}</div><div className="text-xs text-ink-muted">/ratgeber/{p.slug} · {p.status === "published" ? "veröffentlicht" : "Entwurf"}</div></div>
-                <Button variant="ghost" onClick={() => setEditing(p.id)}>Bearbeiten</Button>
-              </div>
-            )}
-          </li>
-        ))}
-      </ul>
-    </div>
-  );
-}
-
-function BlogEditor({ p, onDone }: { p?: Data["posts"][number]; onDone: () => void }) {
-  const save = useServerFn(saveBlogPost);
-  const del = useServerFn(deleteBlogPost);
-  const { run, busy, Msg } = useSaver();
-  const [f, setF] = useState({
-    title: p?.title ?? "", slug: p?.slug ?? "", meta_title: p?.meta_title ?? "", meta_description: p?.meta_description ?? "",
-    answer_summary: p?.answer_summary ?? "", author_name: p?.author_name ?? "GlobeSIM-Team", country_code: p?.country_code ?? "", cover_url: p?.cover_url ?? "", body: p?.body_md ?? "",
-    sections: JSON.stringify(p?.sections ?? [], null, 2), faq: JSON.stringify(p?.faq ?? [], null, 2),
-  });
-  const [published, setPublished] = useState(p?.status === "published");
-  const set = (k: keyof typeof f) => (e: { target: { value: string } }) => setF((o) => ({ ...o, [k]: e.target.value }));
-  let parsed: { sections: Section[]; faq: FaqItem[] } | null = null;
-  try { parsed = { sections: z.array(sectionSchema).parse(JSON.parse(f.sections || "[]")), faq: z.array(faqItemSchema).parse(JSON.parse(f.faq || "[]")) }; } catch { parsed = null; }
-  const blockers = parsed ? publishBlockers({ ...f, ...parsed }) : ["Abschnitte oder FAQ sind kein gültiges JSON."];
-  const words = wordCount(f.answer_summary);
-  return (
-    <form className="space-y-3" onSubmit={(e) => { e.preventDefault(); if (!parsed) return; const ps = parsed; run(async () => {
-      await save({ data: { id: p?.id, title: f.title, slug: f.slug, meta_title: f.meta_title || null, meta_description: f.meta_description || null, answer_summary: f.answer_summary || null, author_name: f.author_name || null, country_code: f.country_code || null, cover_url: f.cover_url || null, body: f.body, sections: ps.sections, faq: ps.faq, published } });
-      onDone();
-    }); }}>
-      <label className="block text-sm font-medium">Titel (H1)<Input className="mt-1" value={f.title} onChange={set("title")} /></label>
-      <label className="block text-sm font-medium">Adresse (Slug) – /ratgeber/{f.slug || "…"}<Input className="mt-1" value={f.slug} onChange={set("slug")} placeholder="esim-tuerkei" /></label>
-      <label className="block text-sm font-medium">Meta-Title ({f.meta_title.length}/60)<Input className="mt-1" value={f.meta_title} onChange={set("meta_title")} /></label>
-      <label className="block text-sm font-medium">Meta-Description ({f.meta_description.length}/155)<Textarea className="mt-1" value={f.meta_description} onChange={set("meta_description")} /></label>
-      <label className="block text-sm font-medium">„Kurz erklärt“ ({words} Wörter, Ziel 40–60)<Textarea className="mt-1" value={f.answer_summary} onChange={set("answer_summary")} /></label>
-      <div className="grid gap-3 sm:grid-cols-3">
-        <label className="block text-sm font-medium">Autor<Input className="mt-1" value={f.author_name} onChange={set("author_name")} /></label>
-        <label className="block text-sm font-medium">Ländercode (z. B. TR)<Input className="mt-1" value={f.country_code} onChange={set("country_code")} maxLength={2} /></label>
-        <label className="block text-sm font-medium">Titelbild-URL (https)<Input className="mt-1" value={f.cover_url} onChange={set("cover_url")} /></label>
-      </div>
-      <label className="block text-sm font-medium">Abschnitte (JSON: heading, body_md, block = "plans" | "compat")<Textarea className="mt-1 min-h-[260px] font-mono text-xs" value={f.sections} onChange={set("sections")} /></label>
-      <label className="block text-sm font-medium">FAQ (JSON: q, a)<Textarea className="mt-1 min-h-[160px] font-mono text-xs" value={f.faq} onChange={set("faq")} /></label>
-      <label className="block text-sm font-medium">Zusätzlicher Einleitungstext (Markdown, optional)<Textarea className="mt-1" value={f.body} onChange={set("body")} /></label>
-      {blockers.length > 0 && <ul className="rounded-[14px] border border-line p-3 text-sm text-ink-muted">{blockers.map((b) => <li key={b}>⚠ {b}</li>)}</ul>}
-      <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={published} disabled={blockers.length > 0 && !published} onChange={(e) => setPublished(e.target.checked)} /> Veröffentlicht {blockers.length > 0 && "(erst nach Klärung der Hinweise)"}</label>
-      <Msg />
-      <div className="flex flex-wrap gap-2">
-        <Button type="submit" loading={busy} disabled={!parsed}>Speichern</Button>
-        <Button type="button" variant="secondary" onClick={onDone}>Abbrechen</Button>
-        {p && <Button type="button" variant="ghost" onClick={() => { if (confirm("Beitrag löschen?")) run(async () => { await del({ data: { id: p.id } }); onDone(); }); }}>Löschen</Button>}
-      </div>
-    </form>
-  );
+function Blog(_: { d: Data }) {
+  return <RatgeberAdmin />;
 }
 
 function Email({ d }: { d: Data }) {
