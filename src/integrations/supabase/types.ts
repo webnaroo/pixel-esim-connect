@@ -776,6 +776,7 @@ export type Database = {
       }
     }
     Functions: {
+      arm_fulfillment_retry: { Args: never; Returns: undefined }
       claim_order_for_fulfillment: {
         Args: { _max_attempts: number; _order_id: string }
         Returns: {
@@ -808,6 +809,7 @@ export type Database = {
           isSetofReturn: true
         }
       }
+      disarm_fulfillment_retry_if_drained: { Args: never; Returns: boolean }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

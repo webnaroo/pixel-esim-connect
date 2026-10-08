@@ -43,6 +43,13 @@
       "when": 1791478015657,
       "tag": "0005_payments_and_retry_scheduling",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1791478073312,
+      "tag": "0006_fulfillment_retry_wake_on_enqueue",
+      "breakpoints": true
     }
   ]
 }
