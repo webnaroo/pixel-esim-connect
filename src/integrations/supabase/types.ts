@@ -125,6 +125,123 @@ export type Database = {
         }
         Relationships: []
       }
+      comparison_facts: {
+        Row: {
+          checked_at: string
+          competitor_id: string
+          created_at: string
+          enabled: boolean
+          id: string
+          row_id: string
+          source_url: string
+          status: string
+          text: string
+        }
+        Insert: {
+          checked_at?: string
+          competitor_id: string
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          row_id: string
+          source_url: string
+          status?: string
+          text: string
+        }
+        Update: {
+          checked_at?: string
+          competitor_id?: string
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          row_id?: string
+          source_url?: string
+          status?: string
+          text?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "comparison_facts_competitor_id_fkey"
+            columns: ["competitor_id"]
+            isOneToOne: false
+            referencedRelation: "competitors"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "comparison_facts_row_id_fkey"
+            columns: ["row_id"]
+            isOneToOne: false
+            referencedRelation: "comparison_rows"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      comparison_rows: {
+        Row: {
+          created_at: string
+          enabled: boolean
+          globesim_status: string
+          globesim_text: string
+          id: string
+          question: string
+          requires: string | null
+          sort_order: number
+        }
+        Insert: {
+          created_at?: string
+          enabled?: boolean
+          globesim_status?: string
+          globesim_text?: string
+          id?: string
+          question: string
+          requires?: string | null
+          sort_order?: number
+        }
+        Update: {
+          created_at?: string
+          enabled?: boolean
+          globesim_status?: string
+          globesim_text?: string
+          id?: string
+          question?: string
+          requires?: string | null
+          sort_order?: number
+        }
+        Relationships: []
+      }
+      competitors: {
+        Row: {
+          created_at: string
+          enabled: boolean
+          id: string
+          logo_url: string | null
+          name: string
+          slug: string
+          sort_order: number
+          website_url: string | null
+        }
+        Insert: {
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          logo_url?: string | null
+          name: string
+          slug: string
+          sort_order?: number
+          website_url?: string | null
+        }
+        Update: {
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          logo_url?: string | null
+          name?: string
+          slug?: string
+          sort_order?: number
+          website_url?: string | null
+        }
+        Relationships: []
+      }
       destination_countries: {
         Row: {
           country_id: string

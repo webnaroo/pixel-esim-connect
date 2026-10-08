@@ -1,12 +1,14 @@
 import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
-import { Check, DeviceMobile } from "@phosphor-icons/react";
+import { DeviceMobile } from "@phosphor-icons/react";
 import { SiteLayout } from "@/components/layout";
+import { ComparisonSection } from "@/components/comparison";
 import { SearchBox } from "@/components/search-box";
 import { DestinationRow, DestinationRowSkeleton } from "@/components/catalog";
 import { SegmentedControl, LinkButton } from "@/components/ui-kit";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { comparisonQuery } from "@/lib/comparison.functions";
 import { destinationsQuery, faqsQuery, popularQuery } from "@/lib/catalog.functions";
 
 export const Route = createFileRoute("/")({
@@ -15,6 +17,7 @@ export const Route = createFileRoute("/")({
       context.queryClient.ensureQueryData(destinationsQuery()),
       context.queryClient.ensureQueryData(popularQuery()),
       context.queryClient.ensureQueryData(faqsQuery()),
+      context.queryClient.ensureQueryData(comparisonQuery()),
     ]),
   head: () => ({
     meta: [
@@ -35,7 +38,7 @@ function Home() {
       <Hero />
       <Popular />
       <HowItWorks />
-      <WhyGlobeSim />
+      <ComparisonSection />
       <Compatibility />
       <HomeFaq />
     </SiteLayout>
@@ -143,31 +146,6 @@ function PhoneMockup() {
         <div className="mt-3 rounded-lg border border-line p-4 text-xs text-ink-muted">Installiert · Datenroaming an</div>
       </div>
     </div>
-  );
-}
-
-function WhyGlobeSim() {
-  const items = [
-    { t: "Transparente Preise", d: "Alle Preise inklusive MwSt. Keine Grundgebühr, kein Abo, keine versteckten Kosten." },
-    { t: "Keine Roaming-Kosten", d: "Du surfst über ein lokales Partnernetz statt über teures Roaming deines Anbieters." },
-    { t: "Sofortige Lieferung", d: "Nach der Zahlung erhältst du die eSIM direkt per E-Mail und in deinem Konto." },
-    { t: "Support, der antwortet", d: "Bei Fragen zur Installation oder Nutzung hilft dir unser Team per E-Mail." },
-  ];
-  return (
-    <section className="container-page py-16 lg:py-24" aria-labelledby="why-h">
-      <h2 id="why-h">Warum GlobeSIM</h2>
-      <ul className="mt-8 grid gap-px overflow-hidden rounded-lg border border-line bg-line sm:grid-cols-2">
-        {items.map((i) => (
-          <li key={i.t} className="bg-surface p-6">
-            <div className="flex items-center gap-2">
-              <Check size={18} weight="bold" className="text-success" aria-hidden />
-              <h3 className="text-lg lg:text-xl">{i.t}</h3>
-            </div>
-            <p className="mt-2 text-ink-muted">{i.d}</p>
-          </li>
-        ))}
-      </ul>
-    </section>
   );
 }
 

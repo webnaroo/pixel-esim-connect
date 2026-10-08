@@ -20,3 +20,4 @@
 - eSIMerge has no webhooks; order/eSIM status is polled by /api/public/cron/esim-status-poll (pg_cron, 5 min) — the provider webhook route only returns 501.
 - An unclear provider outcome on createOrder (timeout/network) sets orders.status needs_review and is never retried automatically — protects against double orders; only HTTP rejections are retried.
 - eSIMerge mapping is derived only from captured sandbox responses (sandbox.fixtures.ts); unmappable plans are recorded in sync_runs.unmapped, never dropped silently.
+- Comparison visibility rules (source, 90-day age, GlobeSIM conditions) live in src/lib/comparison.ts with tests and are mirrored by RLS on comparison_facts — nothing unsourced or stale can reach the public page.

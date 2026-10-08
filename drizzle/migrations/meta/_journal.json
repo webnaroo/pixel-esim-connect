@@ -57,6 +57,13 @@
       "when": 1791478713649,
       "tag": "0007_esimerge_sandbox_fields_and_status_poll",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1791479333289,
+      "tag": "0008_comparison_section",
+      "breakpoints": true
     }
   ]
 }
