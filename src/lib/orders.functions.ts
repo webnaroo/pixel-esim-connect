@@ -11,6 +11,7 @@ export type OrderView = {
   currency: string;
   createdAt: string;
   isTest: boolean;
+  emailStatus: string;
   plan: { destination?: string; type?: string; data_mb?: number | null; validity_days?: number; throttle_claim?: "unknown" | "none_confirmed" | "conflict" };
   esim: { status: string; iccid: string | null; lpa: string | null; smdp: string | null; activationCode: string | null; directInstallUrl: string | null } | null;
 };
@@ -24,7 +25,7 @@ export const getOrderView = createServerFn({ method: "GET" })
     const { verifyGuestToken } = await import("./guest-token");
     if (!(await verifyGuestToken(data.token, data.orderId, secret))) return null;
     const { supabaseAdmin: db } = await import("@/integrations/supabase/client.server");
-    const { data: o } = await db.from("orders").select("id,status,guest_email,amount,currency,created_at,is_test,plan_snapshot").eq("id", data.orderId).maybeSingle();
+    const { data: o } = await db.from("orders").select("id,status,guest_email,amount,currency,created_at,is_test,plan_snapshot,email_status").eq("id", data.orderId).maybeSingle();
     if (!o) return null;
     const { data: e } = await db.from("esims").select("status,iccid,lpa_string,smdp_address,activation_code,direct_install_url").eq("order_id", o.id).maybeSingle();
     return {
@@ -35,6 +36,7 @@ export const getOrderView = createServerFn({ method: "GET" })
       currency: o.currency,
       createdAt: o.created_at,
       isTest: o.is_test,
+      emailStatus: o.email_status,
       plan: (o.plan_snapshot ?? {}) as OrderView["plan"],
       esim: e && o.status === "fulfilled"
         ? { status: e.status, iccid: e.iccid, lpa: e.lpa_string, smdp: e.smdp_address, activationCode: e.activation_code, directInstallUrl: e.direct_install_url }
