@@ -16,6 +16,7 @@ import speedIcon from "@/assets/speed.png.asset.json";
 import wifiIcon from "@/assets/wifi.png.asset.json";
 import shieldIcon from "@/assets/shield.png.asset.json";
 import worldIcon from "@/assets/world.png.asset.json";
+import { pageIdentity } from "@/lib/seo";
 
 export const Route = createFileRoute("/")({
   loader: ({ context }) =>
@@ -27,13 +28,15 @@ export const Route = createFileRoute("/")({
     ]),
   head: () => ({
     meta: [
-      { title: "GlobeSIM – eSIM für deine Reise. Online, sobald du landest." },
-      { name: "description", content: "Entdecke GlobeSIM Reise-eSIMs für dein Reiseziel. Einfach installieren und ohne Roaming-Überraschung verbunden bleiben – deine SIM bleibt aktiv." },
-      { property: "og:title", content: "GlobeSIM – Online, sobald du landest." },
-      { property: "og:description", content: "eSIM kaufen, in Minuten installieren, ohne Roaming-Überraschung." },
+      { title: "GlobeSIM – Reise-eSIM für mobiles Internet im Ausland" },
+      { name: "description", content: "Finde deine GlobeSIM Reise-eSIM: Tarife nach Reiseziel, Datenvolumen und Laufzeit vergleichen. Preise inkl. MwSt., eSIM-Kompatibilität und Installation prüfen." },
+      { property: "og:title", content: "GlobeSIM – Reise-eSIM für mobiles Internet im Ausland" },
+      { property: "og:description", content: "Vergleiche Reise-eSIMs für dein Reiseziel nach Datenvolumen, Laufzeit und Preis inkl. MwSt." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
+      ...pageIdentity("/").meta,
     ],
+    links: pageIdentity("/").links,
   }),
   component: Home,
 });
@@ -59,14 +62,14 @@ function Hero() {
   ];
   return (
     <section className="home-hero relative isolate" aria-labelledby="home-title">
-      <img src={airportBanner} alt="Reisende am Flughafen mit Smartphone und GlobeSIM Reise-eSIM" fetchPriority="high" className="home-hero-image" />
+      <img src={airportBanner} alt="Reisende am Flughafen mit Smartphone und GlobeSIM Reise-eSIM" width={1920} height={960} fetchPriority="high" className="home-hero-image" />
       <div className="container-page relative z-10">
         <div className="home-hero-copy pb-7 pt-8 lg:py-14">
           <p className="mb-4 flex items-center gap-2 text-sm font-medium text-primary">
             <img src={speedIcon.url} alt="" className="size-6 object-contain" aria-hidden />
             GlobeSIM · Deine Reise-eSIM
           </p>
-          <h1 id="home-title" className="!tracking-normal">Online, sobald du landest.</h1>
+          <h1 id="home-title" className="!tracking-normal">GlobeSIM Reise-eSIM</h1>
           <p className="mt-4 max-w-lg text-lg text-ink-muted">eSIM kaufen, in Minuten installieren, ohne Roaming-Überraschung. Bleibe weltweit verbunden – einfach und schnell.</p>
           <div className="mt-7" data-hero-search>
             <SearchBox />

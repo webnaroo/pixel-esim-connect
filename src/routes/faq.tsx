@@ -3,6 +3,7 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 import { SiteLayout } from "@/components/layout";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { faqsQuery } from "@/lib/catalog.functions";
+import { pageIdentity } from "@/lib/seo";
 
 export const Route = createFileRoute("/faq")({
   loader: ({ context }) => context.queryClient.ensureQueryData(faqsQuery()),
@@ -14,7 +15,9 @@ export const Route = createFileRoute("/faq")({
       { property: "og:description", content: "Häufige Fragen zur eSIM." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
+      ...pageIdentity("/faq").meta,
     ],
+    links: pageIdentity("/faq").links,
     scripts: loaderData?.length
       ? [{ type: "application/ld+json", children: JSON.stringify({ "@context": "https://schema.org", "@type": "FAQPage", mainEntity: loaderData.map((f) => ({ "@type": "Question", name: f.question, acceptedAnswer: { "@type": "Answer", text: f.answer } })) }) }]
       : [],

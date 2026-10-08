@@ -12,6 +12,7 @@ import { DestinationRow, PlanCard } from "./catalog";
 import { SegmentedControl, Button, LinkButton } from "./ui-kit";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerTrigger } from "@/components/ui/drawer";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { breadcrumbScript, pageIdentity, productScript } from "@/lib/seo";
 
 type Filters = { days: number | null; minGb: number | null };
 
@@ -246,19 +247,12 @@ function FilterChip({ active, onClick, children }: { active: boolean; onClick: (
   );
 }
 
-/** Structured offer data only with real prices (never preview/test plans). */
-function offerLd(d: { name: string; plans: { price: number }[]; fixturePlans?: boolean }) {
-  if (d.fixturePlans || !d.plans.length) return [];
-  const prices = d.plans.map((p) => p.price).filter((p) => p > 0);
-  if (!prices.length) return [];
-  return [{ type: "application/ld+json", children: JSON.stringify({ "@context": "https://schema.org", "@type": "Product", name: `eSIM ${d.name}`, brand: { "@type": "Brand", name: "GlobeSIM" }, offers: { "@type": "AggregateOffer", priceCurrency: "EUR", lowPrice: Math.min(...prices).toFixed(2), highPrice: Math.max(...prices).toFixed(2), offerCount: prices.length } }) }];
-}
-
-export function destinationHead(d: { name: string; plans: { price: number }[]; fixturePlans?: boolean } | null | undefined, path: string) {
-  if (!d) return { meta: [{ title: "Reiseziel nicht gefunden | GlobeSIM" }, { name: "robots", content: "noindex" }] };
-  const from = d.plans.length ? Math.min(...d.plans.map((p) => p.price)) : null;
-  const title = from != null ? `eSIM für ${d.name} – ab ${formatPrice(from)} | GlobeSIM` : `eSIM für ${d.name} | GlobeSIM`;
-  const description = `eSIM für ${d.name}: mobiles Internet ohne Roaming-Kosten. Online kaufen, per QR-Code in Minuten installieren, deine eigene SIM bleibt aktiv. Sofort per E-Mail.`;
+export function destinationHead(d: { name: string; plans: { price: number }[]; fixturePlans?: boolean; content?: { seoTitle?: string | null; seoDescription?: string | null } | null } | null | undefined, path: string) {
+  const identity = pageIdentity(path);
+  const prices = d && !d.fixturePlans ? d.plans.map((p) => p.price).filter((p) => Number.isFinite(p) && p > 0) : [];
+  const from = prices.length ? Math.min(...prices) : null;
+  const title = d ? d.content?.seoTitle?.trim() || (from != null ? `eSIM für ${d.name} – ab ${formatPrice(from)} | GlobeSIM` : `eSIM für ${d.name} | GlobeSIM`) : "Reiseziel nicht gefunden | GlobeSIM";
+  const description = d ? d.content?.seoDescription?.trim() || `Vergleiche GlobeSIM eSIM-Tarife für ${d.name} nach Datenvolumen, Laufzeit und Preis inkl. MwSt. Prüfe die Kompatibilität und Installation per QR-Code.` : "Dieses Reiseziel ist bei GlobeSIM nicht verfügbar.";
   return {
     meta: [
       { title },
@@ -267,35 +261,14 @@ export function destinationHead(d: { name: string; plans: { price: number }[]; f
       { property: "og:description", content: description },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
-      ...(d.plans.length && !d.fixturePlans ? [] : [{ name: "robots", content: "noindex, follow" }]),
+      ...identity.meta,
+      ...(prices.length ? [] : [{ name: "robots", content: "noindex, follow" }]),
     ],
-    scripts: [
-      ...offerLd(d),
-      {
-        type: "application/ld+json",
-        children: JSON.stringify({
-          "@context": "https://schema.org",
-          "@type": "BreadcrumbList",
-          itemListElement: [
-            { "@type": "ListItem", position: 1, name: "Start", item: "/" },
-            { "@type": "ListItem", position: 2, name: "Reiseziele", item: "/destinations" },
-            { "@type": "ListItem", position: 3, name: d.name, item: path },
-          ],
-        }),
-      },
-      ...(from != null
-        ? [{
-            type: "application/ld+json",
-            children: JSON.stringify({
-              "@context": "https://schema.org",
-              "@type": "Product",
-              name: `eSIM für ${d.name}`,
-              brand: { "@type": "Brand", name: "GlobeSIM" },
-              offers: { "@type": "AggregateOffer", priceCurrency: "EUR", lowPrice: from, highPrice: Math.max(...d.plans.map((p) => p.price)), offerCount: d.plans.length },
-            }),
-          }]
-        : []),
-    ],
+    links: identity.links,
+    scripts: d ? [
+      ...productScript(d, path),
+      breadcrumbScript([{ name: "Start", path: "/" }, { name: "Reiseziele", path: "/destinations" }, { name: d.name, path }]),
+    ] : [],
   };
 }
 

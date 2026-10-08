@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { SiteLayout } from "@/components/layout";
 import { Button, Input } from "@/components/ui-kit";
 import { supabase } from "@/integrations/supabase/client";
+import { pageIdentity } from "@/lib/seo";
 
 const schema = z.object({
   email: z.string().trim().email("Bitte gib eine gültige E-Mail-Adresse ein.").max(255),
@@ -22,7 +23,9 @@ export const Route = createFileRoute("/help")({
       { property: "og:description", content: "Wir helfen dir bei Fragen zu deiner eSIM." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
+      ...pageIdentity("/help").meta,
     ],
+    links: pageIdentity("/help").links,
   }),
   component: Help,
 });

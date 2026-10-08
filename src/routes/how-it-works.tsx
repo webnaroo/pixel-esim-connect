@@ -1,17 +1,20 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { SiteLayout } from "@/components/layout";
 import { LinkButton } from "@/components/ui-kit";
+import { pageIdentity } from "@/lib/seo";
 
 export const Route = createFileRoute("/how-it-works")({
   head: () => ({
     meta: [
-      { title: "So funktioniert's – eSIM in 3 Schritten | GlobeSIM" },
+      { title: "eSIM installieren: Anleitung für iPhone & Android | GlobeSIM" },
       { name: "description", content: "So installierst du deine GlobeSIM eSIM: Reiseziel wählen, bezahlen, QR-Code scannen. Anleitung für iPhone und Android." },
       { property: "og:title", content: "So funktioniert GlobeSIM" },
       { property: "og:description", content: "Reiseziel wählen, bezahlen, QR-Code scannen." },
       { property: "og:type", content: "article" },
       { name: "twitter:card", content: "summary" },
+      ...pageIdentity("/how-it-works").meta,
     ],
+    links: pageIdentity("/how-it-works").links,
   }),
   component: () => (
     <SiteLayout>
