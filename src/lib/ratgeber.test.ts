@@ -161,10 +161,20 @@ describe("generator", () => {
   });
   it("drops unknown links, unconfirmed throttle claims and fixed prices", () => {
     const row = draftRow(out, ctx, req, 1400);
-    expect(row.sections[0]!.body_md).toBe("[Tarife](/countries/turkey) und fremd");
+    expect(row.sections[0]!.body_md).toContain("[Tarife](/countries/turkey) und fremd");
     expect(row.internal_links).toEqual([{ label: "Tarife", path: "/countries/turkey" }]);
     expect(row.answer_summary).not.toMatch(/Drosselung|PRÜFEN/);
     expect(row.answer_summary).not.toContain("9,99");
     expect(cleanText("ohne Drosselung", new Set(), true)).toBe("ohne Drosselung");
+  });
+});
+
+import { stripMeta, withLivePrices } from "./ratgeber-ai";
+describe("availability & live prices", () => {
+  it("removes sentences about missing data", () => {
+    expect(stripMeta("Ob eine Japan-eSIM verfügbar ist, lässt sich aus den bereitgestellten Daten nicht feststellen. Installiere sie vor Abflug.")).toBe("Installiere sie vor Abflug.");
+  });
+  it("adds live prices for the country when missing", () => {
+    expect(withLivePrices([{ body_md: "Text" }], "JP")[0]!.body_md).toContain("{{LIVE_PREISE:JP}}");
   });
 });

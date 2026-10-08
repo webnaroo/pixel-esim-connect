@@ -45,9 +45,8 @@ export async function handleRatgeberAi(request: Request, config: { apiKey: strin
     db.from("blog_posts").select("title,slug").in("status", ["published", "scheduled"]).lte("published_at", new Date().toISOString()),
     db.from("app_settings").select("value").eq("key", "blog_wordlist").maybeSingle(),
   ]);
-  const withPlans = new Set((plans ?? []).map((p) => p.destination_id));
   const ctx: AiContext = {
-    destinations: (dests ?? []).filter((d) => withPlans.has(d.id)).map((d) => ({
+    destinations: (dests ?? []).map((d) => ({
       iso: (d.iso_code ?? "").toUpperCase(), name: d.name_de, path: `/${d.type === "country" ? "countries" : "regions"}/${d.slug}`,
       unlimited_confirmed: (plans ?? []).some((p) => p.destination_id === d.id && p.type === "unlimited" && p.throttle_claim === "none_confirmed"),
     })),

@@ -29,6 +29,8 @@ Feste Regeln, die du niemals brichst:
 - Sachlich auf Deutsch in Du-Form. Keine Superlative ("beste", "Nr. 1", "garantiert", "günstigste"). Keine Wettbewerber mit Namen.
 - Erfinde keine Zahlen, Preise, Netzabdeckungen, Gesetze oder Regeln. Nenne nie Preise im Text; setze stattdessen den Platzhalter {{LIVE_PREISE:<ISO-Ländercode>}} (z. B. {{LIVE_PREISE:TR}}) als eigenen Absatz.
 - Aussagen, die nicht aus den beigelegten Daten stammen und rechtlich/regional unsicher sind (Einreise-, Handy-, Zollregeln, Roaming-Preise, Netzbetreiber), lässt du einfach weg oder formulierst sie allgemein (z. B. "informiere dich vor der Reise bei offiziellen Stellen"). Keine Marker wie [PRÜFEN] oder [QUELLE FEHLT].
+- Jedes Reiseziel in destinations ist bei GlobeSIM verfügbar und buchbar. Schreibe das selbstverständlich ("Bei GlobeSIM bekommst Du eine eSIM für <Land>") und verlinke die Seite aus destinations. Schreibe NIE über Daten, Kontext, Datenlage, "bereitgestellte Daten", fehlende Produktgrundlagen oder ob ein Angebot existiert. Keine Meta-Kommentare über Deine Vorgaben.
+- Für das Land des Beitrags setzt Du mindestens einmal {{LIVE_PREISE:<ISO>}} als eigenen Absatz, dort erscheinen die echten aktuellen Tarife und Preise.
 - "ohne Drosselung" nur erwähnen, wenn im Kontext unlimited_confirmed = true ist; sonst Drosselung gar nicht erwähnen.
 - Keine Behauptungen über Kundenzahlen, Bewertungen oder Tests.
 - Keine Quellen-URLs erfinden. Aussagen, die eine Quelle bräuchten, lässt du weg; missing_sources bleibt leer.
@@ -48,7 +50,7 @@ const PRICE = /\d+(?:[.,]\d{1,2})?\s?(?:€|EUR\b|Euro\b)|€\s?\d+(?:[.,]\d{1,2
 export function cleanText(text: string, allowedPaths: Set<string>, unlimitedConfirmed: boolean) {
   let t = text.replace(/\[([^\]]+)\]\((\/[^)\s]*)\)/g, (all, label: string, path: string) => (allowedPaths.has(path) ? all : label));
   if (!unlimitedConfirmed) t = t.replace(THROTTLE, "");
-  return stripMarkers(t.replace(PRICE, "").replace(/<[^>]+>/g, ""));
+  return stripMeta(stripMarkers(t.replace(PRICE, "").replace(/<[^>]+>/g, "")));
 }
 
 export function allowedPaths(ctx: AiContext) {
@@ -56,6 +58,17 @@ export function allowedPaths(ctx: AiContext) {
 }
 
 /** Builds the row saved for a generated draft. Status is ALWAYS draft. */
+const META = /[^.!?\n]*(bereitgestellten Daten|vorliegenden (GlobeSIM-)?Daten|Datenlage|Produktgrundlage|nicht feststellen|nicht als eigenes Reiseziel)[^.!?\n]*[.!?]?/gi;
+/** Removes sentences where the model talks about its data instead of the topic. */
+export const stripMeta = (t: string) => t.replace(META, "").replace(/[ \t]{2,}/g, " ").trim();
+
+/** Guarantees live prices for the post's country appear at least once. */
+export function withLivePrices<T extends { body_md: string }>(sections: T[], iso: string | null): T[] {
+  if (!iso || !sections.length || sections.some((x) => x.body_md.includes("{{LIVE_PREISE"))) return sections;
+  const out = [...sections]; out[0] = { ...out[0]!, body_md: `${out[0]!.body_md}\n\n{{LIVE_PREISE:${iso}}}` };
+  return out;
+}
+
 export function draftRow(out: DraftOut, ctx: AiContext, req: Extract<AiRequest, { mode: "generate" }>, targetWords: number) {
   const iso = req.country.toUpperCase() || null;
   const confirmed = !!iso && ctx.destinations.some((d) => d.iso === iso && d.unlimited_confirmed);
@@ -70,7 +83,7 @@ export function draftRow(out: DraftOut, ctx: AiContext, req: Extract<AiRequest, 
     meta_title: c(out.meta_title).slice(0, 80),
     meta_description: c(out.meta_description).slice(0, 200),
     answer_summary: c(out.answer_summary).slice(0, 1000),
-    sections: out.sections.filter((s) => s.heading.trim().length >= 3).slice(0, 30).map((s) => ({ heading: c(s.heading).slice(0, 200), level: s.level, body_md: c(s.body_md).slice(0, 20000) })),
+    sections: withLivePrices(out.sections.filter((s) => s.heading.trim().length >= 3).slice(0, 30).map((s) => ({ heading: c(s.heading).slice(0, 200), level: s.level, body_md: c(s.body_md).slice(0, 20000) })), iso),
     faq: out.faq.filter((f) => f.q.trim().length >= 3 && f.a.trim().length >= 3).slice(0, 8).map((f) => ({ q: c(f.q).slice(0, 300), a: c(f.a).slice(0, 2000) })),
     cover_image_alt: out.cover_image_alt.slice(0, 200) || null,
     internal_links: links,
