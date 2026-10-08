@@ -13,6 +13,7 @@ const schema = z.object({
 });
 
 export const Route = createFileRoute("/help")({
+  validateSearch: (s: Record<string, unknown>): { subject?: string } => (typeof s.subject === "string" ? { subject: s.subject.slice(0, 150) } : {}),
   head: () => ({
     meta: [
       { title: "Hilfe & Kontakt | GlobeSIM" },
@@ -27,6 +28,7 @@ export const Route = createFileRoute("/help")({
 });
 
 function Help() {
+  const { subject } = Route.useSearch();
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
@@ -66,7 +68,7 @@ function Help() {
         ) : (
           <form onSubmit={onSubmit} noValidate className="space-y-4">
             <Field label="E-Mail" name="email" error={errors['email']}><Input id="email" name="email" type="email" autoComplete="email" /></Field>
-            <Field label="Betreff" name="subject" error={errors['subject']}><Input id="subject" name="subject" /></Field>
+            <Field label="Betreff" name="subject" error={errors['subject']}><Input id="subject" name="subject" defaultValue={subject} /></Field>
             <Field label="Nachricht" name="message" error={errors['message']}>
               <textarea id="message" name="message" rows={6} className="w-full rounded-md border border-line-strong bg-surface p-4 text-base focus:border-primary focus:outline-none" />
             </Field>
