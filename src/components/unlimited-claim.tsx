@@ -3,10 +3,17 @@ import { unlimitedClaimQuery } from "@/lib/catalog.functions";
 import { showsNoThrottle, type ThrottleClaim } from "@/lib/throttle";
 
 /** "Unlimited · ohne Drosselung · laut Anbieter" — texts from settings, only for confirmed plans. */
-export function UnlimitedLabel({ throttleClaim, className }: { throttleClaim?: ThrottleClaim | null | undefined; className?: string }) {
+export function UnlimitedLabel({ throttleClaim, className, stacked }: { throttleClaim?: ThrottleClaim | null | undefined; className?: string; stacked?: boolean }) {
   const { data } = useQuery(unlimitedClaimQuery());
   const t = data?.texts;
   if (!t || !showsNoThrottle({ type: "unlimited", throttleClaim })) return <span className={className}>Unlimited</span>;
+  if (stacked)
+    return (
+      <span className="flex flex-col">
+        <span className={className}>Unlimited</span>
+        <span className="mt-0.5 text-sm font-medium text-ink">· {t.label}{t.qualifier && <span className="ml-1 text-xs font-normal text-ink-muted">{t.qualifier}</span>}</span>
+      </span>
+    );
   return (
     <span className={className}>
       Unlimited · {t.label}

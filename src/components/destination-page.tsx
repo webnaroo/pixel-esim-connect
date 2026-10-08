@@ -101,7 +101,7 @@ export function DestinationPage({ slug }: { slug: string }) {
                   </DrawerContent>
                 </Drawer>
               </div>
-              <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+              <div className="mt-5 grid items-start gap-3 sm:grid-cols-2 xl:grid-cols-3">
                 {plans.map((p) => (
                   <PlanCard key={p.id} plan={p} selected={selected === p.id} onSelect={() => setSelected(p.id)} />
                 ))}
@@ -113,7 +113,7 @@ export function DestinationPage({ slug }: { slug: string }) {
         )}
       </section>
 
-      {hasPlans && sample && (
+      {hasPlans && sample && (sample.hotspot != null || sample.voiceSms != null || sample.topUpable != null || !!sample.networks?.length || (tab === "unlimited" && !!unlimitedPlans[0]?.fairUse && !showsNoThrottle(unlimitedPlans[0]))) && (
         <section className="container-page mt-14">
           <h2>Gut zu wissen</h2>
           <dl className="mt-5 grid gap-px overflow-hidden rounded-lg border border-line bg-line sm:grid-cols-2">

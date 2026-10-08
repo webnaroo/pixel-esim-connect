@@ -57,7 +57,7 @@ function PlanCardButton({ plan, selected, onSelect, disabled }: { plan: PlanItem
       )}
     >
       <div className="flex items-start justify-between gap-3">
-        {plan.type === "unlimited" ? <UnlimitedLabel throttleClaim={plan.throttleClaim} className="font-display text-xl font-semibold tracking-[-0.02em] text-ink lg:text-2xl" /> : <span className="font-display text-xl font-semibold tracking-[-0.02em] text-ink lg:text-2xl">{formatData(plan.dataMb)}</span>}
+        {plan.type === "unlimited" ? <UnlimitedLabel stacked throttleClaim={plan.throttleClaim} className="font-display text-xl font-semibold tracking-[-0.02em] text-ink lg:text-2xl" /> : <span className="font-display text-xl font-semibold tracking-[-0.02em] text-ink lg:text-2xl">{formatData(plan.dataMb)}</span>}
         <span className="tabular text-xl font-semibold text-ink">{formatPrice(plan.price, plan.currency)}</span>
       </div>
       <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-ink-muted">
