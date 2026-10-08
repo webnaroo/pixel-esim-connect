@@ -1,0 +1,143 @@
+import { createFileRoute } from "@tanstack/react-router";
+import { useSuspenseQuery, useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
+import { useState } from "react";
+import { toast } from "sonner";
+import { CheckCircle, XCircle, Warning } from "@phosphor-icons/react";
+import { adminOverviewQuery, runSyncNow, setShopEnabled, setSyncEnabled } from "@/lib/admin.functions";
+import { Button } from "@/components/ui-kit";
+import { Chip } from "@/components/brand";
+import { AdminError } from "./admin";
+
+export const Route = createFileRoute("/_authenticated/admin/")({
+  loader: ({ context }) => context.queryClient.ensureQueryData(adminOverviewQuery()),
+  errorComponent: AdminError,
+  component: Overview,
+});
+
+const STATUS_LABEL: Record<string, string> = {
+  ok: "OK", ok_with_warnings: "OK mit Hinweisen", aborted_threshold: "Abgebrochen (50 %-Schutz)", failed: "Fehler", skipped: "Übersprungen", running: "Läuft",
+};
+
+function Row({ ok, label, detail }: { ok: boolean; label: string; detail?: string }) {
+  return (
+    <li className="flex items-start gap-3 py-3">
+      {ok ? <CheckCircle size={22} className="shrink-0 text-mint" weight="fill" /> : <XCircle size={22} className="shrink-0 text-danger" weight="fill" />}
+      <div>
+        <p className="font-medium">{label}</p>
+        {detail && <p className="text-sm text-ink-muted">{detail}</p>}
+      </div>
+    </li>
+  );
+}
+
+function Overview() {
+  const { data } = useSuspenseQuery(adminOverviewQuery());
+  const qc = useQueryClient();
+  const toggleShop = useServerFn(setShopEnabled);
+  const toggleSync = useServerFn(setSyncEnabled);
+  const sync = useServerFn(runSyncNow);
+  const [busy, setBusy] = useState<string | null>(null);
+  const refresh = () => qc.invalidateQueries({ queryKey: ["admin", "overview"] });
+  const c = data.checklist;
+  const latestAbort = data.runs.find((r) => r.status === "aborted_threshold");
+  const latest = data.runs[0];
+
+  async function onShop() {
+    setBusy("shop");
+    const r = await toggleShop({ data: { enabled: !data.shopEnabled } });
+    setBusy(null);
+    if (!r.ok) toast.error(`Shop kann nicht aktiviert werden. Offen: ${r.missing.join(", ")}`);
+    else toast.success(data.shopEnabled ? "Shop deaktiviert." : "Shop aktiviert.");
+    refresh();
+  }
+  async function onSync() {
+    setBusy("sync");
+    const r = await sync();
+    setBusy(null);
+    if (r.status === "ok") toast.success(`Sync fertig: ${r.added} neu, ${r.updated} aktualisiert, ${r.deactivated} deaktiviert.`);
+    else toast.warning(r.message ?? STATUS_LABEL[r.status] ?? r.status);
+    refresh();
+  }
+
+  return (
+    <div className="grid gap-8 lg:grid-cols-2">
+      {latestAbort && latest?.id === latestAbort.id && (
+        <div role="alert" className="flex gap-3 rounded-lg border border-warning bg-surface p-4 lg:col-span-2">
+          <Warning size={22} className="shrink-0 text-warning" weight="fill" />
+          <div>
+            <p className="font-medium">Letzter Katalog-Sync wurde abgebrochen</p>
+            <p className="text-sm text-ink-muted">{latestAbort.error}</p>
+          </div>
+        </div>
+      )}
+
+      <section className="rounded-lg border border-line bg-surface p-6">
+        <h2 className="text-xl">Shop-Checkliste</h2>
+        <ul className="mt-2 divide-y divide-line">
+          <Row ok={c.providerReachable} label="Provider erreichbar" detail={c.providerMessage} />
+          <Row ok={c.catalogCount > 0} label="Katalog größer 0" detail={`${c.catalogCount} aktive Tarife`} />
+          <Row ok={c.stripeConfigured} label="Stripe konfiguriert" detail={c.stripeConfigured ? "Schlüssel gesetzt" : "Stripe-Schlüssel nicht gesetzt"} />
+        </ul>
+        <div className="mt-4 flex flex-wrap items-center gap-3">
+          <Chip tone={data.shopEnabled ? "active" : "muted"}>{data.shopEnabled ? "Shop aktiv" : "Shop aus"}</Chip>
+          <Button
+            variant={data.shopEnabled ? "secondary" : "primary"}
+            loading={busy === "shop"}
+            disabled={!data.shopEnabled && data.missing.length > 0}
+            onClick={onShop}
+          >
+            {data.shopEnabled ? "Shop deaktivieren" : "Shop aktivieren"}
+          </Button>
+        </div>
+        {!data.shopEnabled && data.missing.length > 0 && <p className="mt-2 text-sm text-ink-muted">Erst möglich, wenn alle Punkte grün sind.</p>}
+      </section>
+
+      <section className="rounded-lg border border-line bg-surface p-6">
+        <h2 className="text-xl">eSIMerge-Anbindung</h2>
+        <ul className="mt-2 divide-y divide-line">
+          <Row ok={data.provider.baseUrlSet} label="ESIMERGE_BASE_URL" detail={data.provider.baseUrlSet ? "gesetzt" : "nicht gesetzt"} />
+          <Row ok={data.provider.apiKeySet} label="ESIMERGE_API_KEY" detail={data.provider.apiKeySet ? "gesetzt" : "nicht gesetzt"} />
+          <Row ok={data.provider.webhookSecretSet} label="ESIMERGE_WEBHOOK_SECRET" detail={data.provider.webhookSecretSet ? "gesetzt" : "nicht gesetzt"} />
+          <Row ok={data.provider.configMissing.length === 0} label="Endpunkte & Auth" detail={data.provider.configMissing.length ? `Offen: ${data.provider.configMissing.join(", ")}` : "vollständig"} />
+          <Row ok={data.provider.mappingReady} label="Feld-Mapping" detail={data.provider.mappingReady ? "fertig" : "wartet auf API-Doku"} />
+        </ul>
+      </section>
+
+      <section className="rounded-lg border border-line bg-surface p-6 lg:col-span-2">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h2 className="text-xl">Katalog-Sync</h2>
+          <div className="flex flex-wrap gap-2">
+            <Button variant="secondary" loading={busy === "auto"} onClick={async () => { setBusy("auto"); await toggleSync({ data: { enabled: !data.syncEnabled } }); setBusy(null); refresh(); }}>
+              Automatisch: {data.syncEnabled ? "an" : "aus"}
+            </Button>
+            <Button loading={busy === "sync"} onClick={onSync}>Jetzt synchronisieren</Button>
+          </div>
+        </div>
+        {data.runs.length === 0 ? (
+          <p className="mt-4 text-sm text-ink-muted">Noch kein Sync gelaufen.</p>
+        ) : (
+          <div className="mt-4 overflow-x-auto">
+            <table className="w-full text-left text-sm tabular">
+              <thead className="text-ink-muted">
+                <tr><th className="py-2 pr-4 font-medium">Start</th><th className="pr-4 font-medium">Status</th><th className="pr-4 font-medium">Neu</th><th className="pr-4 font-medium">Aktualisiert</th><th className="pr-4 font-medium">Deaktiviert</th><th className="font-medium">Hinweis</th></tr>
+              </thead>
+              <tbody className="divide-y divide-line">
+                {data.runs.map((r) => (
+                  <tr key={r.id}>
+                    <td className="py-2 pr-4 whitespace-nowrap">{new Date(r.started_at).toLocaleString("de-DE")}</td>
+                    <td className="pr-4 whitespace-nowrap"><Chip tone={r.status === "ok" ? "active" : r.status === "aborted_threshold" || r.status === "failed" ? "warning" : "muted"}>{STATUS_LABEL[r.status] ?? r.status}</Chip></td>
+                    <td className="pr-4">{r.plans_added}</td>
+                    <td className="pr-4">{r.plans_updated}</td>
+                    <td className="pr-4">{r.plans_deactivated}</td>
+                    <td className="text-ink-muted">{r.error ?? ""}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>
+    </div>
+  );
+}

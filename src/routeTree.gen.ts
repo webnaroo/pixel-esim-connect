@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as DestinationsRouteImport } from './routes/destinations'
 import { Route as FaqRouteImport } from './routes/faq'
 import { Route as HelpRouteImport } from './routes/help'
@@ -17,12 +18,21 @@ import { Route as HowItWorksRouteImport } from './routes/how-it-works'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as RegisterRouteImport } from './routes/register'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as CountriesSlugRouteImport } from './routes/countries.$slug'
 import { Route as RegionsSlugRouteImport } from './routes/regions.$slug'
+import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
+import { Route as AuthenticatedAdminExplorerRouteImport } from './routes/_authenticated/admin.explorer'
+import { Route as AuthenticatedAdminPricingRouteImport } from './routes/_authenticated/admin.pricing'
+import { Route as ApiPublicCronCatalogSyncRouteImport } from './routes/api/public/cron/catalog-sync'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DestinationsRoute = DestinationsRouteImport.update({
@@ -60,6 +70,11 @@ const ResetPasswordRoute = ResetPasswordRouteImport.update({
   path: '/reset-password',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const CountriesSlugRoute = CountriesSlugRouteImport.update({
   id: '/countries/$slug',
   path: '/countries/$slug',
@@ -70,6 +85,29 @@ const RegionsSlugRoute = RegionsSlugRouteImport.update({
   path: '/regions/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AuthenticatedAdminRoute,
+} as any)
+const AuthenticatedAdminExplorerRoute =
+  AuthenticatedAdminExplorerRouteImport.update({
+    id: '/explorer',
+    path: '/explorer',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
+const AuthenticatedAdminPricingRoute =
+  AuthenticatedAdminPricingRouteImport.update({
+    id: '/pricing',
+    path: '/pricing',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
+const ApiPublicCronCatalogSyncRoute =
+  ApiPublicCronCatalogSyncRouteImport.update({
+    id: '/api/public/cron/catalog-sync',
+    path: '/api/public/cron/catalog-sync',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -80,8 +118,13 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/admin': typeof AuthenticatedAdminRouteWithChildren
   '/countries/$slug': typeof CountriesSlugRoute
   '/regions/$slug': typeof RegionsSlugRoute
+  '/admin/explorer': typeof AuthenticatedAdminExplorerRoute
+  '/admin/pricing': typeof AuthenticatedAdminPricingRoute
+  '/admin/': typeof AuthenticatedAdminIndexRoute
+  '/api/public/cron/catalog-sync': typeof ApiPublicCronCatalogSyncRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -94,10 +137,15 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/countries/$slug': typeof CountriesSlugRoute
   '/regions/$slug': typeof RegionsSlugRoute
+  '/admin/explorer': typeof AuthenticatedAdminExplorerRoute
+  '/admin/pricing': typeof AuthenticatedAdminPricingRoute
+  '/admin': typeof AuthenticatedAdminIndexRoute
+  '/api/public/cron/catalog-sync': typeof ApiPublicCronCatalogSyncRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/destinations': typeof DestinationsRoute
   '/faq': typeof FaqRoute
   '/help': typeof HelpRoute
@@ -105,8 +153,13 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
   '/countries/$slug': typeof CountriesSlugRoute
   '/regions/$slug': typeof RegionsSlugRoute
+  '/_authenticated/admin/explorer': typeof AuthenticatedAdminExplorerRoute
+  '/_authenticated/admin/pricing': typeof AuthenticatedAdminPricingRoute
+  '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
+  '/api/public/cron/catalog-sync': typeof ApiPublicCronCatalogSyncRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -119,8 +172,13 @@ export interface FileRouteTypes {
     | '/login'
     | '/register'
     | '/reset-password'
+    | '/admin'
     | '/countries/$slug'
     | '/regions/$slug'
+    | '/admin/explorer'
+    | '/admin/pricing'
+    | '/admin/'
+    | '/api/public/cron/catalog-sync'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -133,9 +191,14 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/countries/$slug'
     | '/regions/$slug'
+    | '/admin/explorer'
+    | '/admin/pricing'
+    | '/admin'
+    | '/api/public/cron/catalog-sync'
   id:
     | '__root__'
     | '/'
+    | '/_authenticated'
     | '/destinations'
     | '/faq'
     | '/help'
@@ -143,12 +206,18 @@ export interface FileRouteTypes {
     | '/login'
     | '/register'
     | '/reset-password'
+    | '/_authenticated/admin'
     | '/countries/$slug'
     | '/regions/$slug'
+    | '/_authenticated/admin/explorer'
+    | '/_authenticated/admin/pricing'
+    | '/_authenticated/admin/'
+    | '/api/public/cron/catalog-sync'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   DestinationsRoute: typeof DestinationsRoute
   FaqRoute: typeof FaqRoute
   HelpRoute: typeof HelpRoute
@@ -158,6 +227,7 @@ export interface RootRouteChildren {
   ResetPasswordRoute: typeof ResetPasswordRoute
   CountriesSlugRoute: typeof CountriesSlugRoute
   RegionsSlugRoute: typeof RegionsSlugRoute
+  ApiPublicCronCatalogSyncRoute: typeof ApiPublicCronCatalogSyncRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -167,6 +237,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/destinations': {
@@ -218,6 +295,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ResetPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/admin': {
+      id: '/_authenticated/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AuthenticatedAdminRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/countries/$slug': {
       id: '/countries/$slug'
       path: '/countries/$slug'
@@ -232,11 +316,66 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RegionsSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/admin/': {
+      id: '/_authenticated/admin/'
+      path: '/'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AuthenticatedAdminIndexRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/admin/explorer': {
+      id: '/_authenticated/admin/explorer'
+      path: '/explorer'
+      fullPath: '/admin/explorer'
+      preLoaderRoute: typeof AuthenticatedAdminExplorerRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/admin/pricing': {
+      id: '/_authenticated/admin/pricing'
+      path: '/pricing'
+      fullPath: '/admin/pricing'
+      preLoaderRoute: typeof AuthenticatedAdminPricingRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/api/public/cron/catalog-sync': {
+      id: '/api/public/cron/catalog-sync'
+      path: '/api/public/cron/catalog-sync'
+      fullPath: '/api/public/cron/catalog-sync'
+      preLoaderRoute: typeof ApiPublicCronCatalogSyncRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
+interface AuthenticatedAdminRouteChildren {
+  AuthenticatedAdminExplorerRoute: typeof AuthenticatedAdminExplorerRoute
+  AuthenticatedAdminPricingRoute: typeof AuthenticatedAdminPricingRoute
+  AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
+}
+
+const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
+  AuthenticatedAdminExplorerRoute: AuthenticatedAdminExplorerRoute,
+  AuthenticatedAdminPricingRoute: AuthenticatedAdminPricingRoute,
+  AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
+}
+
+const AuthenticatedAdminRouteWithChildren =
+  AuthenticatedAdminRoute._addFileChildren(AuthenticatedAdminRouteChildren)
+
+interface AuthenticatedRouteRouteChildren {
+  AuthenticatedAdminRoute: typeof AuthenticatedAdminRouteWithChildren
+}
+
+const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedAdminRoute: AuthenticatedAdminRouteWithChildren,
+}
+
+const AuthenticatedRouteRouteWithChildren =
+  AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   DestinationsRoute: DestinationsRoute,
   FaqRoute: FaqRoute,
   HelpRoute: HelpRoute,
@@ -246,6 +385,7 @@ const rootRouteChildren: RootRouteChildren = {
   ResetPasswordRoute: ResetPasswordRoute,
   CountriesSlugRoute: CountriesSlugRoute,
   RegionsSlugRoute: RegionsSlugRoute,
+  ApiPublicCronCatalogSyncRoute: ApiPublicCronCatalogSyncRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
