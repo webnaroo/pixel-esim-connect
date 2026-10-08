@@ -168,3 +168,61 @@ export const explorerCall = createServerFn({ method: "POST" })
       return { ok: false as const, code, message: maskString(e instanceof Error ? e.message : String(e)) };
     }
   });
+
+// ---- Unlimited-Prüfung ("ohne Drosselung") ----
+export const getThrottleReview = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertAdmin(context as unknown as Ctx);
+    const [{ data: plans, error }, { data: texts }] = await Promise.all([
+      context.supabase.from("plans").select("id,provider_plan_id,validity_days,is_active,fair_use,hotspot,throttle_claim,throttle_confirmation,destination:destinations(name_de)").eq("type", "unlimited").order("provider_plan_id"),
+      context.supabase.from("app_settings").select("value").eq("key", "unlimited_claim").maybeSingle(),
+    ]);
+    if (error) throw new Error(error.message);
+    return { plans: plans ?? [], texts: (texts?.value ?? null) as { label?: string; qualifier?: string; note?: string } | null };
+  });
+export const throttleReviewQuery = () => queryOptions({ queryKey: ["admin", "throttle"], queryFn: () => getThrottleReview() });
+
+export const confirmNoThrottle = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((i) => z.object({ planIds: z.array(z.string().uuid()).min(1).max(500), source: z.string().max(500), date: z.string().max(10), acceptHint: z.boolean() }).parse(i))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context as unknown as Ctx);
+    const { validateConfirmation, confirmClaim } = await import("./throttle");
+    const err = validateConfirmation(data.source, data.date, new Date());
+    if (err) throw new Error(err);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: plans } = await supabaseAdmin.from("plans").select("id,type,fair_use").in("id", data.planIds);
+    const result = { confirmed: 0, conflict: 0 };
+    for (const p of plans ?? []) {
+      if (p.type !== "unlimited") continue;
+      const r = confirmClaim(p.fair_use as never, { source: data.source, date: data.date, confirmedBy: context.userId, acceptHint: data.acceptHint });
+      await supabaseAdmin.from("plans").update({ throttle_claim: r.claim, throttle_confirmation: r.confirmation as never }).eq("id", p.id);
+      await supabaseAdmin.from("audit_log").insert({ actor_id: context.userId, action: r.claim === "none_confirmed" ? "throttle_confirmed" : "throttle_conflict", entity: "plans", entity_id: p.id, meta: { ...r.confirmation, fair_use: p.fair_use } as never });
+      result[r.claim === "none_confirmed" ? "confirmed" : "conflict"]++;
+    }
+    return result;
+  });
+
+export const revokeNoThrottle = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((i) => z.object({ planIds: z.array(z.string().uuid()).min(1).max(500) }).parse(i))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context as unknown as Ctx);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    await supabaseAdmin.from("plans").update({ throttle_claim: "unknown" }).in("id", data.planIds);
+    await supabaseAdmin.from("audit_log").insert(data.planIds.map((id) => ({ actor_id: context.userId, action: "throttle_revoked", entity: "plans", entity_id: id })));
+    return { ok: true };
+  });
+
+export const saveUnlimitedClaimTexts = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((i) => z.object({ label: z.string().trim().min(2).max(60), qualifier: z.string().trim().max(60), note: z.string().trim().max(600) }).parse(i))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context as unknown as Ctx);
+    const { error } = await context.supabase.from("app_settings").upsert({ key: "unlimited_claim", value: data, updated_at: new Date().toISOString() });
+    if (error) throw new Error("Speichern fehlgeschlagen.");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    await supabaseAdmin.from("audit_log").insert({ actor_id: context.userId, action: "unlimited_claim_texts", entity: "app_settings", entity_id: "unlimited_claim", meta: data });
+    return { ok: true };
+  });

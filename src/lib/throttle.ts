@@ -53,3 +53,9 @@ export function parseClaimTexts(v: unknown): ClaimTexts | null {
   const t = { label: s("label"), qualifier: s("qualifier"), note: s("note") };
   return t.label ? t : null;
 }
+
+/** Plain-text plan label for emails (same rule as the UI). */
+export function unlimitedLabelText(throttleClaim: ThrottleClaim | null | undefined, texts: ClaimTexts | null): string {
+  if (!texts || !showsNoThrottle({ type: "unlimited", throttleClaim })) return "Unlimited";
+  return `Unlimited · ${texts.label}${texts.qualifier ? ` (${texts.qualifier})` : ""}${texts.note ? `\n${texts.note}` : ""}`;
+}

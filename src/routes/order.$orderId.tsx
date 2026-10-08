@@ -65,7 +65,7 @@ function OrderPage() {
   );
 }
 
-function Row({ k, v }: { k: string; v: string }) {
+function Row({ k, v }: { k: string; v: React.ReactNode }) {
   return (
     <div className="flex justify-between gap-4 p-4 text-sm">
       <dt className="text-ink-muted">{k}</dt>
