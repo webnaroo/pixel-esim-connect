@@ -2,7 +2,7 @@ import { parseHTML } from "linkedom";
 import { SITE_URL, pageUrl } from "./seo";
 
 export type SeoPageCheck = { path: string; status: number; canonical: string | null; types: string[]; errors: string[]; warnings: string[] };
-export const PUBLIC_UTILITY_PATHS = ["/blog", "/login", "/register", "/reset-password"];
+export const PUBLIC_UTILITY_PATHS = ["/ratgeber", "/login", "/register", "/reset-password"];
 
 export function auditPaths(xml: string): string[] {
   const { document } = parseHTML(xml);
