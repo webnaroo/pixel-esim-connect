@@ -66,7 +66,7 @@ async function callerIdentity(): Promise<{ userId: string | null; isAdmin: boole
   return { userId: u.user.id, isAdmin: Boolean(isAdmin) };
 }
 
-type CheckoutResult = { ok: true; orderId: string; clientSecret: string; token: string; isTest: boolean } | { ok: false; error: CheckoutError };
+type CheckoutResult = { ok: true; orderId: string; clientSecret: string; token: string; isTest: boolean } | { ok: false; error: CheckoutError; detail?: string };
 
 export const createCheckoutSession = createServerFn({ method: "POST" })
   .inputValidator((i: unknown) => i)
@@ -93,7 +93,10 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
     if (!r.price.ok) return { ok: false, error: "price_unavailable" };
 
     const { paymentsConfigured, createPayment } = await import("./payments.server");
-    if (!paymentsConfigured()) return { ok: false, error: "payment_unavailable" };
+    const env = parsed.data.environment;
+    if (!paymentsConfigured(env)) return { ok: false, error: "payment_unavailable" };
+    // Live payments only once the shop is live; test payments only for admin test orders.
+    if ((env === "live") !== live) return { ok: false, error: "shop_unavailable" };
 
     const { data: order, error } = await db
       .from("orders")
@@ -109,13 +112,27 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
         status: "pending",
         withdrawal_consent_at: new Date().toISOString(),
         is_test: !live,
+        stripe_env: env,
       })
       .select("id")
       .single();
     if (error || !order) return { ok: false, error: "payment_unavailable" };
 
-    const pay = await createPayment({ orderId: order.id, amountCents: Math.round(r.price.gross * 100), currency: r.price.currency, email: parsed.data.email });
-    await db.from("orders").update({ stripe_payment_intent_id: pay.paymentIntentId }).eq("id", order.id);
     const { signGuestToken } = await import("./guest-token");
-    return { ok: true, orderId: order.id, clientSecret: pay.clientSecret, token: await signGuestToken(order.id, process.env["GUEST_TOKEN_SECRET"]!), isTest: !live };
+    const token = await signGuestToken(order.id, process.env["GUEST_TOKEN_SECRET"]!);
+    const dest = r.plan.destination!.name_de;
+    const description = `GlobeSIM eSIM ${dest} · ${r.plan.type === "unlimited" ? "Unlimited" : `${Math.round((r.plan.data_mb ?? 0) / 102.4) / 10} GB`} · ${r.plan.validity_days} Tage`;
+    try {
+      const pay = await createPayment({
+        env, orderId: order.id, amountCents: Math.round(r.price.gross * 100), currency: r.price.currency, email: parsed.data.email, userId: caller.userId, description,
+        // The redirect only shows the order page; it never marks the order paid (only the verified webhook does).
+        returnUrl: `${parsed.data.returnOrigin}/order/${order.id}?t=${encodeURIComponent(token)}`,
+      });
+      await db.from("orders").update({ stripe_session_id: pay.sessionId }).eq("id", order.id);
+      return { ok: true, orderId: order.id, clientSecret: pay.clientSecret, token, isTest: !live };
+    } catch (e) {
+      const { getStripeErrorMessage } = await import("./stripe.server");
+      await db.from("orders").update({ status: "cancelled", last_error: getStripeErrorMessage(e).slice(0, 300) }).eq("id", order.id);
+      return { ok: false, error: "payment_unavailable", detail: getStripeErrorMessage(e) };
+    }
   });

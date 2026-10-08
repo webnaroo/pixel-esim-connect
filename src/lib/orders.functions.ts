@@ -72,7 +72,7 @@ export const refundOrder = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     await assertAdmin(context as unknown as Ctx);
     const { supabaseAdmin: db } = await import("@/integrations/supabase/client.server");
-    const { data: o } = await db.from("orders").select("status,stripe_payment_intent_id").eq("id", data.orderId).single();
+    const { data: o } = await db.from("orders").select("status,stripe_payment_intent_id,stripe_env").eq("id", data.orderId).single();
     if (!o || !["paid", "fulfillment_failed"].includes(o.status)) throw new Error("Nur bezahlte, nicht ausgelieferte Bestellungen können hier erstattet werden.");
     if (!o.stripe_payment_intent_id) throw new Error("Keine Zahlung zu dieser Bestellung gefunden.");
     const { refundPayment } = await import("./payments.server");
