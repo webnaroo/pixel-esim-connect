@@ -39,12 +39,14 @@ function Login() {
     }
     const password = String(f.get("password") ?? "");
     const { error } = await supabase.auth.signInWithPassword({ email, password });
-    setBusy(false);
     if (error) {
+      setBusy(false);
       toast.error("Anmeldung fehlgeschlagen. Bitte Daten prüfen.");
       return;
     }
-    navigate({ to: "/account" });
+    const { isAdmin } = await getMyRole();
+    setBusy(false);
+    navigate({ to: isAdmin ? "/admin" : "/account" });
   }
 
   if (user) {
