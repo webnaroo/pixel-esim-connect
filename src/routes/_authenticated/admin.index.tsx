@@ -103,6 +103,7 @@ function Overview() {
           <Row ok={c.catalogCount > 0} label="Katalog größer 0" detail={`${c.catalogCount} aktive Tarife`} />
           <Row ok={c.stripeConfigured} label="Stripe konfiguriert" detail={c.stripeConfigured ? "Schlüssel gesetzt" : "Stripe-Schlüssel nicht gesetzt"} />
           <Row ok={!!c.emailVerified} label="E-Mail-Absender-Domain" detail={c.emailVerified ? "Verifiziert" : "Nicht verifiziert: keine Mails an Kunden"} />
+          <Row ok={!!c.fxValid} label="Wechselkurs aktuell" detail={c.fxValid ? "Gültiger Kurs USD→EUR" : "Kein gültiger Kurs: Tarife ohne Preis (Admin › Preise)"} />
           <Row ok={!!c.legalPublished} label="Rechtsseiten freigegeben" detail={c.legalPublished ? "Alle freigegeben" : "Noch Platzhalter (Admin › Inhalte)"} />
         </ul>
         <div className="mt-4 flex flex-wrap items-center gap-3">

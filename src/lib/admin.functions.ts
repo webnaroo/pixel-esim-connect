@@ -34,7 +34,10 @@ async function buildChecklist(): Promise<ShopChecklist & { providerMessage: stri
   ]);
   const { canSendCustomerEmail, parseEmailSettings } = await import("./email-rules");
   const emailVerified = canSendCustomerEmail(parseEmailSettings(mail?.value));
-  return { providerReachable, providerSandbox: status.sandbox, providerMessage, catalogCount: count ?? 0, stripeConfigured, emailVerified, legalPublished: (unpublished ?? 0) === 0 };
+  const { loadFx } = await import("./fx.server");
+  const fx = await loadFx(supabaseAdmin);
+  const fxValid = fx.effective("USD") !== null;
+  return { providerReachable, providerSandbox: status.sandbox, providerMessage, catalogCount: count ?? 0, stripeConfigured, emailVerified, fxValid, legalPublished: (unpublished ?? 0) === 0 };
 }
 
 export const getAdminOverview = createServerFn({ method: "GET" })
@@ -134,16 +137,6 @@ export const deletePricingRule = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     await assertAdmin(context as unknown as Ctx);
     await context.supabase.from("pricing_rules").delete().eq("id", data.id);
-    return { ok: true };
-  });
-
-export const saveFxRate = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
-  .inputValidator((i) => z.object({ from: z.string().regex(/^[A-Z]{3}$/), rate: z.number().positive().max(100000) }).parse(i))
-  .handler(async ({ data, context }) => {
-    await assertAdmin(context as unknown as Ctx);
-    const { error } = await context.supabase.from("fx_rates").insert({ from_currency: data.from, to_currency: "EUR", rate: data.rate, source: "manual" });
-    if (error) throw new Error("Kurs konnte nicht gespeichert werden.");
     return { ok: true };
   });
 
