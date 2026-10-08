@@ -178,6 +178,29 @@ export async function signOut() {
   await supabase.auth.signOut();
 }
 
+function SignOutButton({ className }: { className?: string }) {
+  const queryClient = useQueryClient();
+  const navigate = useNavigate();
+  const [busy, setBusy] = useState(false);
+  return (
+    <button
+      type="button"
+      disabled={busy}
+      onClick={async () => {
+        setBusy(true);
+        await queryClient.cancelQueries();
+        queryClient.clear();
+        await supabase.auth.signOut();
+        navigate({ to: "/", replace: true });
+      }}
+      className={className}
+    >
+      <SignOut size={20} aria-hidden />
+      Abmelden
+    </button>
+  );
+}
+
 function LegalLinks() {
   const { data } = useSuspenseQuery(legalIndexQuery());
   if (!data?.length) return null;
