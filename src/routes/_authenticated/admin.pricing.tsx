@@ -63,7 +63,7 @@ function Pricing() {
   const eur = (n: number) => n.toLocaleString("de-DE", { style: "currency", currency: "EUR" });
 
   return (
-    <div className="grid gap-8 lg:grid-cols-2">
+    <div className="grid gap-8 lg:grid-cols-2 [&>*]:min-w-0">
       <section className="rounded-lg border border-line bg-surface p-6 lg:col-span-2">
         <h2 className="text-xl">Margenregeln</h2>
         <p className="mt-1 text-sm text-ink-muted">Reihenfolge: Tarif vor Land vor Tariftyp vor global. Innerhalb einer Ebene gewinnt die höchste Priorität.</p>
