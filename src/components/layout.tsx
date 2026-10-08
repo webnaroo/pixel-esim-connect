@@ -107,6 +107,9 @@ export function Header() {
             <Link to={user ? "/account" : "/login"} className="py-4 font-display text-2xl font-semibold tracking-[-0.02em] text-primary">
               {user ? "Mein Konto" : "Anmelden"}
             </Link>
+            {user && (
+              <SignOutButton className="flex items-center gap-2 py-4 text-left font-display text-2xl font-semibold tracking-[-0.02em] text-ink-muted" />
+            )}
           </nav>
         </div>
       )}
