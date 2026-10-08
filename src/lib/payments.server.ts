@@ -46,6 +46,8 @@ export async function createPayment(input: {
     return_url: input.returnUrl,
     line_items: [{ quantity: 1, price_data: { currency: input.currency.toLowerCase(), unit_amount: input.amountCents, product_data: { name: input.description } } }],
     ...(customer ? { customer } : { customer_email: input.email }),
+    // Frozen price: the session (and its amount) expires after ~30 minutes (Stripe minimum).
+    expires_at: Math.floor(Date.now() / 1000) + 31 * 60,
     metadata: { order_id: input.orderId, ...(input.userId && { userId: input.userId }) },
     payment_intent_data: { description: input.description, metadata: { order_id: input.orderId } },
   });

@@ -467,26 +467,47 @@ export type Database = {
       }
       fx_rates: {
         Row: {
+          decided_by: string | null
+          expires_at: string | null
+          fetched_at: string
           from_currency: string
           id: string
+          published_at: string | null
           rate: number
+          reason: string | null
           source: string
+          source_rate: number | null
+          status: string
           to_currency: string
           valid_from: string
         }
         Insert: {
+          decided_by?: string | null
+          expires_at?: string | null
+          fetched_at?: string
           from_currency: string
           id?: string
+          published_at?: string | null
           rate: number
+          reason?: string | null
           source?: string
+          source_rate?: number | null
+          status?: string
           to_currency: string
           valid_from?: string
         }
         Update: {
+          decided_by?: string | null
+          expires_at?: string | null
+          fetched_at?: string
           from_currency?: string
           id?: string
+          published_at?: string | null
           rate?: number
+          reason?: string | null
           source?: string
+          source_rate?: number | null
+          status?: string
           to_currency?: string
           valid_from?: string
         }
@@ -541,10 +562,13 @@ export type Database = {
         Row: {
           amount: number
           anonymized_at: string | null
+          cost_amount: number | null
+          cost_currency: string | null
           created_at: string
           currency: string
           email_status: string
           fulfillment_attempts: number
+          fx_rate: number | null
           guest_email: string
           id: string
           idempotency_key: string
@@ -555,6 +579,7 @@ export type Database = {
           next_attempt_at: string | null
           plan_id: string | null
           plan_snapshot: Json | null
+          price_frozen_until: string | null
           status: Database["public"]["Enums"]["order_status"]
           stripe_env: string | null
           stripe_payment_intent_id: string | null
@@ -567,10 +592,13 @@ export type Database = {
         Insert: {
           amount: number
           anonymized_at?: string | null
+          cost_amount?: number | null
+          cost_currency?: string | null
           created_at?: string
           currency?: string
           email_status?: string
           fulfillment_attempts?: number
+          fx_rate?: number | null
           guest_email: string
           id?: string
           idempotency_key?: string
@@ -581,6 +609,7 @@ export type Database = {
           next_attempt_at?: string | null
           plan_id?: string | null
           plan_snapshot?: Json | null
+          price_frozen_until?: string | null
           status?: Database["public"]["Enums"]["order_status"]
           stripe_env?: string | null
           stripe_payment_intent_id?: string | null
@@ -593,10 +622,13 @@ export type Database = {
         Update: {
           amount?: number
           anonymized_at?: string | null
+          cost_amount?: number | null
+          cost_currency?: string | null
           created_at?: string
           currency?: string
           email_status?: string
           fulfillment_attempts?: number
+          fx_rate?: number | null
           guest_email?: string
           id?: string
           idempotency_key?: string
@@ -607,6 +639,7 @@ export type Database = {
           next_attempt_at?: string | null
           plan_id?: string | null
           plan_snapshot?: Json | null
+          price_frozen_until?: string | null
           status?: Database["public"]["Enums"]["order_status"]
           stripe_env?: string | null
           stripe_payment_intent_id?: string | null
@@ -965,10 +998,13 @@ export type Database = {
         Returns: {
           amount: number
           anonymized_at: string | null
+          cost_amount: number | null
+          cost_currency: string | null
           created_at: string
           currency: string
           email_status: string
           fulfillment_attempts: number
+          fx_rate: number | null
           guest_email: string
           id: string
           idempotency_key: string
@@ -979,6 +1015,7 @@ export type Database = {
           next_attempt_at: string | null
           plan_id: string | null
           plan_snapshot: Json | null
+          price_frozen_until: string | null
           status: Database["public"]["Enums"]["order_status"]
           stripe_env: string | null
           stripe_payment_intent_id: string | null

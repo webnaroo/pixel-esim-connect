@@ -27,3 +27,4 @@
 - Customer emails go only through src/lib/email.server.ts and only with a verified sender domain (email-rules.ts); otherwise orders get email_status pending_domain — no mail from an unverified domain.
 - Account deletion anonymises orders (kept for tax) and clears eSIM installation data before deleting the login (src/lib/anonymize.ts) — GDPR without losing bookkeeping records.
 - Admin list views (admin-lists.functions.ts) never select activation code, LPA or QR columns — installation data is visible only to the owner via getMyInstallData.
+- Exchange rates are fetched only from official ECB data (ECB XML, Frankfurter as ECB-based fallback; never scraping) by src/lib/fx.server.ts; every price calculation uses loadFx().lookup, whose rules (review threshold, max age, manual override, buffer) are pure functions in src/lib/fx.ts with tests — one source of truth for "no rate, no price".

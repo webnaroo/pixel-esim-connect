@@ -31,3 +31,9 @@ describe("stripe signature", () => {
     expect(await vss("", body, "whsec_test", 1000)).toBe(false);
   });
 });
+
+import { verifyAuth as verifyCron } from "./public-route-guard.server";
+describe("fx cron endpoint auth", () => {
+  it("rejects requests without token", async () => expect(await verifyCron({ kind: "bearer" }, "s3cret-token", new Headers(), "")).toBe(false));
+  it("rejects a wrong token", async () => expect(await verifyCron({ kind: "bearer" }, "s3cret-token", new Headers({ authorization: "Bearer nope" }), "")).toBe(false));
+});

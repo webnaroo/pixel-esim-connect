@@ -16,5 +16,6 @@ describe("shop switch checklist", () => {
   it("blocks with an eSIMerge sandbox key", () => expect(canEnableShop({ ...green, providerSandbox: true })).toBe(false));
   it("blocks without verified email domain", () => expect(canEnableShop({ ...green, emailVerified: false })).toBe(false));
   it("blocks while legal pages are placeholders", () => expect(canEnableShop({ ...green, legalPublished: false })).toBe(false));
+  it("blocks without a valid exchange rate", () => expect(canEnableShop({ ...green, fxValid: false })).toBe(false));
   it("blocks without Stripe", () => expect(canEnableShop({ ...green, stripeConfigured: false })).toBe(false));
 });
