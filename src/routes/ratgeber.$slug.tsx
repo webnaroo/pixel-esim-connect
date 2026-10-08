@@ -71,6 +71,11 @@ function PlansBlock({ slug }: { slug: string }) {
   );
 }
 
+function TariffCta({ slug }: { slug: string }) {
+  const { data } = useSuspenseQuery(destinationQuery(slug));
+  return <Link to="/countries/$slug" params={{ slug }} className="inline-flex h-11 items-center justify-center rounded-full bg-primary px-6 text-sm font-semibold text-primary-foreground">{data?.name ?? "Länder"}-Tarife ansehen</Link>;
+}
+
 function Post() {
   const { slug } = Route.useParams();
   const { data } = useSuspenseQuery(blogPostQuery(slug));
@@ -110,7 +115,7 @@ function Post() {
           </section>
         )}
         <div className="mt-10 flex flex-col gap-3 sm:flex-row">
-          {dSlug && <Link to="/countries/$slug" params={{ slug: dSlug }} className="inline-flex h-12 items-center justify-center rounded-full bg-primary px-6 font-semibold text-primary-foreground">{`${data.title.split(":")[0].replace(/^eSIM\s*/, "") || "Tarife"}-Tarife ansehen`}</Link>}
+          {dSlug && <TariffCta slug={dSlug} />}
           <CompatCheck />
         </div>
       </article>
