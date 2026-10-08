@@ -19,10 +19,14 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as RegisterRouteImport } from './routes/register'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
+import { Route as CheckoutPlanIdRouteImport } from './routes/checkout.$planId'
 import { Route as CountriesSlugRouteImport } from './routes/countries.$slug'
+import { Route as InstallOrderIdRouteImport } from './routes/install.$orderId'
+import { Route as OrderOrderIdRouteImport } from './routes/order.$orderId'
 import { Route as RegionsSlugRouteImport } from './routes/regions.$slug'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
 import { Route as AuthenticatedAdminExplorerRouteImport } from './routes/_authenticated/admin.explorer'
+import { Route as AuthenticatedAdminOrdersRouteImport } from './routes/_authenticated/admin.orders'
 import { Route as AuthenticatedAdminPricingRouteImport } from './routes/_authenticated/admin.pricing'
 import { Route as ApiPublicCronCatalogSyncRouteImport } from './routes/api/public/cron/catalog-sync'
 import { Route as ApiPublicCronFulfillmentRetryRouteImport } from './routes/api/public/cron/fulfillment-retry'
@@ -78,9 +82,24 @@ const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
   path: '/admin',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const CheckoutPlanIdRoute = CheckoutPlanIdRouteImport.update({
+  id: '/checkout/$planId',
+  path: '/checkout/$planId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CountriesSlugRoute = CountriesSlugRouteImport.update({
   id: '/countries/$slug',
   path: '/countries/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const InstallOrderIdRoute = InstallOrderIdRouteImport.update({
+  id: '/install/$orderId',
+  path: '/install/$orderId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OrderOrderIdRoute = OrderOrderIdRouteImport.update({
+  id: '/order/$orderId',
+  path: '/order/$orderId',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RegionsSlugRoute = RegionsSlugRouteImport.update({
@@ -97,6 +116,12 @@ const AuthenticatedAdminExplorerRoute =
   AuthenticatedAdminExplorerRouteImport.update({
     id: '/explorer',
     path: '/explorer',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
+const AuthenticatedAdminOrdersRoute =
+  AuthenticatedAdminOrdersRouteImport.update({
+    id: '/orders',
+    path: '/orders',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
 const AuthenticatedAdminPricingRoute =
@@ -139,9 +164,13 @@ export interface FileRoutesByFullPath {
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
   '/admin': typeof AuthenticatedAdminRouteWithChildren
+  '/checkout/$planId': typeof CheckoutPlanIdRoute
   '/countries/$slug': typeof CountriesSlugRoute
+  '/install/$orderId': typeof InstallOrderIdRoute
+  '/order/$orderId': typeof OrderOrderIdRoute
   '/regions/$slug': typeof RegionsSlugRoute
   '/admin/explorer': typeof AuthenticatedAdminExplorerRoute
+  '/admin/orders': typeof AuthenticatedAdminOrdersRoute
   '/admin/pricing': typeof AuthenticatedAdminPricingRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
   '/api/public/cron/catalog-sync': typeof ApiPublicCronCatalogSyncRoute
@@ -158,9 +187,13 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/checkout/$planId': typeof CheckoutPlanIdRoute
   '/countries/$slug': typeof CountriesSlugRoute
+  '/install/$orderId': typeof InstallOrderIdRoute
+  '/order/$orderId': typeof OrderOrderIdRoute
   '/regions/$slug': typeof RegionsSlugRoute
   '/admin/explorer': typeof AuthenticatedAdminExplorerRoute
+  '/admin/orders': typeof AuthenticatedAdminOrdersRoute
   '/admin/pricing': typeof AuthenticatedAdminPricingRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
   '/api/public/cron/catalog-sync': typeof ApiPublicCronCatalogSyncRoute
@@ -180,9 +213,13 @@ export interface FileRoutesById {
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
+  '/checkout/$planId': typeof CheckoutPlanIdRoute
   '/countries/$slug': typeof CountriesSlugRoute
+  '/install/$orderId': typeof InstallOrderIdRoute
+  '/order/$orderId': typeof OrderOrderIdRoute
   '/regions/$slug': typeof RegionsSlugRoute
   '/_authenticated/admin/explorer': typeof AuthenticatedAdminExplorerRoute
+  '/_authenticated/admin/orders': typeof AuthenticatedAdminOrdersRoute
   '/_authenticated/admin/pricing': typeof AuthenticatedAdminPricingRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
   '/api/public/cron/catalog-sync': typeof ApiPublicCronCatalogSyncRoute
@@ -202,9 +239,13 @@ export interface FileRouteTypes {
     | '/register'
     | '/reset-password'
     | '/admin'
+    | '/checkout/$planId'
     | '/countries/$slug'
+    | '/install/$orderId'
+    | '/order/$orderId'
     | '/regions/$slug'
     | '/admin/explorer'
+    | '/admin/orders'
     | '/admin/pricing'
     | '/admin/'
     | '/api/public/cron/catalog-sync'
@@ -221,9 +262,13 @@ export interface FileRouteTypes {
     | '/login'
     | '/register'
     | '/reset-password'
+    | '/checkout/$planId'
     | '/countries/$slug'
+    | '/install/$orderId'
+    | '/order/$orderId'
     | '/regions/$slug'
     | '/admin/explorer'
+    | '/admin/orders'
     | '/admin/pricing'
     | '/admin'
     | '/api/public/cron/catalog-sync'
@@ -242,9 +287,13 @@ export interface FileRouteTypes {
     | '/register'
     | '/reset-password'
     | '/_authenticated/admin'
+    | '/checkout/$planId'
     | '/countries/$slug'
+    | '/install/$orderId'
+    | '/order/$orderId'
     | '/regions/$slug'
     | '/_authenticated/admin/explorer'
+    | '/_authenticated/admin/orders'
     | '/_authenticated/admin/pricing'
     | '/_authenticated/admin/'
     | '/api/public/cron/catalog-sync'
@@ -263,7 +312,10 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   RegisterRoute: typeof RegisterRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
+  CheckoutPlanIdRoute: typeof CheckoutPlanIdRoute
   CountriesSlugRoute: typeof CountriesSlugRoute
+  InstallOrderIdRoute: typeof InstallOrderIdRoute
+  OrderOrderIdRoute: typeof OrderOrderIdRoute
   RegionsSlugRoute: typeof RegionsSlugRoute
   ApiPublicCronCatalogSyncRoute: typeof ApiPublicCronCatalogSyncRoute
   ApiPublicCronFulfillmentRetryRoute: typeof ApiPublicCronFulfillmentRetryRoute
@@ -343,11 +395,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/checkout/$planId': {
+      id: '/checkout/$planId'
+      path: '/checkout/$planId'
+      fullPath: '/checkout/$planId'
+      preLoaderRoute: typeof CheckoutPlanIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/countries/$slug': {
       id: '/countries/$slug'
       path: '/countries/$slug'
       fullPath: '/countries/$slug'
       preLoaderRoute: typeof CountriesSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/install/$orderId': {
+      id: '/install/$orderId'
+      path: '/install/$orderId'
+      fullPath: '/install/$orderId'
+      preLoaderRoute: typeof InstallOrderIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/order/$orderId': {
+      id: '/order/$orderId'
+      path: '/order/$orderId'
+      fullPath: '/order/$orderId'
+      preLoaderRoute: typeof OrderOrderIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/regions/$slug': {
@@ -369,6 +442,13 @@ declare module '@tanstack/react-router' {
       path: '/explorer'
       fullPath: '/admin/explorer'
       preLoaderRoute: typeof AuthenticatedAdminExplorerRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/admin/orders': {
+      id: '/_authenticated/admin/orders'
+      path: '/orders'
+      fullPath: '/admin/orders'
+      preLoaderRoute: typeof AuthenticatedAdminOrdersRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
     '/_authenticated/admin/pricing': {
@@ -411,12 +491,14 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedAdminRouteChildren {
   AuthenticatedAdminExplorerRoute: typeof AuthenticatedAdminExplorerRoute
+  AuthenticatedAdminOrdersRoute: typeof AuthenticatedAdminOrdersRoute
   AuthenticatedAdminPricingRoute: typeof AuthenticatedAdminPricingRoute
   AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
 }
 
 const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
   AuthenticatedAdminExplorerRoute: AuthenticatedAdminExplorerRoute,
+  AuthenticatedAdminOrdersRoute: AuthenticatedAdminOrdersRoute,
   AuthenticatedAdminPricingRoute: AuthenticatedAdminPricingRoute,
   AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
 }
@@ -445,7 +527,10 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   RegisterRoute: RegisterRoute,
   ResetPasswordRoute: ResetPasswordRoute,
+  CheckoutPlanIdRoute: CheckoutPlanIdRoute,
   CountriesSlugRoute: CountriesSlugRoute,
+  InstallOrderIdRoute: InstallOrderIdRoute,
+  OrderOrderIdRoute: OrderOrderIdRoute,
   RegionsSlugRoute: RegionsSlugRoute,
   ApiPublicCronCatalogSyncRoute: ApiPublicCronCatalogSyncRoute,
   ApiPublicCronFulfillmentRetryRoute: ApiPublicCronFulfillmentRetryRoute,
