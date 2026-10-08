@@ -44,7 +44,7 @@ function Login() {
       toast.error("Anmeldung fehlgeschlagen. Bitte Daten prüfen.");
       return;
     }
-    navigate({ to: "/" });
+    navigate({ to: "/account" });
   }
 
   if (user) {

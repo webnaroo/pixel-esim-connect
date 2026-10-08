@@ -5,6 +5,8 @@ import { Wordmark } from "./brand";
 import { SearchBox } from "./search-box";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
+import { useQuery } from "@tanstack/react-query";
+import { legalIndexQuery } from "@/lib/content.functions";
 
 const NAV = [
   { to: "/destinations", label: "Reiseziele" },
@@ -67,7 +69,7 @@ export function Header() {
         </div>
         <div className="ml-auto flex items-center gap-1 lg:ml-0">
           <Link
-            to="/login"
+            to={user ? "/account" : "/login"}
             className="hidden h-10 items-center gap-2 rounded-md px-3 text-[15px] font-medium text-ink hover:bg-muted lg:inline-flex"
           >
             <UserCircle size={20} aria-hidden />
@@ -101,7 +103,7 @@ export function Header() {
                 {n.label}
               </Link>
             ))}
-            <Link to="/login" className="py-4 font-display text-2xl font-semibold tracking-[-0.02em] text-primary">
+            <Link to={user ? "/account" : "/login"} className="py-4 font-display text-2xl font-semibold tracking-[-0.02em] text-primary">
               {user ? "Mein Konto" : "Anmelden"}
             </Link>
           </nav>
@@ -115,14 +117,15 @@ export function Footer() {
   const { user } = useAuth();
   return (
     <footer className="mt-24 border-t border-line">
-      <div className="container-page grid gap-10 py-12 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="container-page grid gap-10 py-12 sm:grid-cols-2 lg:grid-cols-5">
         <div>
           <Wordmark />
           <p className="mt-3 max-w-xs text-sm text-ink-muted">eSIM für deine Reise. Online, sobald du landest.</p>
         </div>
         <FooterCol title="Reiseziele" links={[{ to: "/destinations", label: "Alle Reiseziele" }, { to: "/regions/europe", label: "Europa" }, { to: "/regions/asia", label: "Asien" }, { to: "/regions/global", label: "Weltweit" }]} />
         <FooterCol title="Service" links={[{ to: "/how-it-works", label: "So funktioniert's" }, { to: "/faq", label: "FAQ" }, { to: "/help", label: "Hilfe & Kontakt" }]} />
-        <FooterCol title="Konto" links={[{ to: "/login", label: user ? "Mein Konto" : "Anmelden" }]} />
+        <LegalLinks />
+        <FooterCol title="Konto" links={[{ to: user ? "/account" : "/login", label: user ? "Mein Konto" : "Anmelden" }, { to: "/blog", label: "Blog" }]} />
       </div>
       <div className="container-page border-t border-line py-6 text-xs text-ink-muted">© {new Date().getFullYear()} GlobeSIM · Alle Preise inkl. MwSt.</div>
     </footer>
@@ -164,4 +167,10 @@ export function SiteLayout({ children }: { children: React.ReactNode }) {
 
 export async function signOut() {
   await supabase.auth.signOut();
+}
+
+function LegalLinks() {
+  const { data } = useQuery(legalIndexQuery());
+  if (!data?.length) return null;
+  return <FooterCol title="Rechtliches" links={data.map((p) => ({ to: `/legal/${p.slug}`, label: p.title }))} />;
 }
