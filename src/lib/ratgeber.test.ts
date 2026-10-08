@@ -174,6 +174,9 @@ describe("availability & live prices", () => {
   it("removes sentences about missing data", () => {
     expect(stripMeta("Ob eine Japan-eSIM verfügbar ist, lässt sich aus den bereitgestellten Daten nicht feststellen. Installiere sie vor Abflug.")).toBe("Installiere sie vor Abflug.");
   });
+  it("removes hedging sentences", () => {
+    expect(stripMeta("Für Japan liegt hier keine bestätigte Konfiguration vor. Schalte Datenroaming ein.")).toBe("Schalte Datenroaming ein.");
+  });
   it("adds live prices for the country when missing", () => {
     expect(withLivePrices([{ body_md: "Text" }], "JP")[0]!.body_md).toContain("{{LIVE_PREISE:JP}}");
   });
