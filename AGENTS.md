@@ -34,6 +34,5 @@
 - Homepage hero crop stays mobile-scoped; country photo tiles work at all sizes; prices stay catalog-backed — consistent imagery, no invented offers.
 - Public page identities and structured data use the shared SEO helpers with leaf-only canonical links; the sitemap uses the same public origin, paginated RLS-limited reads and fails with 503 on source errors — prevents preview URLs, duplicate schemas and incomplete crawler inventories.
 - SEO AI streams through an admin-verified route with durable access blocks; admin history stores analyses, audits and content-trigger/manual changes — no private report leaks or false application claims.
-- Public SEO tests and admin audits share a sitemap-driven HTML validator — checks canonical and JSON-LD on every public page.
-- Shared Markdown wraps long links and words — prevents horizontal page overflow.
-- eSIM device list (esim_devices) is public read-only via RLS (active only); all writes go through admin server functions in devices.functions.ts with has_role, and search/CSV/staleness rules live in src/lib/devices.ts with tests — no device data is ever invented or scraped.
+- SEO tests and admin audits share one sitemap-driven validator; shared Markdown wraps long words — consistent checks, no overflow.
+- esim_devices: public read (active) via RLS, writes only via admin server fns; rules in src/lib/devices.ts — no invented device data.
