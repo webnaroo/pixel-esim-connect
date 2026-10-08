@@ -14,6 +14,8 @@ import { SegmentedControl, LinkButton } from "@/components/ui-kit";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { comparisonQuery } from "@/lib/comparison.functions";
 import { destinationsQuery, faqsQuery, popularQuery } from "@/lib/catalog.functions";
+import { CompatCheck } from "@/components/compat-check";
+import { isCompatFaq } from "@/lib/faq-rules";
 import airportBanner from "@/assets/home-airport.jpg";
 import mobileAirportBanner from "@/assets/home-airport-mobile.jpg.asset.json";
 import speedIcon from "@/assets/speed.png.asset.json";
@@ -241,7 +243,7 @@ function HomeFaq() {
         {faqs.slice(0, 6).map((f) => (
           <AccordionItem key={f.id} value={f.id}>
             <AccordionTrigger className="text-left text-base">{f.question}</AccordionTrigger>
-            <AccordionContent className="text-ink-muted">{f.answer}</AccordionContent>
+            <AccordionContent className="text-ink-muted">{f.answer}{isCompatFaq(f.question) && <CompatCheck hint className="mt-4" />}</AccordionContent>
           </AccordionItem>
         ))}
       </Accordion>
