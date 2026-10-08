@@ -94,7 +94,7 @@ export function previewImport(text: string, existingKeys: Set<string>): ImportPr
   const rows = parseCsv(text);
   const out: ImportPreview = { valid: [], errors: [], duplicates: [] };
   if (!rows.length) { out.errors.push({ line: 1, error: "Datei ist leer" }); return out; }
-  const header = rows[0].map((h) => h.trim().toLowerCase());
+  const header = rows[0]!.map((h) => h.trim().toLowerCase());
   const missing = CSV_COLUMNS.filter((c) => !header.includes(c));
   if (missing.length) { out.errors.push({ line: 1, error: `Spalten fehlen: ${missing.join(", ")}` }); return out; }
   const seen = new Set(existingKeys);

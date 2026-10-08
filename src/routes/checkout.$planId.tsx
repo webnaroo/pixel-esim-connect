@@ -1,3 +1,4 @@
+import { CompatCheck } from "@/components/compat-check";
 import { UnlimitedLabel, UnlimitedNote } from "@/components/unlimited-claim";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
