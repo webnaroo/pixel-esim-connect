@@ -48,13 +48,13 @@ export function auditSeoHtml(path: string, html: string, status = 200): SeoPageC
       }
     }
     if (node["@type"] === "Product") {
-      if (node.url !== pageUrl(path)) errors.push("Product-URL entspricht nicht der Seite.");
-      const offers = node.offers as Record<string, unknown> | undefined;
-      if (!offers || offers.priceCurrency !== "EUR" || !(Number(offers.lowPrice ?? offers.price) > 0)) errors.push("Product: gültiges EUR-Angebot fehlt.");
+      if (node["url"] !== pageUrl(path)) errors.push("Product-URL entspricht nicht der Seite.");
+      const offers = node["offers"] as Record<string, unknown> | undefined;
+      if (!offers || offers["priceCurrency"] !== "EUR" || !(Number(offers["lowPrice"] ?? offers["price"]) > 0)) errors.push("Product: gültiges EUR-Angebot fehlt.");
     }
-    if (node["@type"] === "BlogPosting" && node.mainEntityOfPage !== pageUrl(path)) errors.push("BlogPosting-Seitenbezug ist falsch.");
+    if (node["@type"] === "BlogPosting" && node["mainEntityOfPage"] !== pageUrl(path)) errors.push("BlogPosting-Seitenbezug ist falsch.");
     if (node["@type"] === "BreadcrumbList") {
-      const items = node.itemListElement;
+      const items = node["itemListElement"];
       if (!Array.isArray(items) || !items.length || items.some((item, i) => item.position !== i + 1 || !item.name || !item.item)) errors.push("BreadcrumbList: ungültige Einträge oder Reihenfolge.");
     }
     Object.entries(node).forEach(([key, v]) => { if (key !== "@context" && v && typeof v === "object") visit(v); });

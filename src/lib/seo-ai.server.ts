@@ -8,7 +8,7 @@ function jsonError(message: string, status: number) {
   return Response.json({ message }, { status, headers: { "Cache-Control": "no-store" } });
 }
 
-export async function handleSeoAnalysis(request: Request, config: { apiKey?: string; dbUrl?: string; publicKey?: string }) {
+export async function handleSeoAnalysis(request: Request, config: { apiKey: string | undefined; dbUrl: string | undefined; publicKey: string | undefined }) {
   if (!config.dbUrl || !config.publicKey) return jsonError("Anmeldung nicht verfügbar.", 503);
   const auth = request.headers.get("Authorization");
   if (!auth?.startsWith("Bearer ")) return jsonError("Anmeldung erforderlich.", 401);
@@ -82,7 +82,7 @@ export async function handleSeoAnalysis(request: Request, config: { apiKey?: str
       const emit = (event: unknown) => controller.enqueue(encoder.encode(JSON.stringify(event) + "\n"));
       try {
         emit({ type: "progress", message: "Bericht wird ausgewertet…" });
-        let next = first;
+        let next: Awaited<ReturnType<typeof iterator.next>> = first;
         while (!next.done) {
           const event = next.value;
           if (event.type === "error") throw new Error(safeMessage);
