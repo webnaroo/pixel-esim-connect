@@ -19,6 +19,7 @@ import { Route as RegisterRouteImport } from './routes/register'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as CountriesSlugRouteImport } from './routes/countries.$slug'
 import { Route as RegionsSlugRouteImport } from './routes/regions.$slug'
+import { Route as ApiPublicCronCatalogSyncRouteImport } from './routes/api/public/cron/catalog-sync'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -70,6 +71,12 @@ const RegionsSlugRoute = RegionsSlugRouteImport.update({
   path: '/regions/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicCronCatalogSyncRoute =
+  ApiPublicCronCatalogSyncRouteImport.update({
+    id: '/api/public/cron/catalog-sync',
+    path: '/api/public/cron/catalog-sync',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -82,6 +89,7 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof ResetPasswordRoute
   '/countries/$slug': typeof CountriesSlugRoute
   '/regions/$slug': typeof RegionsSlugRoute
+  '/api/public/cron/catalog-sync': typeof ApiPublicCronCatalogSyncRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -94,6 +102,7 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/countries/$slug': typeof CountriesSlugRoute
   '/regions/$slug': typeof RegionsSlugRoute
+  '/api/public/cron/catalog-sync': typeof ApiPublicCronCatalogSyncRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -107,6 +116,7 @@ export interface FileRoutesById {
   '/reset-password': typeof ResetPasswordRoute
   '/countries/$slug': typeof CountriesSlugRoute
   '/regions/$slug': typeof RegionsSlugRoute
+  '/api/public/cron/catalog-sync': typeof ApiPublicCronCatalogSyncRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -121,6 +131,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/countries/$slug'
     | '/regions/$slug'
+    | '/api/public/cron/catalog-sync'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -133,6 +144,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/countries/$slug'
     | '/regions/$slug'
+    | '/api/public/cron/catalog-sync'
   id:
     | '__root__'
     | '/'
@@ -145,6 +157,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/countries/$slug'
     | '/regions/$slug'
+    | '/api/public/cron/catalog-sync'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -158,6 +171,7 @@ export interface RootRouteChildren {
   ResetPasswordRoute: typeof ResetPasswordRoute
   CountriesSlugRoute: typeof CountriesSlugRoute
   RegionsSlugRoute: typeof RegionsSlugRoute
+  ApiPublicCronCatalogSyncRoute: typeof ApiPublicCronCatalogSyncRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -232,6 +246,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RegionsSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/cron/catalog-sync': {
+      id: '/api/public/cron/catalog-sync'
+      path: '/api/public/cron/catalog-sync'
+      fullPath: '/api/public/cron/catalog-sync'
+      preLoaderRoute: typeof ApiPublicCronCatalogSyncRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -246,6 +267,7 @@ const rootRouteChildren: RootRouteChildren = {
   ResetPasswordRoute: ResetPasswordRoute,
   CountriesSlugRoute: CountriesSlugRoute,
   RegionsSlugRoute: RegionsSlugRoute,
+  ApiPublicCronCatalogSyncRoute: ApiPublicCronCatalogSyncRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
