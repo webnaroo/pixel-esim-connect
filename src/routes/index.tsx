@@ -242,7 +242,7 @@ function HomeFaq() {
       <div className="flex flex-wrap items-center gap-3">
         <Link
           to="/destinations"
-          className="inline-flex items-center rounded-2xl border border-primary px-4 py-2 text-sm font-medium text-primary transition-colors hover:bg-primary hover:text-primary-contrast"
+          className="inline-flex items-center rounded-2xl border border-primary px-4 py-2 text-sm font-medium text-primary transition-colors hover:bg-primary hover:text-primary-foreground"
         >
           Reiseziele ansehen
         </Link>
