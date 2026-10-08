@@ -2,11 +2,13 @@
 import { Fragment } from "react";
 
 function inline(text: string, key: string) {
-  const parts = text.split(/(\*\*[^*]+\*\*|\[[^\]]+\]\(https?:\/\/[^)\s]+\))/g);
+  const parts = text.split(/(\*\*[^*]+\*\*|\[[^\]]+\]\((?:https?:\/\/|\/)[^)\s]*\))/g);
   return parts.map((p, i) => {
     if (/^\*\*[^*]+\*\*$/.test(p)) return <strong key={`${key}-${i}`}>{p.slice(2, -2)}</strong>;
     const m = p.match(/^\[([^\]]+)\]\((https?:\/\/[^)\s]+)\)$/);
     if (m) return <a key={`${key}-${i}`} href={m[2]} className="text-primary underline" target="_blank" rel="noopener noreferrer">{m[1]}</a>;
+    const r = p.match(/^\[([^\]]+)\]\((\/[a-zA-Z0-9/_-]*)\)$/);
+    if (r) return <a key={`${key}-${i}`} href={r[2]} className="text-primary underline">{r[1]}</a>;
     return <Fragment key={`${key}-${i}`}>{p}</Fragment>;
   });
 }

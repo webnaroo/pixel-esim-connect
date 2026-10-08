@@ -141,6 +141,13 @@
       "when": 1791497605810,
       "tag": "0019_ratgeber_blog_fields",
       "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1791498389591,
+      "tag": "0020_ratgeber_generator",
+      "breakpoints": true
     }
   ]
 }

@@ -1,20 +1,20 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { SiteLayout } from "@/components/layout";
-import { Markdown } from "@/components/markdown";
+import { RatgeberArticle } from "@/components/ratgeber-article";
 import { EmptyState } from "@/components/brand";
 import { CompatCheck } from "@/components/compat-check";
 import { blogPostQuery } from "@/lib/content.functions";
 import { destinationQuery } from "@/lib/catalog.functions";
 import { formatData, formatDays, formatPrice } from "@/lib/format";
-import { articleJsonLd, faqJsonLd, parseFaq, parseSections, planBlockState } from "@/lib/ratgeber";
+import { articleJsonLd, coverAbsUrl, faqJsonLd, parseFaq, parseSections, parseSources, planBlockState } from "@/lib/ratgeber";
 import { breadcrumbScript, pageIdentity, textExcerpt } from "@/lib/seo";
 
 export const Route = createFileRoute("/ratgeber/$slug")({
   loader: async ({ context, params }) => {
     const p = await context.queryClient.ensureQueryData(blogPostQuery(params.slug));
     if (!p) throw notFound();
-    if (p.destinationSlug) await context.queryClient.ensureQueryData(destinationQuery(p.destinationSlug));
+    await Promise.all([...new Set(Object.values(p.destinations as Record<string, string>))].map((s) => context.queryClient.ensureQueryData(destinationQuery(s))));
     return p;
   },
   head: ({ loaderData, params }) => {
@@ -22,7 +22,7 @@ export const Route = createFileRoute("/ratgeber/$slug")({
     const path = `/ratgeber/${params.slug}`;
     const title = loaderData.meta_title || `${loaderData.title} | GlobeSIM`;
     const desc = loaderData.meta_description || textExcerpt(loaderData.answer_summary || loaderData.body_md);
-    const img = loaderData.cover_url?.startsWith("https://") ? loaderData.cover_url : null;
+    const img = coverAbsUrl(loaderData.cover_url);
     const faq = faqJsonLd(parseFaq(loaderData.faq));
     return {
       meta: [
@@ -80,45 +80,20 @@ function Post() {
   const { slug } = Route.useParams();
   const { data } = useSuspenseQuery(blogPostQuery(slug));
   if (!data) return null;
-  const sections = parseSections(data.sections);
-  const faq = parseFaq(data.faq);
   const dSlug = data.destinationSlug;
+  const map = data.destinations as Record<string, string>;
+  const preparing = <div className="rounded-[14px] border border-line p-4 text-ink-muted">Tarife werden vorbereitet.</div>;
   return (
     <SiteLayout>
-      <article className="container-page max-w-3xl pb-16 pt-10">
-        <nav aria-label="Brotkrumen" className="text-sm text-ink-muted [overflow-wrap:anywhere]">
-          <Link to="/" className="hover:text-ink">Start</Link> › <Link to="/ratgeber" className="hover:text-ink">Ratgeber</Link> › <span>{data.title}</span>
-        </nav>
-        <h1 className="mt-4">{data.title}</h1>
-        <p className="mt-2 text-xs text-ink-muted">Zuletzt aktualisiert: {new Date(data.updated_at).toLocaleDateString("de-DE")}{data.author_name ? ` · ${data.author_name}` : ""}</p>
-        {data.answer_summary && (
-          <aside className="mt-6 rounded-[14px] border border-primary p-4" aria-label="Kurz erklärt">
-            <p className="text-sm font-semibold">Kurz erklärt</p>
-            <p className="mt-1">{data.answer_summary}</p>
-          </aside>
-        )}
-        {data.body_md.trim() && <div className="mt-8"><Markdown text={data.body_md} /></div>}
-        {sections.map((s, i) => (
-          <section key={i} className="mt-10">
-            <h2 className="text-2xl">{s.heading}</h2>
-            {s.body_md.trim() && <div className="mt-3"><Markdown text={s.body_md} /></div>}
-            {s.block === "plans" && <div className="mt-4">{dSlug ? <PlansBlock slug={dSlug} /> : <div className="rounded-[14px] border border-line p-4 text-ink-muted">Tarife werden vorbereitet.</div>}</div>}
-            {s.block === "compat" && <CompatCheck className="mt-4" />}
-          </section>
-        ))}
-        {faq.length > 0 && (
-          <section className="mt-10">
-            <h2 className="text-2xl">Häufige Fragen</h2>
-            <div className="mt-3 space-y-5">
-              {faq.map((f, i) => <div key={i}><h3 className="text-lg">{f.q}</h3><p className="mt-1 text-ink-muted">{f.a}</p></div>)}
-            </div>
-          </section>
-        )}
-        <div className="mt-10 flex flex-col gap-3 sm:flex-row">
-          {dSlug && <TariffCta slug={dSlug} />}
-          <CompatCheck />
-        </div>
-      </article>
+      <div className="container-page max-w-3xl pb-16 pt-10">
+        <RatgeberArticle
+          a={{ ...data, sections: parseSections(data.sections), faq: parseFaq(data.faq), sources: parseSources(data.sources) }}
+          prices={(iso) => (map[iso] ? <PlansBlock slug={map[iso]!} /> : preparing)}
+          sectionPrices={() => (dSlug ? <PlansBlock slug={dSlug} /> : preparing)}
+          breadcrumb={<nav aria-label="Brotkrumen" className="text-sm text-ink-muted [overflow-wrap:anywhere]"><Link to="/" className="hover:text-ink">Start</Link> › <Link to="/ratgeber" className="hover:text-ink">Ratgeber</Link> › <span>{data.title}</span></nav>}
+          cta={<>{dSlug && <TariffCta slug={dSlug} />}<CompatCheck /></>}
+        />
+      </div>
     </SiteLayout>
   );
 }
