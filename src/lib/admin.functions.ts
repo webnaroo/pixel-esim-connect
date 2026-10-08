@@ -173,8 +173,10 @@ export const getThrottleReview = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     await assertAdmin(context as unknown as Ctx);
+    // plans is closed to client roles (cost prices, raw provider text); read it server-side after the admin check.
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const [{ data: plans, error }, { data: texts }] = await Promise.all([
-      context.supabase.from("plans").select("id,provider_plan_id,validity_days,is_active,fair_use,hotspot,throttle_claim,throttle_confirmation,destination:destinations(name_de)").eq("type", "unlimited").order("provider_plan_id"),
+      supabaseAdmin.from("plans").select("id,provider_plan_id,validity_days,is_active,fair_use,hotspot,throttle_claim,throttle_confirmation,destination:destinations(name_de)").eq("type", "unlimited").order("provider_plan_id"),
       context.supabase.from("app_settings").select("value").eq("key", "unlimited_claim").maybeSingle(),
     ]);
     if (error) throw new Error(error.message);
