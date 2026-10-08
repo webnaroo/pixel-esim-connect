@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
+import { useSuspenseQuery } from "@tanstack/react-query";
 import { DeviceMobile } from "@phosphor-icons/react";
 import { SiteLayout } from "@/components/layout";
 import { ComparisonSection } from "@/components/comparison";
@@ -200,7 +200,7 @@ function Compatibility() {
 }
 
 function HomeFaq() {
-  const { data: faqs = [] } = useQuery(faqsQuery());
+  const { data: faqs = [] } = useSuspenseQuery(faqsQuery());
   if (!faqs.length) return null;
   return (
     <section className="container-page max-w-3xl py-16 lg:py-24" aria-labelledby="faq-h">
