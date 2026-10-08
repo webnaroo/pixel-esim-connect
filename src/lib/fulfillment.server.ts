@@ -50,7 +50,7 @@ export const dbFulfillmentStore: FulfillmentStore = {
   },
   async scheduleRetry(orderId, at, error) {
     const db = await admin();
-    await db.from("orders").update({ status: "paid", next_attempt_at: at.toISOString(), last_error: error }).eq("id", orderId);
+    await db.from("orders").update({ status: "fulfilling", next_attempt_at: at.toISOString(), last_error: error }).eq("id", orderId);
   },
   async markFailed(orderId, error) {
     const db = await admin();
