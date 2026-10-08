@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { checkoutRequestSchema } from "./checkout-rules";
 
-const base = { planId: "8f14e45f-ceea-4e7a-9f6b-2b1f3c4d5e6f", email: "Gast@Example.de", withdrawalConsent: true };
+const base = { planId: "8f14e45f-ceea-4e7a-9f6b-2b1f3c4d5e6f", email: "Gast@Example.de", withdrawalConsent: true, environment: "sandbox", returnOrigin: "https://globesim.example" };
 
 describe("checkout request", () => {
   it("accepts plan, email and consent", () => {

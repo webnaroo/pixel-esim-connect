@@ -1,9 +1,10 @@
 // Pure fulfillment core. I/O is injected so the "never deliver twice" rules are testable.
 import type { EsimDetails, ProviderOrderResult } from "./providers/types";
 
-export const MAX_FULFILLMENT_ATTEMPTS = 3;
+/** First attempt plus 3 retries (after 1, 5 and 25 minutes). */
+export const MAX_FULFILLMENT_ATTEMPTS = 4;
 
-/** Growing delay before the next attempt: 1 min, 5 min, 25 min. */
+/** Growing delay after failed attempt n: 1 min, 5 min, 25 min. */
 export function backoffSeconds(attempt: number): number {
   return 60 * 5 ** Math.max(0, attempt - 1);
 }
@@ -11,9 +12,10 @@ export function backoffSeconds(attempt: number): number {
 export type ClaimedOrder = { id: string; attempts: number; idempotencyKey: string; providerPlanId: string; email: string };
 
 export interface FulfillmentStore {
-  /** Atomically moves a paid order to 'fulfilling'. Returns null when someone else holds it or it is not due. */
+  /** Atomically claims a paid order, or a 'fulfilling' order whose retry is due. Null when held elsewhere or not due. */
   claim(orderId: string, maxAttempts: number): Promise<ClaimedOrder | null>;
   markFulfilled(orderId: string, providerOrderId: string, esim: EsimDetails | undefined): Promise<void>;
+  /** Keeps status 'fulfilling' and sets the next attempt time. */
   scheduleRetry(orderId: string, at: Date, error: string): Promise<void>;
   markFailed(orderId: string, error: string): Promise<void>;
 }

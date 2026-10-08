@@ -357,6 +357,24 @@ export type Database = {
         }
         Relationships: []
       }
+      internal_secrets: {
+        Row: {
+          created_at: string
+          name: string
+          value: string
+        }
+        Insert: {
+          created_at?: string
+          name: string
+          value: string
+        }
+        Update: {
+          created_at?: string
+          name?: string
+          value?: string
+        }
+        Relationships: []
+      }
       orders: {
         Row: {
           amount: number
@@ -373,7 +391,9 @@ export type Database = {
           plan_id: string | null
           plan_snapshot: Json | null
           status: Database["public"]["Enums"]["order_status"]
+          stripe_env: string | null
           stripe_payment_intent_id: string | null
+          stripe_session_id: string | null
           tax: number
           updated_at: string
           user_id: string | null
@@ -394,7 +414,9 @@ export type Database = {
           plan_id?: string | null
           plan_snapshot?: Json | null
           status?: Database["public"]["Enums"]["order_status"]
+          stripe_env?: string | null
           stripe_payment_intent_id?: string | null
+          stripe_session_id?: string | null
           tax?: number
           updated_at?: string
           user_id?: string | null
@@ -415,7 +437,9 @@ export type Database = {
           plan_id?: string | null
           plan_snapshot?: Json | null
           status?: Database["public"]["Enums"]["order_status"]
+          stripe_env?: string | null
           stripe_payment_intent_id?: string | null
+          stripe_session_id?: string | null
           tax?: number
           updated_at?: string
           user_id?: string | null
@@ -752,6 +776,7 @@ export type Database = {
       }
     }
     Functions: {
+      arm_fulfillment_retry: { Args: never; Returns: undefined }
       claim_order_for_fulfillment: {
         Args: { _max_attempts: number; _order_id: string }
         Returns: {
@@ -769,7 +794,9 @@ export type Database = {
           plan_id: string | null
           plan_snapshot: Json | null
           status: Database["public"]["Enums"]["order_status"]
+          stripe_env: string | null
           stripe_payment_intent_id: string | null
+          stripe_session_id: string | null
           tax: number
           updated_at: string
           user_id: string | null
@@ -782,6 +809,7 @@ export type Database = {
           isSetofReturn: true
         }
       }
+      disarm_fulfillment_retry_if_drained: { Args: never; Returns: boolean }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -805,6 +833,7 @@ export type Database = {
         | "fulfillment_failed"
         | "refunded"
         | "cancelled"
+        | "payment_mismatch"
       plan_type: "data" | "unlimited"
       webhook_source: "stripe" | "provider"
     }
@@ -944,6 +973,7 @@ export const Constants = {
         "fulfillment_failed",
         "refunded",
         "cancelled",
+        "payment_mismatch",
       ],
       plan_type: ["data", "unlimited"],
       webhook_source: ["stripe", "provider"],

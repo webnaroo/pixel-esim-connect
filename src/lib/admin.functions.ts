@@ -27,7 +27,7 @@ async function buildChecklist(): Promise<ShopChecklist & { providerMessage: stri
     }
   }
   const { count } = await supabaseAdmin.from("plans").select("id", { count: "exact", head: true }).eq("is_active", true);
-  const stripeConfigured = Boolean(process.env["STRIPE_SECRET_KEY"] && process.env["STRIPE_WEBHOOK_SECRET"]);
+  const stripeConfigured = Boolean(process.env["STRIPE_LIVE_API_KEY"] && process.env["PAYMENTS_LIVE_WEBHOOK_SECRET"]) // live payments, not the test environment;
   return { providerReachable, providerMessage, catalogCount: count ?? 0, stripeConfigured };
 }
 

@@ -6,6 +6,8 @@ export const checkoutRequestSchema = z
     planId: z.string().uuid(),
     email: z.string().trim().toLowerCase().email().max(254),
     withdrawalConsent: z.literal(true),
+    environment: z.enum(["sandbox", "live"]),
+    returnOrigin: z.string().url().max(200).refine((u) => /^https:\/\/|^http:\/\/localhost(:\d+)?$/.test(u), "invalid origin"),
   })
   .strict();
 
