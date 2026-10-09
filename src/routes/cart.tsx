@@ -1,9 +1,11 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Lightning, QrCode, ShieldCheck, ShoppingCart, SimCard, Trash } from "@phosphor-icons/react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { cart, cartDiscount, useCart, useCartDiscount } from "@/lib/cart";
-import { validateDiscountCode } from "@/lib/checkout.functions";
+import { useQueries } from "@tanstack/react-query";
+import { priceFreshness } from "@/lib/price-refresh";
+import { checkoutPlanQuery, validateDiscountCode } from "@/lib/checkout.functions";
 import { discountAmount } from "@/lib/discount-rules";
 import { Button, Input } from "@/components/ui-kit";
 import { formatPrice } from "@/lib/format";
@@ -33,6 +35,8 @@ const PERKS = [
 
 function CartPage() {
   const items = useCart();
+  const checks = useQueries({ queries: items.map((i) => ({ ...checkoutPlanQuery(i.planId), ...priceFreshness })) });
+  useEffect(() => { checks.forEach((q, index) => { const item = items[index]; if (item && q.data?.price) cart.updatePrice(item.planId, q.data.price.gross, q.data.price.currency); }); }, [checks, items]);
   const discount = useCartDiscount();
   const off = (price: number) => (discount ? discountAmount(discount, price) : 0);
   const sum = (f: (i: (typeof items)[number]) => number) => items.reduce<Record<string, number>>((a, i) => ({ ...a, [i.currency]: Math.round(((a[i.currency] ?? 0) + f(i)) * 100) / 100 }), {});

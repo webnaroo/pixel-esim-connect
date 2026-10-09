@@ -90,67 +90,8 @@ export async function refreshRates(trigger: "cron" | "manual", actorId: string |
   return { ok: true as const, source: res.source, publishedAt: res.quotes.date, stored, missing, unchanged, reprice };
 }
 
-/** Recompute prices with the current effective rate; only moves > 0.5 % change the shown price. No valid rate → plan hidden. */
+/** Atomic recalculation preserves release/activity state and records every input. */
 export async function repricePlans(actorId: string | null = null) {
-  const db = await admin();
-  const fx = await loadFx(db);
-  const PAGE = 1000; // PostgREST caps a single response — load all plans in pages
-  const plans: PlanRow[] = [];
-  for (let from = 0; ; from += PAGE) {
-    const { data, error } = await db.from("plans").select("id,provider_plan_id,type,cost_price,cost_currency,sell_price,is_active,last_synced_at,destination:destinations!plans_destination_id_fkey(slug)").eq("provider", "esimerge").range(from, from + PAGE - 1);
-    if (error) throw new Error("Tarife konnten nicht geladen werden.");
-    plans.push(...((data ?? []) as PlanRow[]));
-    if (!data || data.length < PAGE) break;
-  }
-  const [{ data: rules }, { data: vatRow }, { data: latest }] = await Promise.all([
-    db.from("pricing_rules").select("id,scope,scope_ref,type,value,rounding,priority"),
-    db.from("app_settings").select("value").eq("key", "vat_rate").maybeSingle(),
-    db.from("plans").select("last_synced_at").eq("provider", "esimerge").order("last_synced_at", { ascending: false, nullsFirst: false }).limit(1).maybeSingle(),
-  ]);
-  const vat = typeof vatRow?.value === "number" ? vatRow.value : 0.19;
-  const current = latest?.last_synced_at ?? null; // only plans from the last sync may be (re)activated
-  let changed = 0, activated = 0, hidden = 0;
-  // Batch writes by identical outcome: 13k plans must not become 13k sequential updates.
-  const priceBatches = new Map<string, { gross: number; activate: boolean; ids: string[] }>();
-  const activateBatches = new Map<string, string[]>();
-  const hideIds: string[] = [];
-  for (const p of plans ?? []) {
-    if (!p.destination) continue;
-    const price = computePrice({ providerPlanId: p.provider_plan_id, destinationSlug: (p.destination as { slug: string }).slug, planType: p.type, costPrice: Number(p.cost_price), costCurrency: p.cost_currency }, (rules ?? []) as PricingRule[], fx.lookup, vat);
-    const old = Number(p.sell_price);
-    if (!price.ok) {
-      if (p.is_active) hideIds.push(p.id);
-      continue;
-    }
-    if (shouldReprice(old, price.gross)) {
-      const activate = p.last_synced_at === current; // plans missing from the latest sync keep their visibility
-      const key = `${price.gross}|${activate}`;
-      const batch = priceBatches.get(key) ?? { gross: price.gross, activate, ids: [] };
-      batch.ids.push(p.id);
-      priceBatches.set(key, batch);
-      changed++;
-      if (activate && !p.is_active) activated++;
-    } else if (!p.is_active && old > 0 && p.last_synced_at === current) {
-      const key = price.gross.toString();
-      (activateBatches.get(key) ?? activateBatches.set(key, []).get(key)!).push(p.id);
-      activated++;
-    }
-  }
-  for (const { gross, activate, ids } of priceBatches.values()) {
-    for (let i = 0; i < ids.length; i += 500) {
-      const slice = ids.slice(i, i + 500);
-      const { error } = await db.from("plans").update({ sell_price: gross, ...(activate ? { is_active: true } : {}) }).in("id", slice);
-      if (error) throw new Error("Preise konnten nicht gespeichert werden.");
-    }
-    await db.from("audit_log").insert({ actor_id: actorId, action: "price_changed", entity: "plans", entity_id: null, meta: { new: gross, activate, count: ids.length, plan_ids: ids.slice(0, 50) } as never });
-  }
-  for (const ids of activateBatches.values()) {
-    for (let i = 0; i < ids.length; i += 500) await db.from("plans").update({ is_active: true }).in("id", ids.slice(i, i + 500));
-  }
-  if (hideIds.length) {
-    for (let i = 0; i < hideIds.length; i += 500) await db.from("plans").update({ is_active: false }).in("id", hideIds.slice(i, i + 500));
-    await db.from("audit_log").insert({ actor_id: actorId, action: "plan_hidden_no_price", entity: "plans", entity_id: null, meta: { reason: "reprice", count: hideIds.length } as never });
-    hidden = hideIds.length;
-  }
-  return { changed, activated, hidden };
+  const { preparePriceChange, applyPreparedPrices } = await import("./price-recalculation.server");
+  return applyPreparedPrices(await preparePriceChange({ kind: "recalculate" }), actorId);
 }

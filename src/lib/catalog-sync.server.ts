@@ -51,23 +51,21 @@ export async function runCatalogSync(trigger: "cron" | "manual"): Promise<SyncSu
       return { runId, status: "aborted_threshold", ...(threshold.message ? { message: threshold.message } : {}), ...empty };
     }
 
-    const [{ data: dests }, { data: rules }, { data: fxRows }, { data: vatRow }, { data: existing }] = await Promise.all([
-      db.from("destinations").select("id,type,slug,iso_code,provider_ref"),
-      db.from("pricing_rules").select("id,scope,scope_ref,type,value,rounding,priority"),
-      import("./fx.server").then(({ loadFx }) => loadFx(db)).then((fx) => ({ data: fx })),
-      db.from("app_settings").select("value").eq("key", "vat_rate").maybeSingle(),
-      db.from("plans").select("provider_plan_id,destination_id").eq("provider", "esimerge"),
-    ]);
-    const vatRate = typeof vatRow?.value === "number" ? vatRow.value : 0.19;
-    // Countries and regions are matched separately: region codes can collide with country ISO codes (e.g. SA).
-    const byIso = new Map((dests ?? []).filter((d) => d.type === "country" && d.iso_code).map((d) => [d.iso_code!.toUpperCase(), d]));
-    const byRegion = new Map(
-      (dests ?? []).filter((d) => d.type === "region").map((d) => [String((d.provider_ref as { code?: string } | null)?.code ?? d.iso_code ?? d.slug).toUpperCase(), d]),
-    );
+    const { loadPricingContext } = await import("./pricing-context.server");
+    const pricing = await loadPricingContext(db);
+    const { data: dests, error: destError } = await db.from("destinations").select("id,type,slug,iso_code,provider_ref");
+    if (destError) throw new Error("Reiseziele konnten nicht geladen werden.");
+    const existing = [];
+    for (let from = 0; ; from += 500) {
+      const { data, error } = await db.from("plans").select("provider_plan_id,destination_id,price_override,sell_price,is_active").eq("provider", "esimerge").order("id").range(from, from + 499);
+      if (error) throw new Error("Bestehende Tarife konnten nicht vollständig geladen werden.");
+      existing.push(...(data ?? []));
+      if (!data || data.length < 500) break;
+    }
+    const byIso = new Map((dests ?? []).filter((d) => d.type === "country" && d.iso_code).map((d) => [d.iso_code?.toUpperCase(), d]));
+    const byRegion = new Map((dests ?? []).filter((d) => d.type === "region").map((d) => [String((d.provider_ref as { code?: string } | null)?.code ?? d.iso_code ?? d.slug).toUpperCase(), d]));
     const globalDest = (dests ?? []).find((d) => d.type === "global");
-    // Current effective rate (manual override or automatic, incl. safety buffer; none if older than 7 days).
-    const fx = fxRows.lookup;
-    const known = new Set((existing ?? []).map((e) => `${e.provider_plan_id}|${e.destination_id}`));
+    const known = new Map(existing.map((e) => [`${e.provider_plan_id}|${e.destination_id}`, e]));
     const startedAt = new Date().toISOString();
     const counts = { added: 0, updated: 0, unpriced: 0 };
     const missingFx = new Set<string>();
@@ -86,10 +84,9 @@ export async function runCatalogSync(trigger: "cron" | "manual"): Promise<SyncSu
         continue;
       }
       countries.add(dest.id);
-      const price = computePrice(
-        { providerPlanId: p.providerPlanId, destinationSlug: dest.slug, planType: p.type, costPrice: p.costPrice, costCurrency: p.costCurrency },
-        (rules ?? []) as PricingRule[], fx, vatRate,
-      );
+      const previous = known.get(`${p.providerPlanId}|${dest.id}`);
+      const calculation = pricing.calculate({ providerPlanId: p.providerPlanId, destinationSlug: dest.slug, planType: p.type, costPrice: p.costPrice, costCurrency: p.costCurrency, manualPrice: previous?.price_override ?? null });
+      const price = calculation.price;
       if (!price.ok) {
         counts.unpriced++;
         if (price.reason === "missing_fx") missingFx.add(p.costCurrency);
@@ -111,9 +108,11 @@ export async function runCatalogSync(trigger: "cron" | "manual"): Promise<SyncSu
         cost_price: p.costPrice,
         cost_currency: p.costCurrency,
         // Without a valid price the plan stays inactive — never show a wrong price.
-        sell_price: price.ok ? price.gross : 0,
+        sell_price: price.ok ? price.gross : previous?.sell_price ?? 0,
+        price_override: previous?.price_override ?? null,
+        ...(price.ok ? { price_source: calculation.source, price_inputs: calculation.inputs, price_calculated_at: new Date().toISOString() } : {}),
         currency: "EUR",
-        is_active: price.ok,
+        is_active: previous?.is_active ?? price.ok,
         raw: maskSensitive(p.raw ?? null) as never,
         last_synced_at: startedAt,
       };

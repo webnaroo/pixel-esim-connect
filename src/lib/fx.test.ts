@@ -13,6 +13,7 @@ describe("conversion", () => {
 });
 
 describe("buffer", () => {
+  it("uses 3.5 % buffer", () => expect(effectiveRate([row({ rate: 0.9 })], "USD", now, 3.5)?.usedRate).toBeCloseTo(0.9315, 6));
   it("applies the safety buffer", () => expect(effectiveRate([row({ rate: 0.9 })], "USD", now, 2)?.usedRate).toBeCloseTo(0.918, 6));
 });
 
@@ -34,7 +35,8 @@ describe("manual override", () => {
 });
 
 describe("repricing", () => {
-  it("ignores changes below 0.5 %", () => expect(shouldReprice(10, 10.04)).toBe(false));
+  it("applies every cent change below 0.5 %", () => expect(shouldReprice(10, 10.04)).toBe(true));
+  it("keeps identical cents", () => expect(shouldReprice(10, 10.00001)).toBe(false));
   it("reprices above 0.5 %", () => expect(shouldReprice(10, 10.06)).toBe(true));
 });
 

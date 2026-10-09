@@ -23,6 +23,7 @@ export const cart = {
   add(item: CartItem) { if (!read().some((i) => i.planId === item.planId)) write([...read(), item]); },
   remove(planId: string) { write(read().filter((i) => i.planId !== planId)); },
   clear() { write([]); },
+  updatePrice(planId: string, price: number, currency: string) { const items = read(); if (items.some((i) => i.planId === planId && (i.price !== price || i.currency !== currency))) write(items.map((i) => i.planId === planId ? { ...i, price, currency } : i)); },
 };
 
 export function useCart(): CartItem[] {

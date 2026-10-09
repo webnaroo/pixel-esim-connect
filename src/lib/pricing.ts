@@ -17,6 +17,7 @@ export type PriceInput = {
   planType: "data" | "unlimited";
   costPrice: number;
   costCurrency: string;
+  manualPrice?: number | null;
 };
 export type FxLookup = (from: string, to: string) => number | null;
 export type PriceResult =
@@ -50,20 +51,31 @@ export function roundTo4999(gross: number): number {
   return (euros * 100 + target) / 100;
 }
 
-export function computePrice(input: PriceInput, rules: PricingRule[], fx: FxLookup, vatRate: number, currency = "EUR"): PriceResult {
+export function computePrice(input: PriceInput, rules: PricingRule[], fx: FxLookup, vatRate: number, currency = "EUR", policy?: { fees: FeeSettings; minNet: number }): PriceResult {
   if (!Number.isFinite(input.costPrice) || input.costPrice <= 0) return { ok: false, reason: "invalid_cost" };
   const rate = input.costCurrency.toUpperCase() === currency.toUpperCase() ? 1 : fx(input.costCurrency.toUpperCase(), currency.toUpperCase());
   if (rate == null || !Number.isFinite(rate) || rate <= 0) return { ok: false, reason: "missing_fx" };
   const rule = selectRule(input, rules);
-  if (!rule) return { ok: false, reason: "no_rule" };
+  if (!rule && input.manualPrice == null) return { ok: false, reason: "no_rule" };
 
   const cost = input.costPrice * rate;
-  const netRaw = rule.type === "fixed" ? cost + Number(rule.value) : cost * (1 + Number(rule.value) / 100);
+  const netRaw = rule?.type === "fixed" ? cost + Number(rule.value) : cost * (1 + Number(rule?.value ?? 0) / 100);
   let gross = toCents(netRaw * (1 + vatRate)) / 100;
-  if (rule.rounding === "49_99") gross = roundTo4999(gross);
+  if (policy) {
+    const divisor = 1 / (1 + vatRate) - policy.fees.percent / 100;
+    if (divisor > 0) gross = Math.max(gross, Math.ceil((cost + policy.fees.fixed + policy.minNet) / divisor * 100) / 100);
+  }
+  if (rule?.rounding === "49_99") gross = roundTo4999(gross);
+  if (input.manualPrice != null && Number.isFinite(input.manualPrice) && input.manualPrice > 0) gross = input.manualPrice;
+  // Cent rounding of net and fee can put the analytical minimum one cent short.
+  if (policy && input.manualPrice == null) {
+    while (computeMargin(cost, toCents(gross / (1 + vatRate)) / 100, gross, policy.fees, policy.minNet).belowMin) {
+      gross = rule?.rounding === "49_99" ? roundTo4999(gross + 0.01) : toCents(gross + 0.01) / 100;
+    }
+  }
   const net = toCents(gross / (1 + vatRate)) / 100;
   const vat = toCents(gross - net) / 100;
-  return { ok: true, net, vat, gross, currency, ruleId: rule.id };
+  return { ok: true, net, vat, gross, currency, ruleId: input.manualPrice != null ? "manual" : rule?.id ?? "manual" };
 }
 
 // ---------- Margin / net result (admin view) ----------

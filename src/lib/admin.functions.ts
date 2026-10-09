@@ -173,76 +173,17 @@ export const getPricingData = createServerFn({ method: "GET" })
     const val = (k: string) => st?.find((x) => x.key === k)?.value;
     const { parseFeeSettings, parseMinNet } = await import("./pricing");
     const vat = Number(val("vat_rate"));
+    const { providerSetupStatus } = await import("./providers/index.server");
+    const { data: lastCalculation } = await supabaseAdmin.from("audit_log").select("created_at,meta").eq("action", "prices_recalculated").order("created_at", { ascending: false }).limit(1).maybeSingle();
     return {
+      mode: providerSetupStatus().sandbox ? "TEST/VORSCHAU" : "LIVE", lastCalculation,
+      history: (await supabaseAdmin.from("audit_log").select("created_at,actor_id,meta").eq("action", "prices_recalculated").order("created_at", { ascending: false }).limit(10)).data ?? [],
       rules: (rules ?? []).map((r) => ({ ...r, value: Number(r.value) })), fx: (fx ?? []).map((r) => ({ ...r, rate: Number(r.rate) })),
       fees: parseFeeSettings(val("stripe_fees")), minNet: parseMinNet(val("min_net_result")), vatRate: Number.isFinite(vat) && vat > 0 ? vat : 0.19,
     };
   });
 
-export const saveMarginSettings = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
-  .inputValidator((i) => z.object({ percent: z.number().min(0).max(20), fixed: z.number().min(0).max(10), minNet: z.number().min(-100).max(100) }).parse(i))
-  .handler(async ({ data, context }) => {
-    await assertAdmin(context as unknown as Ctx);
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const now = new Date().toISOString();
-    await supabaseAdmin.from("app_settings").upsert([
-      { key: "stripe_fees", value: { percent: data.percent, fixed: data.fixed } as never, updated_at: now },
-      { key: "min_net_result", value: data.minNet as never, updated_at: now },
-    ]);
-    await supabaseAdmin.from("audit_log").insert({ actor_id: context.userId, action: "margin_settings_changed", entity: "app_settings", meta: data as never });
-    return { ok: true };
-  });
-
 export const pricingQuery = () => queryOptions({ queryKey: ["admin", "pricing"], queryFn: () => getPricingData() });
-
-const ruleSchema = z.object({
-  scope: z.enum(["global", "plan_type", "country", "plan"]),
-  scope_ref: z.string().trim().max(120).nullable(),
-  type: z.enum(["percent", "fixed"]),
-  value: z.number().min(-100).max(10000),
-  rounding: z.enum(["49_99", "none"]),
-  priority: z.number().int().min(-1000).max(1000),
-}).refine((r) => r.scope === "global" || (r.scope_ref && r.scope_ref.length > 0), { message: "Bezug fehlt" });
-
-export const savePricingRule = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
-  .inputValidator((i) => ruleSchema.parse(i))
-  .handler(async ({ data, context }) => {
-    await assertAdmin(context as unknown as Ctx);
-    const { error } = await context.supabase.from("pricing_rules").insert({ ...data, scope_ref: data.scope === "global" ? null : data.scope_ref });
-    if (error) throw new Error("Regel konnte nicht gespeichert werden.");
-    const { repricePlans } = await import("./fx.server");
-    const reprice = await repricePlans(context.userId);
-    await (await import("@/integrations/supabase/client.server")).supabaseAdmin.from("audit_log").insert({ actor_id: context.userId, action: "pricing_rule_created", entity: "pricing_rules", meta: data as never });
-    return { ok: true, reprice };
-  });
-
-export const updatePricingRule = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
-  .inputValidator((i) => ruleSchema.extend({ id: z.string().uuid() }).parse(i))
-  .handler(async ({ data, context }) => {
-    await assertAdmin(context as unknown as Ctx);
-    const { id, ...patch } = data;
-    const { error } = await context.supabase.from("pricing_rules").update({ ...patch, scope_ref: patch.scope === "global" ? null : patch.scope_ref }).eq("id", id);
-    if (error) throw new Error("Regel konnte nicht gespeichert werden.");
-    const { repricePlans } = await import("./fx.server");
-    const reprice = await repricePlans(context.userId);
-    await (await import("@/integrations/supabase/client.server")).supabaseAdmin.from("audit_log").insert({ actor_id: context.userId, action: "pricing_rule_updated", entity: "pricing_rules", entity_id: id, meta: patch as never });
-    return { ok: true, reprice };
-  });
-
-export const deletePricingRule = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
-  .inputValidator((i) => z.object({ id: z.string().uuid() }).parse(i))
-  .handler(async ({ data, context }) => {
-    await assertAdmin(context as unknown as Ctx);
-    const { error } = await context.supabase.from("pricing_rules").delete().eq("id", data.id);
-    if (error) throw new Error("Regel konnte nicht gelöscht werden.");
-    const { repricePlans } = await import("./fx.server");
-    const reprice = await repricePlans(context.userId);
-    return { ok: true, reprice };
-  });
 
 // ---------- API explorer (read-only endpoints, masked output) ----------
 const READ_ONLY = ["ping", "listCountries", "listRegions", "listPlans", "getPlan", "checkAvailability", "getEsim", "getUsage"] as const;

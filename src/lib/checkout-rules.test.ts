@@ -4,6 +4,7 @@ import { checkoutAccess, checkoutRequestSchema } from "./checkout-rules";
 const base = { planId: "8f14e45f-ceea-4e7a-9f6b-2b1f3c4d5e6f", email: "Gast@Example.de", withdrawalConsent: true, environment: "sandbox", returnOrigin: "https://globesim.example" };
 
 describe("checkout request", () => {
+  it("accepts displayed gross for comparison only", () => expect(checkoutRequestSchema.parse({ ...base, displayedGross: 1.99 }).displayedGross).toBe(1.99));
   it("accepts plan, email and consent", () => {
     expect(checkoutRequestSchema.parse(base).email).toBe("gast@example.de");
   });

@@ -36,6 +36,7 @@ export const Route = createFileRoute("/checkout/$planId")({
 });
 
 const MESSAGES: Record<CheckoutError, string> = {
+  price_changed: "Der Tarifpreis hat sich geändert. Bitte prüfe den aktualisierten Betrag und bestätige erneut.",
   shop_unavailable: "Der Kauf ist noch nicht freigeschaltet. Bitte versuche es später erneut.",
   plan_unavailable: "Dieser Tarif ist gerade nicht verfügbar.",
   price_unavailable: "Für diesen Tarif liegt aktuell kein gültiger Preis vor.",
@@ -152,9 +153,10 @@ function CheckoutPage() {
     setBusy(true);
     try {
       // Only plan, email and consent are sent. The price is calculated on the server.
-      const r = await submit({ data: { planId, email, withdrawalConsent: true, environment, realPaymentConsent, returnOrigin: window.location.origin, discountCode: discount?.code } });
+      const r = await submit({ data: { planId, email, withdrawalConsent: true, environment, realPaymentConsent, returnOrigin: window.location.origin, discountCode: discount?.code, displayedGross: plan.price?.gross } });
       if (!r.ok) {
         setError(MESSAGES[r.error]);
+        if (r.error === "price_changed") await qc.invalidateQueries({ queryKey: ["checkout-plan", planId] });
         if (r.error === "real_payment_consent_required") setNeedsRealPaymentConsent(true);
         if (r.error.startsWith("discount_")) { setDiscount(null); setCodeMessage(null); }
       }

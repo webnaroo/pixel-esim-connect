@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { queryOptions } from "@tanstack/react-query";
 import { z } from "zod";
+import { priceFreshness } from "./price-refresh";
 import { publicDb } from "./public-db.server";
 
 export type ShopState = "not_configured" | "catalog_empty" | "ready_disabled" | "paused" | "live";
@@ -76,7 +77,7 @@ export const getDestinations = createServerFn({ method: "GET" }).handler(async (
 });
 
 export const destinationsQuery = () =>
-  queryOptions({ queryKey: ["destinations"], queryFn: () => getDestinations(), staleTime: 24 * 60 * 60 * 1000 });
+  queryOptions({ queryKey: ["destinations"], queryFn: () => getDestinations(), ...priceFreshness });
 
 export const getPopularSlugs = createServerFn({ method: "GET" }).handler(async (): Promise<string[]> => {
   const { data } = await publicDb().from("app_settings").select("value").eq("key", "popular_destinations").maybeSingle();
@@ -84,7 +85,7 @@ export const getPopularSlugs = createServerFn({ method: "GET" }).handler(async (
 });
 
 export const popularQuery = () =>
-  queryOptions({ queryKey: ["popular"], queryFn: () => getPopularSlugs(), staleTime: 60 * 60 * 1000 });
+  queryOptions({ queryKey: ["popular"], queryFn: () => getPopularSlugs(), ...priceFreshness });
 
 export const getDestinationDetail = createServerFn({ method: "GET" })
   .inputValidator((input) => z.object({ slug: z.string().min(1).max(120) }).parse(input))
@@ -157,7 +158,7 @@ async function withPreviewPlans(slug: string, plans: PlanItem[]): Promise<{ plan
 export type DestinationDetail = NonNullable<Awaited<ReturnType<typeof getDestinationDetail>>>;
 
 export const destinationQuery = (slug: string) =>
-  queryOptions({ queryKey: ["destination", slug], queryFn: () => getDestinationDetail({ data: { slug } }) });
+  queryOptions({ queryKey: ["destination", slug], queryFn: () => getDestinationDetail({ data: { slug } }), ...priceFreshness });
 
 /** FAQ answers: price/coverage/throttle statements come only from DB values via placeholders; unfillable entries are hidden. */
 export const getFaqs = createServerFn({ method: "GET" }).handler(async () => {
@@ -186,7 +187,7 @@ export const getFaqs = createServerFn({ method: "GET" }).handler(async () => {
   });
 });
 
-export const faqsQuery = () => queryOptions({ queryKey: ["faqs"], queryFn: () => getFaqs(), staleTime: 60 * 60 * 1000 });
+export const faqsQuery = () => queryOptions({ queryKey: ["faqs"], queryFn: () => getFaqs(), ...priceFreshness });
 
 /** Editable claim texts; returned only when at least one active plan is confirmed throttle-free. */
 export const getUnlimitedClaim = createServerFn({ method: "GET" }).handler(async () => {
