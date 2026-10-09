@@ -17,7 +17,7 @@ export async function sendOrderEmail(orderId: string, kind: EmailKind, extra: { 
     await db.from("orders").update({ email_status: "pending_domain" }).eq("id", orderId);
     return { sent: false, reason: "sender_domain_not_verified" };
   }
-  const { data: order } = await db.from("orders").select("id,guest_email,plan_snapshot,user_id").eq("id", orderId).maybeSingle();
+  const { data: order } = await db.from("orders").select("id,guest_email,plan_snapshot,user_id,amount,currency,discount_code,discount_amount").eq("id", orderId).maybeSingle();
   if (!order?.guest_email) return { sent: false, reason: "no_recipient" };
   const secret = process.env["GUEST_TOKEN_SECRET"];
   if (!secret) return { sent: false, reason: "token_secret_missing" };
@@ -25,7 +25,7 @@ export async function sendOrderEmail(orderId: string, kind: EmailKind, extra: { 
   const { SITE_URL } = await import("./seo");
   const token = encodeURIComponent(await signGuestToken(orderId, secret));
   const snap = (order.plan_snapshot ?? {}) as { destination?: string; type?: string; data_mb?: number | null; validity_days?: number; throttle_claim?: string };
-  const { formatData } = await import("./format");
+  const { formatData, formatPrice } = await import("./format");
   const { unlimitedLabelText } = await import("./throttle");
   const { data: claimTexts } = await db.from("app_settings").select("value").eq("key", "unlimited_claim").maybeSingle();
   const volume = snap.type === "unlimited" ? unlimitedLabelText(snap.throttle_claim as never, (claimTexts?.value ?? null) as never).split("\n")[0] : formatData(snap.data_mb ?? null);
@@ -36,6 +36,8 @@ export async function sendOrderEmail(orderId: string, kind: EmailKind, extra: { 
     installUrl: `${SITE_URL}/install/${orderId}?t=${token}`,
     orderUrl: `${SITE_URL}/order/${orderId}?t=${token}`,
     threshold: extra.threshold,
+    total: formatPrice(Number(order.amount), order.currency),
+    discount: Number(order.discount_amount) > 0 ? `${order.discount_code ?? "Rabatt"}: −${formatPrice(Number(order.discount_amount), order.currency)}` : undefined,
   };
   const { sendTemplateEmail } = await import("./email-templates/send-email");
   try {

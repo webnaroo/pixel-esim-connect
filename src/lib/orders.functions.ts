@@ -12,6 +12,8 @@ export type OrderView = {
   createdAt: string;
   isTest: boolean;
   emailStatus: string;
+  discountCode: string | null;
+  discountAmount: number;
   plan: { destination?: string; type?: string; data_mb?: number | null; validity_days?: number; throttle_claim?: "unknown" | "none_confirmed" | "conflict" };
   esim: { status: string; iccid: string | null; lpa: string | null; smdp: string | null; activationCode: string | null; directInstallUrl: string | null } | null;
 };
@@ -25,7 +27,7 @@ export const getOrderView = createServerFn({ method: "GET" })
     const { verifyGuestToken } = await import("./guest-token");
     if (!(await verifyGuestToken(data.token, data.orderId, secret))) return null;
     const { supabaseAdmin: db } = await import("@/integrations/supabase/client.server");
-    const { data: o } = await db.from("orders").select("id,status,guest_email,amount,currency,created_at,is_test,plan_snapshot,email_status").eq("id", data.orderId).maybeSingle();
+    const { data: o } = await db.from("orders").select("id,status,guest_email,amount,currency,created_at,is_test,plan_snapshot,email_status,discount_code,discount_amount").eq("id", data.orderId).maybeSingle();
     if (!o) return null;
     const { data: e } = await db.from("esims").select("status,iccid,lpa_string,smdp_address,activation_code,direct_install_url").eq("order_id", o.id).maybeSingle();
     return {
@@ -37,6 +39,8 @@ export const getOrderView = createServerFn({ method: "GET" })
       createdAt: o.created_at,
       isTest: o.is_test,
       emailStatus: o.email_status,
+      discountCode: o.discount_code,
+      discountAmount: Number(o.discount_amount ?? 0),
       plan: (o.plan_snapshot ?? {}) as OrderView["plan"],
       esim: e && o.status === "fulfilled"
         ? { status: e.status, iccid: e.iccid, lpa: e.lpa_string, smdp: e.smdp_address, activationCode: e.activation_code, directInstallUrl: e.direct_install_url }
@@ -60,7 +64,7 @@ export const listAdminOrders = createServerFn({ method: "GET" })
     const { supabaseAdmin: db } = await import("@/integrations/supabase/client.server");
     const { data } = await db
       .from("orders")
-      .select("id,status,guest_email,amount,currency,fulfillment_attempts,last_error,is_test,is_sandbox,created_at,plan_snapshot,email_status,dispute_status")
+      .select("id,status,guest_email,amount,currency,fulfillment_attempts,last_error,is_test,is_sandbox,created_at,plan_snapshot,email_status,dispute_status,discount_code,discount_amount")
       .order("created_at", { ascending: false })
       .limit(500);
     return data ?? [];

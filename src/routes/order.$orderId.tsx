@@ -49,6 +49,7 @@ function OrderPage() {
               <Row k="Reiseziel" v={order.plan.destination ?? "–"} />
               <Row k="Tarif" v={<>{order.plan.type === "unlimited" ? <UnlimitedLabel throttleClaim={order.plan.throttle_claim} /> : formatData(order.plan.data_mb ?? null)} · {formatDays(order.plan.validity_days ?? 0)}{order.plan.type === "unlimited" && <UnlimitedNote throttleClaim={order.plan.throttle_claim} />}</>} />
               <Row k="E-Mail" v={order.emailStatus === "pending_domain" ? `${order.email} · E-Mail ausstehend` : order.email} />
+              {!fixture && order.discountAmount > 0 && <Row k="Rabatt" v={`${order.discountCode ?? ""} −${formatPrice(order.discountAmount, order.currency)}`} />}
               <Row k="Betrag" v={fixture ? "Testdaten" : formatPrice(order.amount, order.currency)} />
             </dl>
 
