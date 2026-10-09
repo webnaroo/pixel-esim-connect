@@ -76,3 +76,42 @@ describe("processing", () => {
     expect(s).not.toContain("8901");
   });
 });
+
+describe("test deliveries", () => {
+  it("gültig signierte Testnachricht ohne passende Bestellung erscheint als ignoriert mit Grund", async () => {
+    const { webhookReasonLabel, webhookDeliveryVerified } = await import("./webhook-labels");
+    const secret = "whsec_test_123";
+    const t = 1_791_550_881;
+    const body = JSON.stringify({ id: "evt_test_abc", type: "order.issued", mode: "test", test: true, data: { order_id: "esm_order_test_demo", iccid: "8988" } });
+    const { hmacSha256Hex } = await import("./public-route-guard.server");
+    const header = `t=${t},v1=${await hmacSha256Hex(secret, `${t}.${body}`)}`;
+    expect(await verifyEsimergeSignature(header, body, secret, t)).toBe(true);
+    const stored: { eventId: string; status?: string; error?: string; payload?: unknown }[] = [];
+    const store: EventStore = {
+      insert: async (r) => (stored.push({ eventId: r.eventId, payload: r.payload }), true),
+      finish: async (id, o) => { const row = stored.find((s) => s.eventId === id)!; row.status = o.status; if (o.error) row.error = o.error; },
+    };
+    const d = deps(null, { status: "ready" });
+    const raw = JSON.parse(body);
+    const runs: Promise<void>[] = [];
+    await receiveEvent(store, d, parseEvent(raw, null)!, raw, null, "sandbox", (p) => runs.push(p));
+    await Promise.all(runs);
+    expect(stored).toHaveLength(1);
+    expect(stored[0]!.status).toBe("ignored");
+    expect(webhookReasonLabel(stored[0]!.error)).toBe("Testnachricht");
+    expect(JSON.stringify(stored[0]!.payload)).not.toContain("8988");
+    expect(d.markIssued).not.toHaveBeenCalled();
+    expect(webhookDeliveryVerified([{ signature_valid: true, status: stored[0]!.status! }])).toBe(true);
+  });
+  it("echte Nachricht ohne passende Bestellung: ignoriert, Bestellung nicht gefunden", async () => {
+    const { webhookReasonLabel } = await import("./webhook-labels");
+    const o = await handleEvent(deps(null, { status: "ready" }), ev("order.issued"), "sandbox");
+    expect(o.status).toBe("ignored");
+    expect(webhookReasonLabel(o.error)).toBe("Bestellung nicht gefunden");
+  });
+  it("ungültige Unterschrift zählt nicht als eingerichtet", async () => {
+    const { webhookDeliveryVerified } = await import("./webhook-labels");
+    expect(webhookDeliveryVerified([{ signature_valid: false, status: "ignored" }])).toBe(false);
+    expect(webhookDeliveryVerified([{ signature_valid: true, status: "failed" }])).toBe(false);
+  });
+});

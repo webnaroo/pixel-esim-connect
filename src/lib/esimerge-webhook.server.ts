@@ -12,12 +12,13 @@ export const dbEventStore: EventStore = {
       .from("provider_webhook_events")
       .upsert({ event_id: row.eventId, delivery_id: row.deliveryId, event_type: row.type, payload: row.payload as never, mode: row.mode, signature_valid: true }, { onConflict: "event_id", ignoreDuplicates: true })
       .select("id");
-    if (error) throw new Error("webhook_store_unavailable");
+    if (error) { console.error("webhook_store_failed", row.eventId, error.message); throw new Error("webhook_store_unavailable"); }
     return (data ?? []).length > 0;
   },
   async finish(eventId, o: Outcome) {
     const db = await admin();
-    await db.from("provider_webhook_events").update({ status: o.status, error: o.error ?? null, order_id: o.orderId ?? null, processed_at: new Date().toISOString() }).eq("event_id", eventId);
+    const { error } = await db.from("provider_webhook_events").update({ status: o.status, error: o.error ?? null, order_id: o.orderId ?? null, processed_at: new Date().toISOString() }).eq("event_id", eventId);
+    if (error) console.error("webhook_finish_failed", eventId, error.message);
   },
 };
 

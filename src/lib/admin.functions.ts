@@ -37,7 +37,8 @@ async function buildChecklist(): Promise<ShopChecklist & { providerMessage: stri
   const { loadFx } = await import("./fx.server");
   const fx = await loadFx(supabaseAdmin);
   const fxValid = fx.effective("USD") !== null;
-  const { count: whOk } = await supabaseAdmin.from("provider_webhook_events").select("id", { count: "exact", head: true }).eq("status", "processed");
+  const { WEBHOOK_READY_STATUSES } = await import("./webhook-labels");
+  const { count: whOk } = await supabaseAdmin.from("provider_webhook_events").select("id", { count: "exact", head: true }).eq("signature_valid", true).in("status", [...WEBHOOK_READY_STATUSES]);
   const webhookReady = status.webhookSecretSet && (whOk ?? 0) > 0;
   return { providerReachable, providerSandbox: status.sandbox, providerMessage, catalogCount: count ?? 0, stripeConfigured, emailVerified, fxValid, webhookReady, legalPublished: (unpublished ?? 0) === 0 };
 }
