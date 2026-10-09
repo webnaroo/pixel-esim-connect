@@ -9,7 +9,7 @@ import { CompatCheck } from "./compat-check";
 import { NoThrottleClaim, UnlimitedLabel } from "./unlimited-claim";
 import { showsNoThrottle } from "@/lib/throttle";
 import { useEffect, useMemo, useState } from "react";
-import { trackOncePerPage } from "@/lib/meta-pixel";
+import { onConsentChange, trackOncePerPage } from "@/lib/meta-pixel";
 import { Link } from "@tanstack/react-router";
 import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
 import { CaretRight, Funnel } from "@phosphor-icons/react";
@@ -41,8 +41,10 @@ export function DestinationPage({ slug }: { slug: string }) {
   useEffect(() => {
     if (!d || d.fixturePlans || !d.plans.length) return;
     const p = selPlan;
-    if (p) trackOncePerPage("ViewContent", p.id, { content_ids: [p.id], content_type: "product", content_name: d.name, content_category: "eSIM", value: p.price, currency: p.currency });
-    else trackOncePerPage("ViewContent", `dest:${d.slug}`, { content_ids: d.plans.map((x) => x.id).slice(0, 20), content_type: "product_group", content_name: d.name, content_category: "eSIM", value: Math.min(...d.plans.map((x) => x.price)), currency: d.plans[0]?.currency ?? "EUR" });
+    const run = () => { if (p) trackOncePerPage("ViewContent", p.id, { content_ids: [p.id], content_type: "product", content_name: d.name, content_category: "eSIM", value: p.price, currency: p.currency });
+    else trackOncePerPage("ViewContent", `dest:${d.slug}`, { content_ids: d.plans.map((x) => x.id).slice(0, 20), content_type: "product_group", content_name: d.name, content_category: "eSIM", value: Math.min(...d.plans.map((x) => x.price)), currency: d.plans[0]?.currency ?? "EUR" }); };
+    run();
+    return onConsentChange(run); // consent given on this page → still counts the current view
   }, [d, selPlan]);
 
   if (!d) return null;
