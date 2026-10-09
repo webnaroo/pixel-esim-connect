@@ -82,8 +82,15 @@ export async function refreshRates(trigger: "cron" | "manual", actorId: string |
 export async function repricePlans(actorId: string | null = null) {
   const db = await admin();
   const fx = await loadFx(db);
-  const [{ data: plans }, { data: rules }, { data: vatRow }, { data: latest }] = await Promise.all([
-    db.from("plans").select("id,provider_plan_id,type,cost_price,cost_currency,sell_price,is_active,last_synced_at,destination:destinations!plans_destination_id_fkey(slug)").eq("provider", "esimerge"),
+  const PAGE = 1000; // PostgREST caps a single response — load all plans in pages
+  const plans: PlanRow[] = [];
+  for (let from = 0; ; from += PAGE) {
+    const { data, error } = await db.from("plans").select("id,provider_plan_id,type,cost_price,cost_currency,sell_price,is_active,last_synced_at,destination:destinations!plans_destination_id_fkey(slug)").eq("provider", "esimerge").range(from, from + PAGE - 1);
+    if (error) throw new Error("Tarife konnten nicht geladen werden.");
+    plans.push(...((data ?? []) as PlanRow[]));
+    if (!data || data.length < PAGE) break;
+  }
+  const [{ data: rules }, { data: vatRow }, { data: latest }] = await Promise.all([
     db.from("pricing_rules").select("id,scope,scope_ref,type,value,rounding,priority"),
     db.from("app_settings").select("value").eq("key", "vat_rate").maybeSingle(),
     db.from("plans").select("last_synced_at").eq("provider", "esimerge").order("last_synced_at", { ascending: false, nullsFirst: false }).limit(1).maybeSingle(),
