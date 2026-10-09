@@ -26,4 +26,5 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'refund-notice': refundNotice,
   'admin-test': adminTest,
   'admin-refund-request': adminRefundRequest,
+  'admin-new-order': adminNewOrder,
 }

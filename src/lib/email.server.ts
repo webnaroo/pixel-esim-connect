@@ -59,3 +59,39 @@ export async function sendOrderEmail(orderId: string, kind: EmailKind, extra: { 
 }
 
 export const sendOrderReadyEmail = (orderId: string) => sendOrderEmail(orderId, "install_link");
+
+// Admin notice for every paid order. Best effort: the order flow never fails because of this mail.
+// One mail per admin per order (idempotency key), no activation data included.
+export async function notifyAdminsNewOrder(orderId: string): Promise<void> {
+  try {
+    const { supabaseAdmin: db } = await import("@/integrations/supabase/client.server");
+    const settings = await loadEmailSettings();
+    if (!canSendCustomerEmail(settings)) return;
+    const { data: order } = await db.from("orders").select("id,guest_email,plan_snapshot,amount,currency").eq("id", orderId).maybeSingle();
+    if (!order) return;
+    const snap = (order.plan_snapshot ?? {}) as { destination?: string; type?: string; data_mb?: number | null; validity_days?: number };
+    const { formatData, formatPrice } = await import("./format");
+    const plan = [snap.destination, snap.type === "unlimited" ? "Unlimited" : formatData(snap.data_mb ?? null), snap.validity_days ? `${snap.validity_days} Tage` : null].filter(Boolean).join(" · ");
+    const { data: roles } = await db.from("user_roles").select("user_id").eq("role", "admin");
+    const { data: admins } = await db.from("profiles").select("email").in("id", (roles ?? []).map((r) => r.user_id));
+    const { sendTemplateEmail } = await import("./email-templates/send-email");
+    const { SITE_URL } = await import("./seo");
+    for (const a of admins ?? []) {
+      if (!a.email) continue;
+      await sendTemplateEmail("admin-new-order", a.email, {
+        templateData: {
+          orderId: order.id.slice(0, 8),
+          plan,
+          total: formatPrice(Number(order.amount), order.currency),
+          customer: order.guest_email ?? undefined,
+          url: `${SITE_URL}/admin/orders`,
+        },
+        fromLocal: settings.from_local,
+        replyTo: settings.reply_to,
+        idempotencyKey: `admin-new-order-${orderId}-${a.email}`,
+      }).catch(() => undefined);
+    }
+  } catch {
+    console.error("admin_new_order_mail_failed", orderId);
+  }
+}
