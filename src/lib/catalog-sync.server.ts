@@ -12,6 +12,8 @@ export async function runCatalogSync(trigger: "cron" | "manual"): Promise<SyncSu
   const { getProvider, providerSetupStatus } = await import("./providers/index.server");
   const empty = { added: 0, updated: 0, deactivated: 0, unpriced: 0 };
 
+  // Runs killed by the worker time limit never finish; mark them failed after 15 minutes.
+  await db.from("sync_runs").update({ status: "failed", finished_at: new Date().toISOString(), error: "Abgebrochen (Zeitlimit)" }).eq("status", "running").lt("started_at", new Date(Date.now() - 15 * 60_000).toISOString());
   // Simple lock: skip when another run started in the last 15 minutes and has not finished.
   const { data: running } = await db.from("sync_runs").select("id").eq("status", "running").gte("started_at", new Date(Date.now() - 15 * 60_000).toISOString()).limit(1);
   if (running?.length) return { runId: null, status: "skipped", message: "Ein Sync läuft bereits.", ...empty };
@@ -72,6 +74,7 @@ export async function runCatalogSync(trigger: "cron" | "manual"): Promise<SyncSu
     const typeCount = { data: 0, unlimited: 0 };
     const countries = new Set<string>();
     const newIds: string[] = [];
+    const rows: Array<Record<string, unknown> & { provider_plan_id: string; destination_id: string }> = [];
 
     for (const p of fetched) {
       const dest =
@@ -114,10 +117,19 @@ export async function runCatalogSync(trigger: "cron" | "manual"): Promise<SyncSu
         raw: maskSensitive(p.raw ?? null) as never,
         last_synced_at: startedAt,
       };
-      const { data: up, error } = await db.from("plans").upsert(row, { onConflict: "provider,provider_plan_id,destination_id" }).select("id").single();
+      rows.push(row);
+    }
+
+    // Batched upserts: the live catalog has >10 000 plans; one request per plan exceeds the worker time limit.
+    const uniq = new Map(rows.map((r) => [`${r.provider_plan_id}|${r.destination_id}`, r]));
+    const all = [...uniq.values()];
+    for (let i = 0; i < all.length; i += 500) {
+      const { data: ups, error } = await db.from("plans").upsert(all.slice(i, i + 500), { onConflict: "provider,provider_plan_id,destination_id" }).select("id,provider_plan_id,destination_id");
       if (error) throw new Error(`Upsert fehlgeschlagen: ${error.message}`);
-      if (known.has(`${p.providerPlanId}|${dest.id}`)) counts.updated++;
-      else { counts.added++; if (up?.id) newIds.push(up.id); } // new plans stay hidden (released=false) until the admin releases them
+      for (const up of ups ?? []) {
+        if (known.has(`${up.provider_plan_id}|${up.destination_id}`)) counts.updated++;
+        else { counts.added++; newIds.push(up.id); } // new plans stay hidden (released=false) until the admin releases them
+      }
     }
 
     // Provider hint vs. "ohne Drosselung" confirmation: never silently keep the claim.
