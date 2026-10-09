@@ -50,7 +50,11 @@ export const Route = createFileRoute("/api/public/payments/webhook")({
                 const { data: updated } = await db.from("orders")
                   .update({ status: "paid", stripe_payment_intent_id: obj.payment_intent ?? null })
                   .eq("id", orderId).eq("status", "pending").select("id");
-                if (updated?.length) await fulfillOrderById(orderId);
+                if (updated?.length) {
+                  const { notifyAdminsNewOrder } = await import("@/lib/email.server");
+                  await notifyAdminsNewOrder(orderId);
+                  await fulfillOrderById(orderId);
+                }
               } else if (decision.action === "mismatch") {
                 await db.from("orders").update({ status: "payment_mismatch", stripe_payment_intent_id: obj.payment_intent ?? null, last_error: decision.reason }).eq("id", orderId).eq("status", "pending");
                 await db.from("audit_log").insert({ action: "payment_mismatch", entity: "order", entity_id: orderId, meta: { reason: decision.reason } });
