@@ -130,7 +130,7 @@ describe("Bestellung je Code", () => {
   it("insufficient_funds: fulfillment_failed, Pause + Warnung", async () => {
     const s = store();
     expect(await fulfillOrder({ store: s, createOrder: failWith("insufficient_funds", 402) }, "o1")).toBe("failed");
-    expect(s.markFailed.mock.calls[0]![1]).toContain("Guthaben bei eSIMerge zu niedrig");
+    expect(String((s.markFailed.mock.calls[0] as unknown[])[1])).toContain("Guthaben bei eSIMerge zu niedrig");
     expect((s.providerError.mock.calls[0] as unknown[])[3]).toMatchObject({ pause: "insufficient_funds" });
   });
   it.each(["invalid_api_key", "forbidden"])("%s pausiert den Verkauf", async (code) => {
@@ -144,7 +144,7 @@ describe("Bestellung je Code", () => {
     const create = vi.fn(failWith("request_in_flight", 409));
     expect(await fulfillOrder({ store: s, createOrder: create }, "o1")).toBe("retry_scheduled");
     expect(s.markFailed).not.toHaveBeenCalled();
-    expect(create.mock.calls[0]![0]).toMatchObject({ idempotencyKey: "KEY-1" });
+    expect((create.mock.calls[0] as unknown[])[0]).toMatchObject({ idempotencyKey: "KEY-1" });
   });
   it("internal_error nach Wiederholungen: needs_review", async () => {
     const s = store();
@@ -154,7 +154,7 @@ describe("Bestellung je Code", () => {
     const s = store();
     const create = async () => { throw new ProviderRequestError("HTTP 422", 422, "createOrder", parseEsmError(422, JSON.parse(errBody("validation_error", { field: "plan_id" })))); };
     await fulfillOrder({ store: s, createOrder: create }, "o1");
-    const msg = s.markFailed.mock.calls[0]![1];
+    const msg = String((s.markFailed.mock.calls[0] as unknown[])[1]);
     expect(msg).toContain("plan_id"); expect(msg).toContain("req_abc"); expect(msg).not.toContain(SECRET_MSG);
   });
   it("plan_unavailable: fulfillment_failed, Tarif raus", async () => {
