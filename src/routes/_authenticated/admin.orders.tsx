@@ -121,7 +121,7 @@ function WebhookEvents() {
             {q.data!.alerts.slice(0, 10).map((a) => (
               <li key={a.id}>
                 <span className="text-ink-muted">{new Date(a.createdAt).toLocaleString("de-DE")} · Bestellung {a.orderId?.slice(0, 8)} · </span>
-                {a.action === "cost_mismatch" ? a.message : a.action === "provider_order_cancelled" ? "Storniert – Erstatten prüfen" : a.action === "plan_unavailable" ? "Tarif aus dem Shop genommen, Katalog-Sync gestartet" : a.message || "Fehlgeschlagen – Erstatten prüfen"}
+                {a.action === "cost_mismatch" ? a.message : a.action === "provider_order_cancelled" ? "Storniert – Erstatten prüfen" : a.action === "plan_unavailable" ? "Tarif aus dem Shop genommen, Katalog-Sync gestartet" : a.action === "auto_refunded" ? "Automatisch erstattet" : a.message || "Fehlgeschlagen – Erstatten prüfen"}
                 {a.code && <span className="ml-1 font-mono text-xs text-ink-muted">· {a.code}</span>}
                 {a.field && <span className="ml-1 font-mono text-xs text-ink-muted">· Feld {a.field}</span>}
                 {a.requestId && <span className="ml-1 font-mono text-xs text-ink-muted">· request_id {a.requestId}</span>}
