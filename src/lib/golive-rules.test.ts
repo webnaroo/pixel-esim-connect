@@ -58,3 +58,40 @@ describe("price check", () => {
 describe("receipt gaps", () => {
   it("names missing company fields", () => expect(receiptGaps({ company_name: "GlobeSIM", street: "Karlstal 27a", zip: "24143", city: "Kiel" })).toEqual(["USt-IdNr."]));
 });
+
+import { canSwitchShopOn, evaluateStep, tickStep, SHOP_CONFIRM_PHRASE, type WizardFacts } from "./golive-wizard";
+const facts = (o: Partial<WizardFacts> = {}): WizardFacts => ({
+  key: { set: true, sandbox: false, pingOk: true, pingMessage: "ok" },
+  webhook: { liveSecretSet: true, liveValidEvents: 1, recent401: 0, sandboxEndpointRemovedConfirmed: true },
+  catalog: { lastSyncOk: true, lastSyncAt: null, activePlans: 5, countries: 3, unpriced: 0, noMargin: 0, lowRest: 0 },
+  stripe: { liveKey: true, liveSecret: true, liveEvents: 1, dashboardConfirmed: true },
+  email: { authTemplates: true, testOk: true, replyConfirmed: true },
+  purchase: { orderId: "o", paid: true, issuedWebhook: true, installData: true, emailSent: true, costMatches: true, refunded: true },
+  autoRefund: { decided: true, enabled: false }, shop: { missing: [], enabled: false }, ...o,
+});
+describe("go-live assistant", () => {
+  it("rejects a sandbox key", () => {
+    const r = evaluateStep(1, facts({ key: { set: true, sandbox: true, pingOk: true, pingMessage: "" } }));
+    expect(r.ok).toBe(false);
+    expect(r.reason).toContain("Sandbox-Schlüssel");
+  });
+  it("ticks a step only when green", () => {
+    const now = new Date("2026-10-09T12:00:00Z");
+    const red = evaluateStep(2, facts({ webhook: { liveSecretSet: true, liveValidEvents: 0, recent401: 2, sandboxEndpointRemovedConfirmed: true } }));
+    expect(tickStep({}, 2, red, now)).toEqual({});
+    expect(red.reason).toContain("401");
+    expect(tickStep({}, 2, evaluateStep(2, facts()), now)).toEqual({ "2": now.toISOString() });
+  });
+  it("shop stays locked without explicit confirmation", () => {
+    expect(canSwitchShopOn([], undefined)).toBe(false);
+    expect(canSwitchShopOn([], "ja")).toBe(false);
+    expect(canSwitchShopOn(["Test-E-Mail gesendet"], SHOP_CONFIRM_PHRASE)).toBe(false);
+    expect(canSwitchShopOn([], SHOP_CONFIRM_PHRASE)).toBe(true);
+  });
+  it("step results never contain secret values", () => {
+    const secret = "esm_sk_live_SUPERSECRET";
+    const text = JSON.stringify([1, 2, 3, 4, 5, 6, 7, 8, 9].map((n) => evaluateStep(n, facts({ key: { set: true, sandbox: false, pingOk: false, pingMessage: "401 unauthorized" } }))));
+    expect(text).not.toContain(secret);
+    expect(text).not.toMatch(/esm_sk_live_[A-Za-z0-9]/);
+  });
+});

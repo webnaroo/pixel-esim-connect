@@ -10,10 +10,12 @@ import { Button, Input } from "@/components/ui-kit";
 import { Chip } from "@/components/brand";
 import { AdminError } from "./admin";
 import { privateHead } from "@/lib/seo";
+import { GoLiveWizard } from "@/components/golive-wizard";
+import { wizardQuery } from "@/lib/wizard.functions";
 
 export const Route = createFileRoute("/_authenticated/admin/golive")({
   head: () => privateHead("Go-Live", "E-Mail, Stripe Live und Testkauf im GlobeSIM-Admin vorbereiten."),
-  loader: ({ context }) => Promise.all([context.queryClient.ensureQueryData(goLiveQuery()), context.queryClient.ensureQueryData(adminOverviewQuery())]),
+  loader: ({ context }) => Promise.all([context.queryClient.ensureQueryData(goLiveQuery()), context.queryClient.ensureQueryData(adminOverviewQuery()), context.queryClient.ensureQueryData(wizardQuery())]),
   errorComponent: AdminError,
   component: GoLive,
 });
@@ -60,6 +62,7 @@ function GoLive() {
 
   return (
     <div className="grid gap-8">
+      <GoLiveWizard />
       <section className={card}>
         <h2 className="text-xl">E-Mail</h2>
         <ul className="mt-2 divide-y divide-line">
@@ -95,7 +98,7 @@ function GoLive() {
           ))}
           <li className="py-3">
             <p className="font-medium">Registrierung / Passwort zurücksetzen</p>
-            <p className="text-sm text-ink-muted">Diese Mails verschickt die Anmeldung. Sie sind noch nicht im GlobeSIM-Design angelegt und kommen derzeit als Standard-Mails. Siehe Anleitung im Chat.</p>
+            <p className="text-sm text-ink-muted">Im GlobeSIM-Design angelegt (Betreff „GlobeSIM – E-Mail-Adresse bestätigen“ bzw. „GlobeSIM – Passwort zurücksetzen“). Sie werden von der Anmeldung verschickt.</p>
           </li>
         </ul>
       </section>
