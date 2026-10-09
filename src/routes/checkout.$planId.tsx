@@ -213,7 +213,7 @@ function CheckoutPage() {
                   <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-line bg-surface p-4">
                     <input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} className="mt-1 size-5 shrink-0 accent-[var(--color-primary)]" required />
                     <span className="text-sm text-ink">
-                      <span className="mb-1 block text-xs font-semibold uppercase tracking-wide text-ink">Platzhalter – juristische Prüfung ausstehend</span>
+                      <span className="mb-1 block text-xs font-semibold uppercase tracking-wide text-ink">Widerrufsrecht</span>
                       Ich stimme ausdrücklich zu, dass GlobeSIM vor Ablauf der Widerrufsfrist mit der Bereitstellung der eSIM beginnt. Mir ist bekannt, dass ich dadurch mein Widerrufsrecht verliere.
                     </span>
                   </label>
