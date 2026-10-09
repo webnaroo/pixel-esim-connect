@@ -17,6 +17,8 @@ export function providerSetupStatus() {
     baseUrlSet: Boolean(env.baseUrl),
     apiKeySet: Boolean(env.token),
     webhookSecretSet: Boolean(env.webhookSecret),
+    webhookSecretSandboxSet: Boolean(env.webhookSecretSandbox),
+    webhookSecretLiveSet: Boolean(env.webhookSecretLive),
     configMissing: missing,
     mappingReady: MAPPING_READY,
     sandbox: isSandboxKey(env.token),

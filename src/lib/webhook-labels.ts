@@ -7,6 +7,7 @@ export const WEBHOOK_REASON_LABEL: Record<string, string> = {
   order_not_found: "Bestellung nicht gefunden",
   unknown_event_type: "Unbekannter Ereignistyp",
   mode_mismatch: "Test/Live passt nicht zur Bestellung",
+  mode_conflict: "Modus im Inhalt widerspricht dem Geheimnis",
   no_provider_order: "Bestellung hat keine eSIMerge-Nummer",
   not_confirmed_by_api: "Status nicht bestätigt",
   cancelled_by_provider: "Von eSIMerge storniert – Erstatten prüfen",

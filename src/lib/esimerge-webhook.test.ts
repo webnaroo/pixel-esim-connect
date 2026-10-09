@@ -66,6 +66,23 @@ describe("processing", () => {
     expect((await handleEvent(d, ev("order.issued"), "sandbox")).error).toBe("mode_mismatch");
     expect(d.getOrder).not.toHaveBeenCalled();
   });
+  it("live event never touches sandbox order", async () => {
+    const d = deps(order({ isSandbox: true }), { status: "ready" });
+    expect((await handleEvent(d, ev("order.issued"), "live")).error).toBe("mode_mismatch");
+    expect(d.markIssued).not.toHaveBeenCalled();
+  });
+  it("payload mode contradicting the verifying secret is stored as ignored", async () => {
+    const d = deps(order({ isSandbox: false }), { status: "ready" });
+    const e = { ...ev("order.issued"), modeConflict: true };
+    expect(await handleEvent(d, e, "live")).toEqual({ status: "ignored", error: "mode_conflict" });
+    expect(d.findOrder).not.toHaveBeenCalled();
+  });
+  it("live secret verifies live webhook, sandbox secret does not", async () => {
+    const LIVE = "whsec_live_456";
+    const h = `t=${now},v1=${await hmacSha256Hex(LIVE, `${now}.${body}`)}`;
+    expect(await verifyEsimergeSignature(h, body, LIVE, now)).toBe(true);
+    expect(await verifyEsimergeSignature(h, body, SECRET, now)).toBe(false);
+  });
   it("usage threshold 80 mails once", async () => {
     const d = deps(order({ alertsSent: [80] }), { status: "ready" }, 85);
     await handleEvent(d, ev("esim.usage.threshold", { order_id: "esm_o1", threshold: 80 }), "sandbox");

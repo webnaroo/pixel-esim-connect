@@ -11,6 +11,7 @@ import { computeMargin, computePrice, type PricingRule } from "@/lib/pricing";
 import { Button, Input } from "@/components/ui-kit";
 import { AdminError } from "./admin";
 import { privateHead } from "@/lib/seo";
+import { PriceCheck } from "@/components/price-check";
 
 export const Route = createFileRoute("/_authenticated/admin/pricing")({
   head: () => privateHead("Preise verwalten", "Wechselkurse, Gebühren und Preisregeln im GlobeSIM-Admin."),
@@ -71,6 +72,7 @@ function Pricing() {
 
   return (
     <div className="grid gap-8 lg:grid-cols-2 [&>*]:min-w-0">
+      <div className="lg:col-span-2"><PriceCheck /></div>
       <section className="rounded-lg border border-line bg-surface p-6 lg:col-span-2">
         <h2 className="text-xl">Margenregeln</h2>
         <p className="mt-1 text-sm text-ink-muted">Reihenfolge: Tarif vor Land vor Tariftyp vor global. Innerhalb einer Ebene gewinnt die höchste Priorität.</p>

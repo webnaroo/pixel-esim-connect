@@ -60,7 +60,15 @@ export const Route = createFileRoute("/api/public/payments/webhook")({
               if (orderId) await db.from("orders").update({ status: "cancelled" }).eq("id", orderId).eq("status", "pending");
             } else if (ev.type === "charge.refunded" && obj.payment_intent) {
               await db.from("orders").update({ status: "refunded" }).eq("stripe_payment_intent_id", obj.payment_intent);
+            } else if (ev.type === "charge.dispute.created" && obj.payment_intent) {
+              // Dispute: mark the order and warn the admin with the deadline. No automatic action.
+              const d = ev.data.object as { id?: string; reason?: string; amount?: number; evidence_details?: { due_by?: number | null } };
+              const dueBy = d.evidence_details?.due_by ? new Date(d.evidence_details.due_by * 1000).toISOString() : null;
+              const { data: hit } = await db.from("orders").update({ dispute_status: "open", dispute_id: d.id ?? null, dispute_due_by: dueBy }).eq("stripe_payment_intent_id", obj.payment_intent).select("id");
+              await db.from("audit_log").insert({ action: "stripe_dispute", entity: "order", entity_id: hit?.[0]?.id ?? null, meta: { env, reason: d.reason ?? null, amount: d.amount ?? null, due_by: dueBy, message: `Rückbuchung/Streitfall${dueBy ? ` – Frist ${new Date(dueBy).toLocaleDateString("de-DE")}` : ""}` } });
             }
+            // payment_intent.succeeded / payment_intent.payment_failed: acknowledged and recorded only;
+            // the order status changes via checkout.session.* (it carries our order id).
           });
           if (r === "processed") await markWebhookProcessed("stripe", eventKey);
           return Response.json({ received: true, duplicate: r === "duplicate" });

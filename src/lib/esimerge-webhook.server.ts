@@ -77,10 +77,10 @@ export const dbWebhookDeps: WebhookDeps = {
     const db = await admin();
     await db.from("esims").update(patch).eq("order_id", orderId);
   },
-  async sendUsageMail(orderId) {
-    // Usage hint mail; sendOrderEmail stays blocked until sending is set up. No top-up link (no top-up product).
+  async sendUsageMail(orderId, threshold) {
+    // Usage hint mail (80 / 100 %). No top-up link (no top-up product).
     const { sendOrderEmail } = await import("./email.server");
-    await sendOrderEmail(orderId, "usage_alert");
+    await sendOrderEmail(orderId, "usage_alert", { threshold });
   },
   now: () => new Date(),
 };

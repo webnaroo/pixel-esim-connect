@@ -40,6 +40,7 @@ import { Route as AuthenticatedAdminCustomersRouteImport } from './routes/_authe
 import { Route as AuthenticatedAdminDevicesRouteImport } from './routes/_authenticated/admin.devices'
 import { Route as AuthenticatedAdminEsimsRouteImport } from './routes/_authenticated/admin.esims'
 import { Route as AuthenticatedAdminExplorerRouteImport } from './routes/_authenticated/admin.explorer'
+import { Route as AuthenticatedAdminGoliveRouteImport } from './routes/_authenticated/admin.golive'
 import { Route as AuthenticatedAdminLogsRouteImport } from './routes/_authenticated/admin.logs'
 import { Route as AuthenticatedAdminOrdersRouteImport } from './routes/_authenticated/admin.orders'
 import { Route as AuthenticatedAdminPlansRouteImport } from './routes/_authenticated/admin.plans'
@@ -214,6 +215,12 @@ const AuthenticatedAdminExplorerRoute =
     path: '/explorer',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
+const AuthenticatedAdminGoliveRoute =
+  AuthenticatedAdminGoliveRouteImport.update({
+    id: '/golive',
+    path: '/golive',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
 const AuthenticatedAdminLogsRoute = AuthenticatedAdminLogsRouteImport.update({
   id: '/logs',
   path: '/logs',
@@ -324,6 +331,7 @@ export interface FileRoutesByFullPath {
   '/admin/devices': typeof AuthenticatedAdminDevicesRoute
   '/admin/esims': typeof AuthenticatedAdminEsimsRoute
   '/admin/explorer': typeof AuthenticatedAdminExplorerRoute
+  '/admin/golive': typeof AuthenticatedAdminGoliveRoute
   '/admin/logs': typeof AuthenticatedAdminLogsRoute
   '/admin/orders': typeof AuthenticatedAdminOrdersRoute
   '/admin/plans': typeof AuthenticatedAdminPlansRoute
@@ -369,6 +377,7 @@ export interface FileRoutesByTo {
   '/admin/devices': typeof AuthenticatedAdminDevicesRoute
   '/admin/esims': typeof AuthenticatedAdminEsimsRoute
   '/admin/explorer': typeof AuthenticatedAdminExplorerRoute
+  '/admin/golive': typeof AuthenticatedAdminGoliveRoute
   '/admin/logs': typeof AuthenticatedAdminLogsRoute
   '/admin/orders': typeof AuthenticatedAdminOrdersRoute
   '/admin/plans': typeof AuthenticatedAdminPlansRoute
@@ -417,6 +426,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/devices': typeof AuthenticatedAdminDevicesRoute
   '/_authenticated/admin/esims': typeof AuthenticatedAdminEsimsRoute
   '/_authenticated/admin/explorer': typeof AuthenticatedAdminExplorerRoute
+  '/_authenticated/admin/golive': typeof AuthenticatedAdminGoliveRoute
   '/_authenticated/admin/logs': typeof AuthenticatedAdminLogsRoute
   '/_authenticated/admin/orders': typeof AuthenticatedAdminOrdersRoute
   '/_authenticated/admin/plans': typeof AuthenticatedAdminPlansRoute
@@ -465,6 +475,7 @@ export interface FileRouteTypes {
     | '/admin/devices'
     | '/admin/esims'
     | '/admin/explorer'
+    | '/admin/golive'
     | '/admin/logs'
     | '/admin/orders'
     | '/admin/plans'
@@ -510,6 +521,7 @@ export interface FileRouteTypes {
     | '/admin/devices'
     | '/admin/esims'
     | '/admin/explorer'
+    | '/admin/golive'
     | '/admin/logs'
     | '/admin/orders'
     | '/admin/plans'
@@ -557,6 +569,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/devices'
     | '/_authenticated/admin/esims'
     | '/_authenticated/admin/explorer'
+    | '/_authenticated/admin/golive'
     | '/_authenticated/admin/logs'
     | '/_authenticated/admin/orders'
     | '/_authenticated/admin/plans'
@@ -826,6 +839,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminExplorerRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/_authenticated/admin/golive': {
+      id: '/_authenticated/admin/golive'
+      path: '/golive'
+      fullPath: '/admin/golive'
+      preLoaderRoute: typeof AuthenticatedAdminGoliveRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
     '/_authenticated/admin/logs': {
       id: '/_authenticated/admin/logs'
       path: '/logs'
@@ -934,6 +954,7 @@ interface AuthenticatedAdminRouteChildren {
   AuthenticatedAdminDevicesRoute: typeof AuthenticatedAdminDevicesRoute
   AuthenticatedAdminEsimsRoute: typeof AuthenticatedAdminEsimsRoute
   AuthenticatedAdminExplorerRoute: typeof AuthenticatedAdminExplorerRoute
+  AuthenticatedAdminGoliveRoute: typeof AuthenticatedAdminGoliveRoute
   AuthenticatedAdminLogsRoute: typeof AuthenticatedAdminLogsRoute
   AuthenticatedAdminOrdersRoute: typeof AuthenticatedAdminOrdersRoute
   AuthenticatedAdminPlansRoute: typeof AuthenticatedAdminPlansRoute
@@ -950,6 +971,7 @@ const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
   AuthenticatedAdminDevicesRoute: AuthenticatedAdminDevicesRoute,
   AuthenticatedAdminEsimsRoute: AuthenticatedAdminEsimsRoute,
   AuthenticatedAdminExplorerRoute: AuthenticatedAdminExplorerRoute,
+  AuthenticatedAdminGoliveRoute: AuthenticatedAdminGoliveRoute,
   AuthenticatedAdminLogsRoute: AuthenticatedAdminLogsRoute,
   AuthenticatedAdminOrdersRoute: AuthenticatedAdminOrdersRoute,
   AuthenticatedAdminPlansRoute: AuthenticatedAdminPlansRoute,

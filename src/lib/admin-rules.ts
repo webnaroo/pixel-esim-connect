@@ -13,7 +13,7 @@ export function evaluateSyncThreshold(previousActive: number, fetched: number): 
   return { abort: false };
 }
 
-export type ShopChecklist = { providerReachable: boolean; providerSandbox: boolean; catalogCount: number; stripeConfigured: boolean; emailVerified?: boolean; legalPublished?: boolean; fxValid?: boolean; webhookReady?: boolean; providerAuthOk?: boolean };
+export type ShopChecklist = { providerReachable: boolean; providerSandbox: boolean; catalogCount: number; stripeConfigured: boolean; stripeMissing?: string[]; emailVerified?: boolean; emailTestSent?: boolean; replyConfirmed?: boolean; legalPublished?: boolean; fxValid?: boolean; webhookReady?: boolean; providerAuthOk?: boolean };
 
 export function shopChecklistMissing(c: ShopChecklist): string[] {
   const missing: string[] = [];
@@ -22,8 +22,11 @@ export function shopChecklistMissing(c: ShopChecklist): string[] {
   // A sandbox key never delivers real eSIMs: the shop can never go live with it.
   if (c.providerSandbox) missing.push("eSIMerge Live-Zugang (aktuell Sandbox)");
   if (!(c.catalogCount > 0)) missing.push("Katalog größer 0");
-  if (!c.stripeConfigured) missing.push("Stripe konfiguriert");
-  if (c.emailVerified === false) missing.push("E-Mail-Absender-Domain verifiziert");
+  if (c.stripeMissing?.length) missing.push(...c.stripeMissing);
+  else if (!c.stripeConfigured) missing.push("Stripe konfiguriert");
+  if (c.emailVerified === false) missing.push("E-Mail-Domain notify.globesim.de verifiziert");
+  if (c.emailTestSent === false) missing.push("Test-E-Mail gesendet");
+  if (c.replyConfirmed === false) missing.push("Antwortadresse support@globesim.de bestätigt");
   if (c.fxValid === false) missing.push("Wechselkurs aktuell");
   if (c.webhookReady === false) missing.push("eSIMerge-Webhook eingerichtet");
   if (c.legalPublished === false) missing.push("Rechtsseiten freigegeben");

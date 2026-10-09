@@ -12,8 +12,11 @@ const BREAKER_COOLDOWN_MS = 30_000;
 export function providerEnv() {
   const baseUrl = process.env[esimergeConfig.baseUrlEnv];
   const token = process.env[esimergeConfig.auth.tokenEnv];
-  const webhookSecret = process.env[esimergeConfig.webhook.secretEnv];
-  return { baseUrl, token, webhookSecret };
+  const webhookSecretSandbox = process.env[esimergeConfig.webhook.secretEnv];
+  const webhookSecretLive = process.env[esimergeConfig.webhook.secretEnvLive];
+  // The secret that matters is the one for the mode of the current API key.
+  const webhookSecret = token?.startsWith("esm_sk_test_") ? webhookSecretSandbox : webhookSecretLive;
+  return { baseUrl, token, webhookSecret, webhookSecretSandbox, webhookSecretLive };
 }
 
 function authHeaders(token: string): Record<string, string> {
