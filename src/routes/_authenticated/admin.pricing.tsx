@@ -32,7 +32,10 @@ function Pricing() {
   const { data } = useSuspenseQuery(pricingQuery());
   const qc = useQueryClient();
   const save = useServerFn(savePricingRule);
+  const update = useServerFn(updatePricingRule);
   const del = useServerFn(deletePricingRule);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editValue, setEditValue] = useState({ value: "0", rounding: "49_99", priority: "0" });
   const saveMargin = useServerFn(saveMarginSettings);
   const fxq = useQuery(fxAdminQuery());
   const refresh = () => qc.invalidateQueries(); // prices feed admin tables and public pages
