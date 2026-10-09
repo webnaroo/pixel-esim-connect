@@ -10,6 +10,7 @@ import { Button, Input } from "@/components/ui-kit";
 import { formatPrice } from "@/lib/format";
 import { AdminError } from "./admin";
 import { privateHead } from "@/lib/seo";
+import { RefundRequests } from "@/components/admin-refund-requests";
 
 export const Route = createFileRoute("/_authenticated/admin/orders")({
   head: () => privateHead("Bestellungen verwalten", "Geschützte Bestell- und Erstattungsverwaltung von GlobeSIM."),
@@ -64,6 +65,7 @@ function AdminOrders() {
 
   return (
     <div className="space-y-6">
+      <RefundRequests />
       <WebhookEvents />
       {failed.length > 0 && (
         <div role="alert" className="rounded-lg border border-line border-l-4 border-l-warning bg-surface p-4 text-sm">

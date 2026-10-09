@@ -5,6 +5,7 @@ import { template as orderProblem } from './order-problem'
 import { template as usageAlert } from './usage-alert'
 import { template as refundNotice } from './refund-notice'
 import { template as adminTest } from './admin-test'
+import { template as adminRefundRequest } from './admin-refund-request'
 
 export interface TemplateEntry {
   component: ComponentType<any>
@@ -23,4 +24,5 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'usage-alert': usageAlert,
   'refund-notice': refundNotice,
   'admin-test': adminTest,
+  'admin-refund-request': adminRefundRequest,
 }

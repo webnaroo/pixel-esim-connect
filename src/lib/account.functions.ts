@@ -112,5 +112,24 @@ export const requestMyRefund = createServerFn({ method: "POST" })
     const { error } = await db.from("support_tickets").insert({ user_id: context.userId, email: p?.email ?? o.guest_email, subject, order_id: o.id, message: data.reason || "Kunde beantragt eine Erstattung über „Mein Konto“." });
     if (error) return { ok: false as const, error: "Antrag konnte nicht gesendet werden." };
     await db.from("audit_log").insert({ actor_id: context.userId, action: "customer_refund_requested", entity: "order", entity_id: o.id });
+    // Notify every admin by mail (best effort; the request is already saved and shown in the admin).
+    try {
+      const { loadEmailSettings } = await import("./email.server");
+      const { canSendCustomerEmail } = await import("./email-rules");
+      const st = await loadEmailSettings();
+      if (canSendCustomerEmail(st)) {
+        const { data: roles } = await db.from("user_roles").select("user_id").eq("role", "admin");
+        const { data: admins } = await db.from("profiles").select("email").in("id", (roles ?? []).map((r) => r.user_id));
+        const { sendTemplateEmail } = await import("./email-templates/send-email");
+        const { SITE_URL } = await import("./seo");
+        for (const a of admins ?? []) {
+          if (!a.email) continue;
+          await sendTemplateEmail("admin-refund-request", a.email, {
+            templateData: { orderId: o.id.slice(0, 8), customer: p?.email ?? o.guest_email, reason: data.reason || undefined, url: `${SITE_URL}/admin` },
+            fromLocal: st.from_local, replyTo: st.reply_to, idempotencyKey: `admin-refund-request-${o.id}-${a.email}`,
+          }).catch(() => undefined);
+        }
+      }
+    } catch { console.error("admin_refund_mail_failed", o.id); }
     return { ok: true as const, already: false };
   });
