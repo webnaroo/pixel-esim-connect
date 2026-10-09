@@ -76,7 +76,8 @@ export async function runCatalogSync(trigger: "cron" | "manual"): Promise<SyncSu
 
     // Special codes (territories like GB-SCT, alt product lines like CNA) get their own
     // destination on first sight: territories visible, alt lines hidden until the admin enables them.
-    const createdDests = new Map<string, { id: string; slug: string }>();
+    type DestRow = NonNullable<(typeof dests)[number]>;
+    const createdDests = new Map<string, DestRow>();
     const ensureSpecialDest = async (code: string, kind: "territory" | "alt", name: string | undefined) => {
       const key = code.toUpperCase();
       const cached = createdDests.get(key) ?? byIso.get(key);
