@@ -127,6 +127,22 @@ function OrderPage() {
                   ))}
                 </ol>
 
+                <div className="mt-8 rounded-lg border border-line bg-surface p-5">
+                  <p className="font-display text-base font-semibold tracking-[-0.02em] text-ink">Gut zu wissen</p>
+                  <ul className="mt-3 space-y-3">
+                    {[
+                      "Der QR-Code funktioniert nur einmal – installiere die eSIM am besten noch zu Hause im WLAN.",
+                      "Am Ziel angekommen schaltest du das Datenroaming für die neue eSIM ein.",
+                      "Die Installationsdaten findest du jederzeit über deinen Bestelllink – mit Konto auch unter „Mein Konto“.",
+                    ].map((n) => (
+                      <li key={n} className="flex gap-3 text-sm text-ink-muted">
+                        <CheckCircle size={16} weight="regular" className="mt-0.5 shrink-0 text-primary" aria-hidden />
+                        <span>{n}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
                 {!user && (
                   <div className="mt-8 rounded-lg border border-line bg-surface p-5">
                     <p className="text-sm font-medium text-ink">Link für später sichern</p>
