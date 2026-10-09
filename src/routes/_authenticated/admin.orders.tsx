@@ -33,12 +33,20 @@ function AdminOrders() {
   const pendingMail = all.filter((o) => o.email_status === "pending_domain").length;
   const failed = orders.filter((o) => ["fulfillment_failed", "payment_mismatch", "needs_review"].includes(o.status));
 
-  const doRefund = async (id: string) => {
-    if (!confirm("Diese Bestellung wirklich erstatten?")) return;
+  const doRefund = async (id: string, delivered: boolean) => {
+    if (!confirm(delivered ? "Die eSIM wurde schon ausgeliefert. Trotzdem komplett erstatten? Die Installationsdaten sind danach für den Kunden gesperrt." : "Diese Bestellung wirklich erstatten?")) return;
     setBusy(id); setMsg(null);
     try { await refund({ data: { orderId: id } }); await qc.invalidateQueries({ queryKey: ["admin", "orders"] }); }
     catch (e) { setMsg(e instanceof Error ? e.message : "Erstattung fehlgeschlagen."); }
     finally { setBusy(null); }
+  };
+
+  const requestProviderRefund = async (o: { id: string; provider_order_id: string | null; created_at: string }) => {
+    const text = `Erstattungsanfrage GlobeSIM\neSIMerge-Bestellnummer: ${o.provider_order_id}\nUnsere Bestellnummer: ${o.id}\nDatum: ${new Date(o.created_at).toLocaleString("de-DE")}`;
+    try { await navigator.clipboard.writeText(text); } catch { /* ignore */ }
+    window.open("https://portal.esimerge.com", "_blank", "noopener,noreferrer");
+    setMsg(null);
+    alert("Bestelldaten kopiert. Im eSIMerge-Portal beim Support einfügen und Erstattung beantragen.");
   };
 
   return (
@@ -85,9 +93,15 @@ function AdminOrders() {
                   </td>
                   <td className="p-3">{o.fulfillment_attempts}</td>
                   <td className="p-3 text-right">
-                    {["fulfillment_failed", "payment_mismatch", "needs_review", "paid", "fulfilling"].includes(o.status) && (
-                      <Button variant="secondary" className="h-10!" loading={busy === o.id} onClick={() => doRefund(o.id)}>Erstatten</Button>
-                    )}
+                    <div className="flex justify-end gap-2">
+                      <Button variant="secondary" className="h-10!" loading={busy === o.id}
+                        disabled={!["fulfillment_failed", "payment_mismatch", "needs_review", "paid", "fulfilling", "fulfilled"].includes(o.status)}
+                        title={o.status === "refunded" ? "Bereits erstattet" : o.status === "pending" || o.status === "expired" ? "Nicht bezahlt" : undefined}
+                        onClick={() => doRefund(o.id, o.status === "fulfilled")}>Erstatten</Button>
+                      <Button variant="secondary" className="h-10!" disabled={!o.provider_order_id}
+                        title={o.provider_order_id ? "Öffnet das eSIMerge-Portal, Bestelldaten werden kopiert" : "Keine eSIMerge-Bestellung vorhanden"}
+                        onClick={() => requestProviderRefund(o)}>Bei eSIMerge beantragen</Button>
+                    </div>
                   </td>
                 </tr>
               ))}
