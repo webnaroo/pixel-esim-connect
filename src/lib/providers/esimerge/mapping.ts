@@ -92,6 +92,8 @@ export function mapCatalogItem(raw: unknown): CatalogItemResult {
       providerPlanId: p.id,
       type,
       coverage,
+      ...(destinationKind && destinationKind !== "standard" ? { destinationKind } : {}),
+      ...(p.destination_name ?? p.country_name ? { destinationName: (p.destination_name ?? p.country_name)! } : {}),
       dataMb: type === "unlimited" ? null : p.data_mb,
       validityDays: p.validity_days,
       ...(p.networks?.length ? { networks: p.networks } : {}),
