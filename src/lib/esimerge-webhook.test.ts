@@ -1,3 +1,6 @@
+import { mapOrder, buildCreateOrderBody } from "./providers/esimerge/mapping";
+import { buildCustomerReference, costDeviation, errorCodeLabel } from "./esimerge-order";
+import { webhookReasonLabel } from "./webhook-labels";
 import { describe, expect, it, vi } from "vitest";
 import { hmacSha256Hex } from "./public-route-guard.server";
 import { handleEvent, parseEvent, receiveEvent, sanitizePayload, verifyEsimergeSignature, type EventStore, type ApiOrder, type LocalOrder, type WebhookDeps } from "./esimerge-webhook";
@@ -46,11 +49,12 @@ describe("processing", () => {
     expect(d.markIssued).not.toHaveBeenCalled();
     expect(d.setEsim).not.toHaveBeenCalled();
   });
-  it("order.failed -> fulfillment_failed with code", async () => {
-    const d = deps(order(), { status: "pending", failed: true });
-    const e = parseEvent(JSON.parse(body), null)!;
-    expect((await handleEvent(d, e, "sandbox")).status).toBe("processed");
-    expect(d.markFailed).toHaveBeenCalledWith("o1", "insufficient_balance", "zu wenig Guthaben");
+  it("order.failed -> fulfillment_failed with code from API (not payload)", async () => {
+    const d = deps(order(), { status: "pending", orderStatus: "failed", errorCode: "insufficient_balance" });
+    const o = await handleEvent(d, ev("order.failed", { order_id: "esm_o1", code: "from_payload" }), "sandbox");
+    expect(o.status).toBe("processed");
+    expect(d.markFailed).toHaveBeenCalledWith("o1", "insufficient_balance");
+    expect(errorCodeLabel("insufficient_balance")).toBe("Guthaben bei eSIMerge aufladen");
   });
   it("order.failed on delivered order is ignored", async () => {
     const d = deps(order({ status: "fulfilled" }), { status: "pending", failed: true });
@@ -113,5 +117,50 @@ describe("test deliveries", () => {
     const { webhookDeliveryVerified } = await import("./webhook-labels");
     expect(webhookDeliveryVerified([{ signature_valid: false, status: "ignored" }])).toBe(false);
     expect(webhookDeliveryVerified([{ signature_valid: true, status: "failed" }])).toBe(false);
+  });
+});
+
+describe("eSIMerge Bestell-Abruf", () => {
+  const base = { id: "esm_o1", object: "order", amount_usd: 4.5, esim: { id: "esm_e1", status: "pending", qr_code: "LPA:1$smdp.x$CODE", smdp_address: "smdp.x", activation_code: "CODE", iccid: "8900" } };
+  it.each([["pending", "pending"], ["issued", "issued"], ["active", "active"], ["expired", "expired"], ["cancelled", "cancelled"], ["failed", "failed"], ["weird", "unknown"]])("Status %s -> %s", (raw, want) => {
+    expect(mapOrder({ ...base, status: raw }).orderStatus).toBe(want);
+  });
+  it("failed liefert error.code, aber nie error.message", () => {
+    const r = mapOrder({ ...base, status: "failed", esim: null, error: { code: "insufficient_balance", message: "Reseller XY balance 0.12" } });
+    expect(r.errorCode).toBe("insufficient_balance");
+    expect(JSON.stringify(r)).not.toContain("Reseller XY");
+  });
+  it("order.failed ohne Bestätigung ändert nichts", async () => {
+    const d = deps(order(), { status: "pending", orderStatus: "pending" });
+    const o = await handleEvent(d, ev("order.failed"), "sandbox");
+    expect(o).toMatchObject({ status: "ignored", error: "not_confirmed_by_api" });
+    expect(webhookReasonLabel(o.error)).toBe("Status nicht bestätigt");
+    expect(d.markFailed).not.toHaveBeenCalled();
+  });
+  it("API cancelled -> storniert, Erstatten prüfen", async () => {
+    const d = deps(order(), { status: "pending", orderStatus: "cancelled" });
+    expect((await handleEvent(d, ev("esim.activated"), "sandbox")).status).toBe("processed");
+    expect(d.markCancelled).toHaveBeenCalledWith("o1");
+  });
+  it("esim.activated übernimmt activated_at aus der API", async () => {
+    const d = deps(order(), { status: "ready", orderStatus: "active", activatedAt: "2026-10-09T10:00:00Z" });
+    await handleEvent(d, ev("esim.activated"), "sandbox");
+    expect(d.setEsim).toHaveBeenCalledWith("o1", { status: "active", activated_at: "2026-10-09T10:00:00Z" });
+  });
+  it("customer_reference enthält keine personenbezogenen Daten", () => {
+    const ref = buildCustomerReference("6f1c2b9e-1111-4222-8333-944445555666");
+    expect(ref).toBe("6f1c2b9e-1111-4222-8333-944445555666");
+    expect(buildCustomerReference("max@example.com Max Muster")).not.toMatch(/@|\s/);
+    expect(buildCustomerReference("x".repeat(200))).toHaveLength(120);
+    expect(buildCreateOrderBody({ providerPlanId: "p1", customerReference: "abc" })).toEqual({ plan_id: "p1", customer_reference: "abc" });
+  });
+  it("Preisabweichung erzeugt Warnung", () => {
+    expect(costDeviation(5.1, 4.5)).toBe("Einkaufspreis weicht vom Katalog ab: 5,10 statt 4,50 USD");
+    expect(costDeviation(4.5, 4.5)).toBeNull();
+  });
+  it("LPA, Aktivierungscode und qr_code nie in der Webhook-Tabelle", () => {
+    const s = JSON.stringify(sanitizePayload({ id: "e", type: "order.issued", data: { ...base, lpa: "LPA:1$smdp.x$CODE", qr_code: "LPA:1$smdp.x$CODE", activation_code: "CODE" } }));
+    expect(s).not.toContain("CODE");
+    expect(s).not.toContain("LPA:1$");
   });
 });
