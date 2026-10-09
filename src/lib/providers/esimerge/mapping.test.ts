@@ -81,10 +81,10 @@ describe("secrets", () => {
 });
 
 describe("live catalog: supports_topup null", () => {
-  it("maps the plan and leaves top-up unknown", () => {
+  it("maps the plan as not top-upable", () => {
     const base = byId("esm_plan_sa_5gb_30d") as Record<string, unknown>;
     const r = mapCatalogItem({ ...base, supports_topup: null });
     expect(r.ok).toBe(true);
-    expect(r.ok && "topUpable" in r.plan).toBe(false);
+    expect(r.ok && r.plan).toMatchObject({ topUpable: false });
   });
 });

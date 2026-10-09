@@ -88,7 +88,8 @@ export function mapCatalogItem(raw: unknown): CatalogItemResult {
       ...(p.fair_usage ? { fairUse: { note: p.fair_usage } } : {}),
       costPrice: p.price_usd,
       costCurrency: COST_CURRENCY,
-      ...(p.supports_topup != null ? { topUpable: p.supports_topup } : {}),
+      // Owner rule: GlobeSIM sells one-time eSIMs only; missing top-up info means no top-up.
+      ...(p.supports_topup !== undefined ? { topUpable: p.supports_topup ?? false } : {}),
       raw: maskSensitive(raw),
     },
   };
