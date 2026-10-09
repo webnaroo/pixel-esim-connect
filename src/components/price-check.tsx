@@ -22,6 +22,7 @@ export function PriceCheck() {
   if (!q.data) return <p className="text-sm text-danger">Prüfliste konnte nicht geladen werden.</p>;
   const d = q.data as unknown as ReturnType<typeof buildPriceCheck> & { fees: FeeSettings; lastSync: string | null };
   const byId = new Map(d.rows.map((r) => [r.id, r]));
+  const stale = d.rows.filter((r) => r.storedGross != null && r.gross != null && r.storedGross !== r.gross).length;
   const label = (id: string) => { const r = byId.get(id); return r ? `${r.destinationName ?? "?"} · ${r.type === "unlimited" ? "Unlimited" : `${Math.round((r.dataMb ?? 0) / 102.4) / 10} GB`} · ${r.validityDays} T · ${r.providerPlanId}` : id; };
   const items: { key: string; title: string; ids: string[]; extra?: (id: string) => string; action?: React.ReactNode }[] = [
     { key: "noCost", title: "Tarife ohne Einkaufspreis", ids: d.lists.noCost },
@@ -49,6 +50,7 @@ export function PriceCheck() {
       {confirmation.dialog}
       <h2 className="text-xl">Prüfliste Preise</h2>
       <p className="mt-1 text-sm text-ink-muted">Stand letzter Sync: {d.lastSync ? new Date(d.lastSync).toLocaleString("de-DE") : "noch keiner"}. Nur Anzeige – Kundenpreise ändern sich dadurch nicht.</p>
+      {stale > 0 && <p className="mt-2 text-sm font-medium text-danger">Live-Preise sind veraltet: {stale} Tarife weichen von der aktuellen Berechnung ab. Neuberechnung erst nach deiner Bestätigung.</p>}
       <ul className="mt-3 divide-y divide-line">
         {items.map((it) => (
           <li key={it.key} className="py-3">
@@ -72,7 +74,7 @@ export function PriceCheck() {
         <Button variant="secondary" onClick={exportCsv}>Als CSV exportieren</Button>
       </div>
       <div className="mt-2 overflow-x-auto">
-        <table className="w-full text-left text-sm tabular">
+        <table className="w-full min-w-[1600px] text-left text-sm tabular">
           <thead className="text-ink-muted"><tr>{["Land", "Tarif", "Einkauf USD", "Kurs inkl. Puffer", "Einkauf EUR", "Netto", "Brutto inkl. 19 %", "Marge €", "Marge %", "Stripe-Gebühr", "Rest", "Aufschlag", "Preisquelle", "Zuletzt berechnet", "Preis überschreiben"].map((h) => <th key={h} className="py-2 pr-3 font-medium">{h}</th>)}</tr></thead>
           <tbody className="divide-y divide-line">
             {sampleRows.map(({ s, r }, i) => (
