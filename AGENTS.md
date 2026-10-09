@@ -36,3 +36,4 @@
 - Ratgeber posts (blog_posts) are public only with status=published (RLS + server fns); src/lib/ratgeber.ts publishBlockers() checks completeness+score only; AI omits unsure claims, no markers (owner decision). All active destinations count as available; prices only via {{LIVE_PREISE:ISO}}.
 - eSIM install UI lives only in src/components/esim-install-panel.tsx (device rules in src/lib/install-device.ts), used by account and /install — both stay identical.
 - SEO: shared helpers, leaf-only canonicals; sitemap uses public origin, paginated reads, 503 on errors; tests and admin audits share one sitemap validator; SEO AI runs only via an admin-verified route with history.
+- Meta Pixel loads only via src/lib/meta-pixel.ts after marketing consent (consent-banner.tsx); Purchase only for server-confirmed paid, non-test orders, once per order id — no tracking without consent, no fake or duplicate purchases.
