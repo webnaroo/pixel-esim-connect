@@ -67,9 +67,13 @@ export const listAdminOrders = createServerFn({ method: "GET" })
     const { supabaseAdmin: db } = await import("@/integrations/supabase/client.server");
     const { data } = await db
       .from("orders")
-      .select("id,status,guest_email,amount,currency,fulfillment_attempts,last_error,is_test,is_sandbox,created_at,plan_snapshot,email_status,dispute_status,discount_code,discount_amount,provider_order_id")
+      .select("id,status,guest_email,amount,currency,fulfillment_attempts,last_error,is_test,is_sandbox,created_at,plan_snapshot,email_status,dispute_status,discount_code,discount_amount")
       .order("created_at", { ascending: false })
       .limit(500);
+    const ids = (data ?? []).map((o) => o.id);
+    const { data: es } = ids.length ? await db.from("esims").select("order_id,provider_order_id").in("order_id", ids) : { data: [] };
+    const prov = new Map((es ?? []).map((e) => [e.order_id, e.provider_order_id]));
+    const withProv = (data ?? []).map((o) => ({ ...o, provider_order_id: prov.get(o.id) ?? null }));
     return data ?? [];
   });
 
