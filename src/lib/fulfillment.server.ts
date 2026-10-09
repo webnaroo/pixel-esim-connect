@@ -62,6 +62,18 @@ export const dbFulfillmentStore: FulfillmentStore = {
     await db.from("orders").update({ status: "needs_review", next_attempt_at: null, last_error: error }).eq("id", orderId);
     await audit("fulfillment_needs_review", orderId, { reason: "provider_outcome_unknown" });
   },
+  async providerError(orderId, providerPlanId, info, rule) {
+    const db = await admin();
+    const meta = { code: info.code, http_status: info.httpStatus, field: info.field, request_id: info.requestId, message: rule.label };
+    await audit("provider_error", orderId, meta);
+    if (rule.pause) await pauseSales(rule.pause, { code: info.code, request_id: info.requestId });
+    if (rule.planUnavailable) {
+      await db.from("plans").update({ is_active: false }).eq("provider", "esimerge").eq("provider_plan_id", providerPlanId);
+      await audit("plan_unavailable", orderId, { provider_plan_id: providerPlanId, request_id: info.requestId });
+      const { runCatalogSync } = await import("./catalog-sync.server");
+      void runCatalogSync("manual").catch(() => {});
+    }
+  },
   async markFailed(orderId, error) {
     const db = await admin();
     await db.from("orders").update({ status: "fulfillment_failed", last_error: error }).eq("id", orderId);
@@ -70,6 +82,16 @@ export const dbFulfillmentStore: FulfillmentStore = {
     await sendOrderEmail(orderId, "failure");
   },
 };
+
+/** Sales pause (insufficient funds / invalid key): customers only see "Gerade nicht verfügbar". */
+export async function pauseSales(reason: "insufficient_funds" | "auth", meta: Record<string, unknown>) {
+  const db = await admin();
+  const { data } = await db.from("app_settings").select("value").eq("key", "sales_pause").maybeSingle();
+  const cur = (data?.value ?? {}) as { active?: boolean; reason?: string };
+  const now = new Date().toISOString();
+  await db.from("app_settings").upsert([{ key: "sales_paused", value: true, updated_at: now }, { key: "sales_pause", value: { active: true, reason, since: cur.active ? (cur as { since?: string }).since ?? now : now, ...meta } as never, updated_at: now }]);
+  if (!cur.active || cur.reason !== reason) await db.from("audit_log").insert({ action: "sales_paused", entity: "app_settings", entity_id: "sales_pause", meta: { reason, ...meta } as never });
+}
 
 export const dbWebhookStore: WebhookEventStore = {
   async record(source, eventId) {

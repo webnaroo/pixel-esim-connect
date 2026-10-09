@@ -1,4 +1,5 @@
 import { buildCustomerReference } from "./esimerge-order";
+import { errorRule, errorSummary, type EsmErrorInfo, type EsmErrorRule } from "./esimerge-errors";
 // Pure fulfillment core. I/O is injected so the "never deliver twice" rules are testable.
 import { ProviderRequestError, type EsimDetails, type ProviderOrderResult } from "./providers/types";
 
@@ -21,6 +22,8 @@ export interface FulfillmentStore {
   markFailed(orderId: string, error: string): Promise<void>;
   /** Outcome of the provider call is unknown (timeout/network): stop, no automatic retry, admin must check. */
   markNeedsReview(orderId: string, error: string): Promise<void>;
+  /** Side effects for a coded eSIMerge error (admin alert, sales pause, plan removal). */
+  providerError?(orderId: string, providerPlanId: string, info: EsmErrorInfo, rule: EsmErrorRule): Promise<void>;
 }
 
 /**
@@ -60,6 +63,22 @@ export async function fulfillOrder(deps: FulfillDeps, orderId: string): Promise<
     return "fulfilled";
   } catch (e) {
     const err = safeError(e);
+    if (e instanceof ProviderRequestError && e.info) {
+      // Coded eSIMerge answer: fixed handling per error code (owner docs), no guessing.
+      const rule = errorRule(e.info.code, e.info.httpStatus);
+      const summary = errorSummary(e.info);
+      await deps.store.providerError?.(orderId, claimed.providerPlanId, e.info, rule);
+      if (rule.order === "in_progress") {
+        // request_in_flight / rate_limited: same idempotency key later, never marked failed.
+        const now = (deps.now ?? (() => new Date()))();
+        if (claimed.attempts >= MAX_FULFILLMENT_ATTEMPTS) { await deps.store.markNeedsReview(orderId, summary); return "needs_review"; }
+        await deps.store.scheduleRetry(orderId, new Date(now.getTime() + 5 * 60_000), summary);
+        return "retry_scheduled";
+      }
+      if (rule.order === "failed") { await deps.store.markFailed(orderId, summary); return "failed"; }
+      await deps.store.markNeedsReview(orderId, summary);
+      return "needs_review";
+    }
     if (!isClearRejection(e)) {
       await deps.store.markNeedsReview(orderId, err);
       return "needs_review";
