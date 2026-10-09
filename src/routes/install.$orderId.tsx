@@ -27,18 +27,27 @@ function Qr({ value }: { value: string }) {
 }
 
 function Copy({ label, value }: { label: string; value: string }) {
-  const [done, setDone] = useState(false);
+  const [state, setState] = useState<"idle" | "done" | "manual">("idle");
+  const copy = async () => {
+    let ok = false;
+    try { await navigator.clipboard.writeText(value); ok = true; } catch {
+      // Fallback for browsers that block the clipboard API.
+      const ta = document.createElement("textarea");
+      ta.value = value; ta.setAttribute("readonly", ""); ta.style.position = "fixed"; ta.style.opacity = "0";
+      document.body.appendChild(ta); ta.select();
+      try { ok = document.execCommand("copy"); } catch { ok = false; }
+      ta.remove();
+    }
+    setState(ok ? "done" : "manual");
+    if (ok) setTimeout(() => setState("idle"), 1500);
+  };
   return (
     <div className="rounded-lg border border-line bg-surface p-4">
       <div className="text-sm text-ink-muted">{label}</div>
       <div className="mt-1 flex items-center justify-between gap-3">
-        <code className="min-w-0 break-all text-sm text-ink">{value}</code>
-        <button
-          type="button"
-          onClick={() => navigator.clipboard.writeText(value).then(() => { setDone(true); setTimeout(() => setDone(false), 1500); })}
-          className="shrink-0 text-sm font-medium text-primary"
-        >
-          {done ? "Kopiert" : "Kopieren"}
+        <code className="min-w-0 select-all break-all text-sm text-ink">{value}</code>
+        <button type="button" onClick={copy} className="min-h-11 shrink-0 px-2 text-sm font-medium text-primary">
+          {state === "done" ? "Kopiert" : "Kopieren"}
         </button>
       </div>
     </div>
