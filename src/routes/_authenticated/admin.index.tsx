@@ -4,7 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 import { toast } from "sonner";
 import { CheckCircle, XCircle, Warning } from "@phosphor-icons/react";
-import { adminOverviewQuery, runSyncNow, setShopEnabled, setSyncEnabled } from "@/lib/admin.functions";
+import { adminOverviewQuery, releaseSalesPause, runSyncNow, setShopEnabled, setSyncEnabled } from "@/lib/admin.functions";
 import { Button } from "@/components/ui-kit";
 import { Chip } from "@/components/brand";
 import { AdminError } from "./admin";
@@ -40,12 +40,23 @@ function Overview() {
   const toggleShop = useServerFn(setShopEnabled);
   const toggleSync = useServerFn(setSyncEnabled);
   const sync = useServerFn(runSyncNow);
+  const release = useServerFn(releaseSalesPause);
   const [busy, setBusy] = useState<string | null>(null);
   const refresh = () => qc.invalidateQueries({ queryKey: ["admin", "overview"] });
   const c = data.checklist;
   const latestAbort = data.runs.find((r) => r.status === "aborted_threshold");
   const latest = data.runs[0];
 
+  async function onRelease() {
+    const p = data.salesPause;
+    const q = p?.reason === "auth" ? "Ist der eSIMerge-Schlüssel ersetzt bzw. freigeschaltet?" : "Ist das Guthaben bei eSIMerge aufgeladen?";
+    if (!window.confirm(`${q}\nDer Verkauf wird dann wieder freigegeben (wird im Audit-Log festgehalten).`)) return;
+    setBusy("release");
+    await release({ data: { confirmed: true } });
+    setBusy(null);
+    toast.success("Verkauf wieder freigegeben.");
+    refresh();
+  }
   async function onShop() {
     setBusy("shop");
     const r = await toggleShop({ data: { enabled: !data.shopEnabled } });
@@ -97,11 +108,25 @@ function Overview() {
         </div>
       )}
 
+      {data.salesPause && (
+        <section role="alert" className="rounded-lg border-2 border-danger bg-surface p-5">
+          <h2 className="text-lg font-semibold text-danger">Verkauf pausiert</h2>
+          <p className="mt-1 text-sm text-ink">
+            {data.salesPause.reason === "auth" ? "eSIMerge-Zugang ungültig oder ohne Berechtigung. Bitte Schlüssel prüfen." : "Guthaben bei eSIMerge zu niedrig. Bitte bei eSIMerge aufladen; nicht lieferbare Bestellungen nach 24 h erstatten."}
+            {" "}Kunden sehen nur „Gerade nicht verfügbar".
+          </p>
+          <p className="mt-1 font-mono text-xs text-ink-muted">
+            {data.salesPause.code ? `Code ${data.salesPause.code}` : ""}{data.salesPause.requestId ? ` · request_id ${data.salesPause.requestId}` : ""}{data.salesPause.since ? ` · seit ${new Date(data.salesPause.since).toLocaleString("de-DE")}` : ""}
+          </p>
+          <Button className="mt-3" onClick={onRelease} disabled={busy === "release"}>Verkauf wieder freigeben</Button>
+        </section>
+      )}
       <section className="rounded-lg border border-line bg-surface p-6">
         <h2 className="text-xl">Shop-Checkliste</h2>
         <ul className="mt-2 divide-y divide-line">
           <Row ok={c.providerReachable} label="Provider erreichbar" detail={c.providerMessage} />
           <Row ok={!c.providerSandbox} label="eSIMerge-Zugang" detail={data.provider.apiKeySet ? (c.providerSandbox ? "Sandbox (keine echten eSIMs)" : "Live") : "nicht gesetzt"} />
+          <Row ok={c.providerAuthOk !== false} label="eSIMerge-Zugang gültig" detail={c.providerAuthOk === false ? "Schlüssel ungültig/gesperrt – Verkauf pausiert" : "OK"} />
           <Row ok={c.catalogCount > 0} label="Katalog größer 0" detail={`${c.catalogCount} aktive Tarife`} />
           <Row ok={c.stripeConfigured} label="Stripe konfiguriert" detail={c.stripeConfigured ? "Schlüssel gesetzt" : "Stripe-Schlüssel nicht gesetzt"} />
           <Row ok={!!c.emailVerified} label="E-Mail-Absender-Domain" detail={c.emailVerified ? "Verifiziert" : "Nicht verifiziert: keine Mails an Kunden"} />
