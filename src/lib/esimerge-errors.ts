@@ -31,7 +31,7 @@ const RULES: Record<string, EsmErrorRule> = {
   validation_error: { label: "Programmfehler: Anfrage ungültig", retryDelays: [], order: "failed" },
   idempotency_key_required: TECH,
   idempotency_conflict: TECH,
-  request_in_flight: { label: "Anfrage läuft noch bei eSIMerge", retryDelays: [2000, 4000, 8000], order: "in_progress" },
+  request_in_flight: { label: "Anfrage läuft noch bei eSIMerge", retryDelays: [2000, 4000, 8000, 16000], order: "in_progress" },
   missing_api_key: { label: "eSIMerge-Zugang ungültig", retryDelays: [], order: "needs_review", pause: "auth" },
   invalid_api_key: { label: "eSIMerge-Zugang ungültig", retryDelays: [], order: "needs_review", pause: "auth" },
   revoked_api_key: { label: "eSIMerge-Zugang ungültig", retryDelays: [], order: "needs_review", pause: "auth" },

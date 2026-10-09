@@ -75,7 +75,7 @@ describe("Zuordnung je Code", () => {
   it("Wiederholung nur bei 429/500/502/503/504", () => {
     for (const s of [429, 500, 502, 503, 504]) expect(retryDelays(null, s)).toEqual([1000, 2000, 4000, 8000]);
     for (const s of [400, 401, 402, 403, 404, 405, 409, 422]) expect(retryDelays(null, s)).toEqual([]);
-    expect(retryDelays("request_in_flight", 409)).toEqual([2000, 4000, 8000]);
+    expect(retryDelays("request_in_flight", 409)).toEqual([2000, 4000, 8000, 16000]);
   });
   it("Zusammenfassung enthält Code, Feld, request_id, nie die Meldung", () => {
     const s = errorSummary(parseEsmError(422, JSON.parse(errBody("validation_error", { field: "plan_id" }))));

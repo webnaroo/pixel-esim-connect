@@ -11,17 +11,15 @@ export function backoffSeconds(attempt: number): number {
   return 60 * 5 ** Math.max(0, attempt - 1);
 }
 
-/** Attempt cap while eSIMerge reports "still in progress": 1 + 8×30 s (≈5 min) + 11×2 min ≈ 27 min, then admin review. */
-export const MAX_IN_PROGRESS_ATTEMPTS = 20;
-
 /**
- * Fallback poll while eSIMerge is still working (owner rule): first check 60 s after the
- * first attempt, then every 30 s until 5 minutes have passed, then every 2 minutes.
+ * While eSIMerge reports "still in progress" (owner rule): retry with the same key every 30 s
+ * for 15 minutes (30 attempts), then every 2 minutes until ~60 minutes, then admin review.
+ * Never marked failed and never refunded on this path.
  */
+export const MAX_IN_PROGRESS_ATTEMPTS = 53;
+
 export function inProgressDelaySeconds(attempt: number): number {
-  if (attempt <= 1) return 60;
-  if (attempt <= 9) return 30; // 60 s + 8 × 30 s = 5 min
-  return 120;
+  return attempt < 30 ? 30 : 120;
 }
 
 export type ClaimedOrder = { id: string; attempts: number; idempotencyKey: string; providerPlanId: string; email: string };
