@@ -25,9 +25,11 @@ function AdminOrders() {
   const [busy, setBusy] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("");
+  // Sandbox orders are hidden by default (kept, never deleted).
+  const [showSandbox, setShowSandbox] = useState(false);
   if (q.error) throw q.error;
   const all = q.data ?? [];
-  const orders = all.filter((o) => (!status || o.status === status) && (!search || `${o.id} ${o.guest_email}`.toLowerCase().includes(search.toLowerCase())));
+  const orders = all.filter((o) => (showSandbox || !o.is_sandbox) && (!status || o.status === status) && (!search || `${o.id} ${o.guest_email}`.toLowerCase().includes(search.toLowerCase())));
   const pendingMail = all.filter((o) => o.email_status === "pending_domain").length;
   const failed = orders.filter((o) => ["fulfillment_failed", "payment_mismatch", "needs_review"].includes(o.status));
 
@@ -58,6 +60,7 @@ function AdminOrders() {
           <option value="">Alle Status</option>
           {["pending", "paid", "fulfilling", "fulfilled", "needs_review", "fulfillment_failed", "payment_mismatch", "refunded", "cancelled"].map((s) => <option key={s} value={s}>{s}</option>)}
         </select>
+        <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={showSandbox} onChange={(e) => setShowSandbox(e.target.checked)} /> Sandbox-Bestellungen anzeigen ({all.filter((o) => o.is_sandbox).length})</label>
       </div>
       {msg && <ErrorBox message={msg} />}
       {q.isLoading ? <p className="text-ink-muted">Wird geladen …</p> : orders.length === 0 ? (
@@ -102,7 +105,7 @@ function WebhookEvents() {
   const q = useQuery(webhookEventsQuery());
   const [type, setType] = useState("");
   const [st, setSt] = useState("");
-  const [mode, setMode] = useState("");
+  const [mode, setMode] = useState("live"); // sandbox events hidden by default
   const all = q.data?.events ?? [];
   const failed = all.filter((e) => e.status === "failed" || e.event_type === "order.failed" || e.event_type === "order.topup.failed");
   const rows = all.filter((e) => (!type || e.event_type === type) && (!st || e.status === st) && (!mode || e.mode === mode));

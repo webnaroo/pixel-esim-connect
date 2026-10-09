@@ -20,7 +20,7 @@ function Logs() {
         cols={[{ key: "created_at", label: "Zeit" }, { key: "endpoint", label: "Endpunkt" }, { key: "status", label: "Status" }, { key: "latency_ms", label: "ms" }, { key: "error", label: "Fehler" }]} />}
       {k === "sync_runs" && <AdminList key={k} kind="sync_runs" searchLabel="Suchen" filters={[{ value: "ok", label: "OK" }, { value: "aborted", label: "Abgebrochen" }, { value: "error", label: "Fehler" }]}
         cols={[{ key: "started_at", label: "Start" }, { key: "status", label: "Status" }, { key: "plans_added", label: "Neu" }, { key: "plans_updated", label: "Aktualisiert" }, { key: "plans_deactivated", label: "Deaktiviert" }, { key: "error", label: "Fehler" }]} />}
-      {k === "webhooks" && <AdminList key={k} kind="webhooks" searchLabel="Event-ID suchen" filters={[{ value: "stripe", label: "Stripe" }, { value: "provider", label: "eSIMerge" }]}
+      {k === "webhooks" && <AdminList key={k} kind="webhooks" searchLabel="Event-ID suchen" filters={[{ value: "stripe", label: "Stripe" }, { value: "provider", label: "eSIMerge" }, { value: "sandbox", label: "Nur Sandbox/Test" }]}
         cols={[{ key: "created_at", label: "Empfangen" }, { key: "source", label: "Quelle" }, { key: "event_type", label: "Typ" }, { key: "event_id", label: "Event-ID" }, { key: "mode", label: "Modus" }, { key: "status", label: "Status" }, { key: "reason", label: "Grund" }, { key: "processed_at", label: "Verarbeitet" }]} />}
     </div>
   );

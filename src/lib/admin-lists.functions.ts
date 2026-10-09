@@ -90,14 +90,16 @@ export const adminList = createServerFn({ method: "GET" })
       case "webhooks": {
         // Stripe dedup rows live in webhook_events, eSIMerge deliveries in provider_webhook_events.
         const { webhookReasonLabel, WEBHOOK_STATUS_LABEL } = await import("./webhook-labels");
+        // Sandbox/test events are hidden unless the "sandbox" filter is chosen (never deleted).
+        const sandbox = filter === "sandbox";
         const wantStripe = filter !== "provider", wantProvider = filter !== "stripe";
         const n = to + 1; // enough rows from each source to fill this page after merging
         const [st, pr] = await Promise.all([
-          wantStripe ? (() => { let s = db.from("webhook_events").select("id,source,event_id,processed_at,created_at", { count: "exact" }).eq("source", "stripe").order("created_at", { ascending: false }).range(0, n - 1); if (q) s = s.ilike("event_id", like(q)); return s; })() : null,
-          wantProvider ? (() => { let s = db.from("provider_webhook_events").select("id,event_id,event_type,status,error,mode,signature_valid,processed_at,received_at", { count: "exact" }).order("received_at", { ascending: false }).range(0, n - 1); if (q) s = s.ilike("event_id", like(q)); return s; })() : null,
+          wantStripe ? (() => { let s = db.from("webhook_events").select("id,source,event_id,processed_at,created_at", { count: "exact" }).eq("source", "stripe").order("created_at", { ascending: false }).range(0, n - 1); s = sandbox ? s.like("event_id", "sandbox:%") : s.not("event_id", "like", "sandbox:%"); if (q) s = s.ilike("event_id", like(q)); return s; })() : null,
+          wantProvider ? (() => { let s = db.from("provider_webhook_events").select("id,event_id,event_type,status,error,mode,signature_valid,processed_at,received_at", { count: "exact" }).order("received_at", { ascending: false }).range(0, n - 1); s = s.eq("mode", sandbox ? "sandbox" : "live"); if (q) s = s.ilike("event_id", like(q)); return s; })() : null,
         ]);
         const merged: Row[] = [
-          ...(st?.data ?? []).map((r) => ({ id: r.id, created_at: r.created_at, source: "Stripe", event_id: r.event_id, event_type: "", status: r.processed_at ? "Verarbeitet" : "Wartet", reason: "", mode: "", processed_at: r.processed_at })),
+          ...(st?.data ?? []).map((r) => ({ id: r.id, created_at: r.created_at, source: "Stripe", event_id: r.event_id, event_type: "", status: r.processed_at ? "Verarbeitet" : "Wartet", reason: "", mode: r.event_id.startsWith("live:") ? "Live" : "Test", processed_at: r.processed_at })),
           ...(pr?.data ?? []).map((r) => ({ id: r.id, created_at: r.received_at, source: "eSIMerge", event_id: r.event_id, event_type: r.event_type, status: WEBHOOK_STATUS_LABEL[r.status] ?? r.status, reason: webhookReasonLabel(r.error), mode: r.mode === "live" ? "Live" : "Sandbox", processed_at: r.processed_at })),
         ].sort((a, b) => String(b.created_at).localeCompare(String(a.created_at)));
         rows = merged.slice(from, to + 1);

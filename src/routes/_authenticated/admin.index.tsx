@@ -60,6 +60,7 @@ function Overview() {
   }
   async function onShop() {
     setBusy("shop");
+    // Switching on happens only in the go-live assistant with explicit confirmation.
     const r = await toggleShop({ data: { enabled: !data.shopEnabled } });
     setBusy(null);
     if (!r.ok) toast.error(`Shop kann nicht aktiviert werden. Offen: ${r.missing.join(", ")}`);
