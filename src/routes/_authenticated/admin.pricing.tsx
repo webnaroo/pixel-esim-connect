@@ -41,7 +41,8 @@ function Pricing() {
 
   async function addRule(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    const f = new FormData(e.currentTarget);
+    const form = e.currentTarget;
+    const f = new FormData(form);
     try {
       await confirmation.request({ kind: "create", rule: {
         id: crypto.randomUUID(), scope: scope as "global",
@@ -49,7 +50,7 @@ function Pricing() {
         type: String(f.get("type")) as "percent", value: Number(f.get("value")),
         rounding: String(f.get("rounding")) as "49_99", priority: Number(f.get("priority") || 0),
       } });
-      e.currentTarget?.reset();
+      form.reset();
       refresh();
     } catch {
       toast.error("Bitte Eingaben prüfen (Bezug, Wert).");
@@ -72,6 +73,7 @@ function Pricing() {
       {confirmation.dialog}
       <div className="lg:col-span-2 flex flex-wrap items-center justify-between gap-3"><div><strong className="text-primary">{data.mode}</strong><p className="text-sm text-ink-muted">Vorschau und Website verwenden gemeinsame Preisregeln.</p><p className={data.lastCalculation ? "text-sm text-ink-muted" : "text-sm text-danger"}>{data.lastCalculation ? `Zuletzt berechnet: ${new Date(data.lastCalculation.created_at).toLocaleString("de-DE")}` : "Vollständiger Berechnungsstand noch nicht protokolliert."}</p></div><Button variant="secondary" loading={confirmation.busy} onClick={() => confirmation.request({ kind: "recalculate" })}>Preise jetzt neu berechnen und veröffentlichen</Button></div>
       <div className="lg:col-span-2"><PriceCheck /></div>
+      <section className="lg:col-span-2"><h2 className="text-xl">Preisänderungsprotokoll</h2><ul className="mt-3 divide-y divide-line text-sm">{data.history.length ? data.history.map((h) => <li className="py-2" key={h.created_at}>{new Date(h.created_at).toLocaleString("de-DE")} · {String((h.meta as { changed?: number } | null)?.changed ?? 0)} Preise geändert · Admin {h.actor_id?.slice(0, 8) ?? "Automatisch"}</li>) : <li className="text-ink-muted">Noch keine vollständige Neuberechnung protokolliert.</li>}</ul></section>
       <section className="rounded-lg border border-line bg-surface p-6 lg:col-span-2">
         <h2 className="text-xl">Margenregeln</h2>
         <p className="mt-1 text-sm text-ink-muted">Reihenfolge: Tarif vor Land vor Tariftyp vor global. Innerhalb einer Ebene gewinnt die höchste Priorität.</p>
