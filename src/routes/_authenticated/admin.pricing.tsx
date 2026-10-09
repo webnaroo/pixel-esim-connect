@@ -11,6 +11,7 @@ import { computeMargin, computePrice, type PricingRule } from "@/lib/pricing";
 import { Button, Input } from "@/components/ui-kit";
 import { AdminError } from "./admin";
 import { privateHead } from "@/lib/seo";
+import { usePriceConfirmation } from "@/components/price-change-dialog";
 import { PriceCheck } from "@/components/price-check";
 
 export const Route = createFileRoute("/_authenticated/admin/pricing")({
@@ -31,6 +32,7 @@ const sel = "h-12 w-full rounded-md border border-line-strong bg-surface px-3 te
 function Pricing() {
   const { data } = useSuspenseQuery(pricingQuery());
   const qc = useQueryClient();
+  const confirmation = usePriceConfirmation();
   const save = useServerFn(savePricingRule);
   const update = useServerFn(updatePricingRule);
   const del = useServerFn(deletePricingRule);
@@ -46,15 +48,12 @@ function Pricing() {
     e.preventDefault();
     const f = new FormData(e.currentTarget);
     try {
-      await save({ data: {
-        scope: scope as "global",
+      await confirmation.request({ kind: "create", rule: {
+        id: crypto.randomUUID(), scope: scope as "global",
         scope_ref: scope === "global" ? null : String(f.get("scope_ref") ?? ""),
-        type: String(f.get("type")) as "percent",
-        value: Number(f.get("value")),
-        rounding: String(f.get("rounding")) as "49_99",
-        priority: Number(f.get("priority") || 0),
+        type: String(f.get("type")) as "percent", value: Number(f.get("value")),
+        rounding: String(f.get("rounding")) as "49_99", priority: Number(f.get("priority") || 0),
       } });
-      toast.success("Regel gespeichert.");
       e.currentTarget?.reset();
       refresh();
     } catch {
@@ -65,7 +64,7 @@ function Pricing() {
   const latestFx = (from: string) => fxq.data?.current.find((x) => x.currency === from)?.effective?.usedRate ?? null;
   const preview = computePrice(
     { providerPlanId: test.planId, destinationSlug: test.slug, planType: test.type, costPrice: Number(test.cost.replace(",", ".")), costCurrency: test.currency.toUpperCase() },
-    data.rules as PricingRule[], (from) => latestFx(from), data.vatRate,
+    data.rules as PricingRule[], (from) => latestFx(from), data.vatRate, "EUR", { fees: data.fees, minNet: data.minNet },
   );
   const testCur = test.currency.toUpperCase();
   const testRate = testCur === "EUR" ? 1 : latestFx(testCur);
@@ -75,6 +74,8 @@ function Pricing() {
 
   return (
     <div className="grid gap-8 lg:grid-cols-2 [&>*]:min-w-0">
+      {confirmation.dialog}
+      <div className="lg:col-span-2 flex flex-wrap items-center justify-between gap-3"><div><strong className="text-primary">{data.mode}</strong><p className="text-sm text-ink-muted">Vorschau und Website verwenden gemeinsame Preisregeln.</p><p className={data.lastCalculation ? "text-sm text-ink-muted" : "text-sm text-danger"}>{data.lastCalculation ? `Zuletzt berechnet: ${new Date(data.lastCalculation.created_at).toLocaleString("de-DE")}` : "Vollständiger Berechnungsstand noch nicht protokolliert."}</p></div><Button variant="secondary" loading={confirmation.busy} onClick={() => confirmation.request({ kind: "recalculate" })}>Preise jetzt neu berechnen und veröffentlichen</Button></div>
       <div className="lg:col-span-2"><PriceCheck /></div>
       <section className="rounded-lg border border-line bg-surface p-6 lg:col-span-2">
         <h2 className="text-xl">Margenregeln</h2>
@@ -89,8 +90,8 @@ function Pricing() {
                   <form className="flex flex-wrap items-center gap-2" onSubmit={async (e) => {
                     e.preventDefault();
                     try {
-                      await update({ data: { id: r.id, scope: r.scope as "global", scope_ref: r.scope_ref, type: r.type as "percent", value: num(editValue.value), rounding: editValue.rounding as "49_99", priority: Number(editValue.priority) || 0 } });
-                      toast.success("Regel gespeichert. Preise werden neu berechnet.");
+                      await confirmation.request({ kind: "update", id: r.id, rule: { id: r.id, scope: r.scope as "global", scope_ref: r.scope_ref, type: r.type as "percent", value: num(editValue.value), rounding: editValue.rounding as "49_99", priority: Number(editValue.priority) || 0 } });
+                      
                       setEditingId(null);
                       refresh();
                     } catch {
@@ -118,7 +119,7 @@ function Pricing() {
                         setEditingId(r.id);
                         setEditValue({ value: String(r.value), rounding: r.rounding === "none" ? "none" : "49_99", priority: String(r.priority) });
                       }}>Bearbeiten</button>
-                      <button className="text-sm font-medium text-danger" onClick={async () => { await del({ data: { id: r.id } }); refresh(); }}>Löschen</button>
+                      <button className="text-sm font-medium text-danger" onClick={async () => { await confirmation.request({ kind: "delete", id: r.id }); }}>Löschen</button>
                     </span>
                   </span>
                 )}
@@ -183,7 +184,8 @@ function Pricing() {
         }}>
           <label className="text-sm">Gebühr in %<Input name="percent" inputMode="decimal" defaultValue={String(data.fees.percent).replace(".", ",")} /></label>
           <label className="text-sm">Fixbetrag in €<Input name="fixed" inputMode="decimal" defaultValue={String(data.fees.fixed).replace(".", ",")} /></label>
-          <Button type="submit" className="col-span-2 justify-self-start">Speichern</Button>
+          <label className="text-sm col-span-2">Mindestgewinn nach Gebühren (€)<Input name="minNet" inputMode="decimal" defaultValue={String(data.minNet).replace(".", ",")} /></label>
+           <Button type="submit" className="col-span-2 justify-self-start">Vorschau prüfen</Button>
         </form>
       </section>
     </div>

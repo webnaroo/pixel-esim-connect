@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { priceCheckQuery, releasePlans } from "@/lib/golive.functions";
 import { toCsv, type buildPriceCheck } from "@/lib/golive-rules";
 import type { FeeSettings } from "@/lib/pricing";
+import { usePriceConfirmation } from "./price-change-dialog";
 import { Button } from "@/components/ui-kit";
 
 const eur = (v: number | null) => (v == null ? "–" : `${v.toFixed(2).replace(".", ",")} €`);
@@ -12,6 +13,7 @@ const usd = (v: number | null) => (v == null ? "–" : `${v.toFixed(2).replace("
 const COUNTRY: Record<string, string> = { TR: "Türkei", EG: "Ägypten", US: "USA", AE: "VAE", SA: "Saudi-Arabien" };
 
 export function PriceCheck() {
+  const confirmation = usePriceConfirmation();
   const q = useQuery(priceCheckQuery());
   const qc = useQueryClient();
   const release = useServerFn(releasePlans);
@@ -44,6 +46,7 @@ export function PriceCheck() {
 
   return (
     <section className="rounded-lg border border-line bg-surface p-6">
+      {confirmation.dialog}
       <h2 className="text-xl">Prüfliste Preise</h2>
       <p className="mt-1 text-sm text-ink-muted">Stand letzter Sync: {d.lastSync ? new Date(d.lastSync).toLocaleString("de-DE") : "noch keiner"}. Nur Anzeige – Kundenpreise ändern sich dadurch nicht.</p>
       <ul className="mt-3 divide-y divide-line">
@@ -70,7 +73,7 @@ export function PriceCheck() {
       </div>
       <div className="mt-2 overflow-x-auto">
         <table className="w-full text-left text-sm tabular">
-          <thead className="text-ink-muted"><tr>{["Land", "Tarif", "Einkauf USD", "Kurs inkl. Puffer", "Einkauf EUR", "Netto", "Brutto inkl. 19 %", "Marge €", "Marge %", "Stripe-Gebühr", "Rest"].map((h) => <th key={h} className="py-2 pr-3 font-medium">{h}</th>)}</tr></thead>
+          <thead className="text-ink-muted"><tr>{["Land", "Tarif", "Einkauf USD", "Kurs inkl. Puffer", "Einkauf EUR", "Netto", "Brutto inkl. 19 %", "Marge €", "Marge %", "Stripe-Gebühr", "Rest", "Aufschlag", "Preisquelle", "Zuletzt berechnet", "Preis überschreiben"].map((h) => <th key={h} className="py-2 pr-3 font-medium">{h}</th>)}</tr></thead>
           <tbody className="divide-y divide-line">
             {sampleRows.map(({ s, r }, i) => (
               <tr key={i}>
@@ -85,6 +88,10 @@ export function PriceCheck() {
                 <td className="pr-3">{r?.marginPercent != null ? `${String(r.marginPercent).replace(".", ",")} %` : "–"}</td>
                 <td className="pr-3">{eur(r?.fee ?? null)}</td>
                 <td className="pr-3 font-medium">{eur(r?.rest ?? null)}</td>
+                 <td className="pr-3">{r?.priceInputs && typeof r.priceInputs === "object" ? String((r.priceInputs as { markup?: number }).markup ?? "–") : "–"}</td>
+                 <td className="pr-3">{r?.manualPrice != null ? "Preis überschrieben" : r?.priceSource ?? "Noch nicht erfasst"}</td>
+                 <td className="pr-3 whitespace-nowrap">{r?.calculatedAt ? new Date(r.calculatedAt).toLocaleString("de-DE") : "–"}</td>
+                 <td className="pr-3">{r && <Button variant="secondary" loading={confirmation.busy} onClick={() => { const v = window.prompt("Manueller Bruttopreis in EUR (leer = Überschreibung entfernen)", r.manualPrice == null ? "" : String(r.manualPrice)); if (v === null) return; const price = v.trim() ? Number(v.replace(",", ".")) : null; if (price !== null && (!Number.isFinite(price) || price <= 0)) return toast.error("Bitte einen gültigen Preis eingeben."); void confirmation.request({ kind: "override", id: r.id, override: price }); }}>Bearbeiten</Button>}</td>
               </tr>
             ))}
           </tbody>
