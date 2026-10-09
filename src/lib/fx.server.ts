@@ -5,7 +5,7 @@ import { computePrice, type PricingRule } from "./pricing";
 type PlanRow = {
   id: string;
   provider_plan_id: string;
-  type: string;
+  type: "data" | "unlimited";
   cost_price: number | string;
   cost_currency: string;
   sell_price: number | string;
