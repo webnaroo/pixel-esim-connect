@@ -91,28 +91,47 @@ export async function repricePlans(actorId: string | null = null) {
   const vat = typeof vatRow?.value === "number" ? vatRow.value : 0.19;
   const current = latest?.last_synced_at ?? null; // only plans from the last sync may be (re)activated
   let changed = 0, activated = 0, hidden = 0;
+  // Batch writes by identical outcome: 13k plans must not become 13k sequential updates.
+  const priceBatches = new Map<string, { gross: number; activate: boolean; ids: string[] }>();
+  const activateBatches = new Map<string, string[]>();
+  const hideIds: string[] = [];
   for (const p of plans ?? []) {
     if (!p.destination) continue;
     const price = computePrice({ providerPlanId: p.provider_plan_id, destinationSlug: (p.destination as { slug: string }).slug, planType: p.type, costPrice: Number(p.cost_price), costCurrency: p.cost_currency }, (rules ?? []) as PricingRule[], fx.lookup, vat);
     const old = Number(p.sell_price);
     if (!price.ok) {
-      if (p.is_active) {
-        await db.from("plans").update({ is_active: false }).eq("id", p.id);
-        await db.from("audit_log").insert({ actor_id: actorId, action: "plan_hidden_no_price", entity: "plans", entity_id: p.id, meta: { reason: price.reason } as never });
-        hidden++;
-      }
+      if (p.is_active) hideIds.push(p.id);
       continue;
     }
     if (shouldReprice(old, price.gross)) {
       const activate = p.last_synced_at === current; // plans missing from the latest sync keep their visibility
-      await db.from("plans").update({ sell_price: price.gross, ...(activate ? { is_active: true } : {}) }).eq("id", p.id);
-      await db.from("audit_log").insert({ actor_id: actorId, action: "price_changed", entity: "plans", entity_id: p.id, meta: { old, new: price.gross } as never });
+      const key = `${price.gross}|${activate}`;
+      const batch = priceBatches.get(key) ?? { gross: price.gross, activate, ids: [] };
+      batch.ids.push(p.id);
+      priceBatches.set(key, batch);
       changed++;
       if (activate && !p.is_active) activated++;
     } else if (!p.is_active && old > 0 && p.last_synced_at === current) {
-      await db.from("plans").update({ is_active: true }).eq("id", p.id);
+      const key = price.gross.toString();
+      (activateBatches.get(key) ?? activateBatches.set(key, []).get(key)!).push(p.id);
       activated++;
     }
+  }
+  for (const { gross, activate, ids } of priceBatches.values()) {
+    for (let i = 0; i < ids.length; i += 500) {
+      const slice = ids.slice(i, i + 500);
+      const { error } = await db.from("plans").update({ sell_price: gross, ...(activate ? { is_active: true } : {}) }).in("id", slice);
+      if (error) throw new Error("Preise konnten nicht gespeichert werden.");
+    }
+    await db.from("audit_log").insert({ actor_id: actorId, action: "price_changed", entity: "plans", entity_id: null, meta: { new: gross, activate, count: ids.length, plan_ids: ids.slice(0, 50) } as never });
+  }
+  for (const ids of activateBatches.values()) {
+    for (let i = 0; i < ids.length; i += 500) await db.from("plans").update({ is_active: true }).in("id", ids.slice(i, i + 500));
+  }
+  if (hideIds.length) {
+    for (let i = 0; i < hideIds.length; i += 500) await db.from("plans").update({ is_active: false }).in("id", hideIds.slice(i, i + 500));
+    await db.from("audit_log").insert({ actor_id: actorId, action: "plan_hidden_no_price", entity: "plans", entity_id: null, meta: { reason: "reprice", count: hideIds.length } as never });
+    hidden = hideIds.length;
   }
   return { changed, activated, hidden };
 }
