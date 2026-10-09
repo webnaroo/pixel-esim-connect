@@ -38,7 +38,7 @@ function AdminOrders() {
   const doRefund = async (id: string, delivered: boolean) => {
     if (!confirm(delivered ? "Die eSIM wurde schon ausgeliefert. Trotzdem komplett erstatten? Die Installationsdaten sind danach für den Kunden gesperrt." : "Diese Bestellung wirklich erstatten?")) return;
     setBusy(id); setMsg(null);
-    try { await refund({ data: { orderId: id } }); await qc.invalidateQueries({ queryKey: ["admin", "orders"] }); }
+    try { await refund({ data: { orderId: id } }); await qc.invalidateQueries({ queryKey: ["admin"] }); }
     catch (e) { setMsg(e instanceof Error ? e.message : "Erstattung fehlgeschlagen."); }
     finally { setBusy(null); }
   };

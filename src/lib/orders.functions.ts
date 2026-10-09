@@ -92,6 +92,8 @@ async function refundOrderNow(orderId: string, actorId: string) {
   const r = await refundPayment(o.stripe_env === "live" ? "live" : "sandbox", o.stripe_payment_intent_id, refundIdempotencyKey(orderId));
   await db.from("orders").update({ status: "refunded", refunded_at: new Date().toISOString(), refund_id: r.refundId, refund_started_at: new Date().toISOString() }).eq("id", orderId);
   await db.from("audit_log").insert({ actor_id: actorId, action: "order_refunded", entity: "order", entity_id: orderId, meta: { refund_id: r.refundId } });
+  // Any open customer refund request for this order is settled by the refund itself.
+  await db.from("support_tickets").update({ status: "closed" }).eq("order_id", orderId).like("subject", "Erstattung beantragt:%").neq("status", "closed");
 }
 
 export const refundOrder = createServerFn({ method: "POST" })
@@ -113,7 +115,10 @@ export const listRefundRequests = createServerFn({ method: "GET" })
     const ids = (t ?? []).map((x) => x.order_id).filter(Boolean) as string[];
     const { data: os } = ids.length ? await db.from("orders").select("id,status,amount,currency,plan_snapshot").in("id", ids) : { data: [] };
     const m = new Map((os ?? []).map((o) => [o.id, o]));
-    return (t ?? []).map((x) => {
+    // Requests whose order was already refunded/cancelled elsewhere are done: close them and hide.
+    const done = (t ?? []).filter((x) => x.order_id && ["refunded", "cancelled"].includes(m.get(x.order_id)?.status ?? "")).map((x) => x.id);
+    if (done.length) await db.from("support_tickets").update({ status: "closed" }).in("id", done);
+    return (t ?? []).filter((x) => !done.includes(x.id)).map((x) => {
       const o = x.order_id ? m.get(x.order_id) : undefined;
       const s = (o?.plan_snapshot ?? {}) as { destination?: string; data_mb?: number | null; validity_days?: number };
       return { ...x, order_status: o?.status ?? null, amount: o ? Number(o.amount) : null, currency: o?.currency ?? "EUR", plan: [s.destination, s.data_mb ? `${+(s.data_mb / 1024).toFixed(2)} GB` : null, s.validity_days ? `${s.validity_days} Tage` : null].filter(Boolean).join(" · ") };
