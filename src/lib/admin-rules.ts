@@ -13,11 +13,12 @@ export function evaluateSyncThreshold(previousActive: number, fetched: number): 
   return { abort: false };
 }
 
-export type ShopChecklist = { providerReachable: boolean; providerSandbox: boolean; catalogCount: number; stripeConfigured: boolean; emailVerified?: boolean; legalPublished?: boolean; fxValid?: boolean; webhookReady?: boolean };
+export type ShopChecklist = { providerReachable: boolean; providerSandbox: boolean; catalogCount: number; stripeConfigured: boolean; emailVerified?: boolean; legalPublished?: boolean; fxValid?: boolean; webhookReady?: boolean; providerAuthOk?: boolean };
 
 export function shopChecklistMissing(c: ShopChecklist): string[] {
   const missing: string[] = [];
   if (!c.providerReachable) missing.push("Provider erreichbar");
+  if (c.providerAuthOk === false) missing.push("eSIMerge-Zugang gültig");
   // A sandbox key never delivers real eSIMs: the shop can never go live with it.
   if (c.providerSandbox) missing.push("eSIMerge Live-Zugang (aktuell Sandbox)");
   if (!(c.catalogCount > 0)) missing.push("Katalog größer 0");

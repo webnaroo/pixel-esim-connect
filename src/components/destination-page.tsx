@@ -36,6 +36,7 @@ export function DestinationPage({ slug }: { slug: string }) {
   );
   const selectedPlan = d.plans.find((p) => p.id === selected) ?? null;
   const canBuy = shop?.state === "live" && !d.fixturePlans;
+  const paused = shop?.state === "paused";
   const isCountry = d.type === "country";
   const fromPrice = hasPlans ? Math.min(...d.plans.map((p) => p.price)) : null;
   const allDays = [...new Set((tab === "data" ? dataPlans : unlimitedPlans).map((p) => p.validityDays))].sort((a, b) => a - b);
@@ -112,7 +113,7 @@ export function DestinationPage({ slug }: { slug: string }) {
                 ))}
               </div>
               {plans.length === 0 && <p className="mt-6 text-sm text-ink-muted">Keine Tarife für diese Filter.</p>}
-              {selectedPlan && <div className="mt-6 hidden lg:block"><BuyBar plan={selectedPlan} canBuy={canBuy} inline /></div>}
+              {selectedPlan && <div className="mt-6 hidden lg:block"><BuyBar plan={selectedPlan} canBuy={canBuy} paused={paused} inline /></div>}
             </div>
           </div>
         )}
@@ -176,7 +177,7 @@ export function DestinationPage({ slug }: { slug: string }) {
 
       {selectedPlan && (
         <div className="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-surface lg:hidden">
-          <div className="container-page py-3"><BuyBar plan={selectedPlan} canBuy={canBuy} /></div>
+          <div className="container-page py-3"><BuyBar plan={selectedPlan} canBuy={canBuy} paused={paused} /></div>
         </div>
       )}
     </div>
@@ -202,7 +203,7 @@ function Info({ k, v }: { k: string; v: string }) {
   );
 }
 
-function BuyBar({ plan, canBuy, inline }: { plan: PlanItem; canBuy: boolean; inline?: boolean }) {
+function BuyBar({ plan, canBuy, paused, inline }: { plan: PlanItem; canBuy: boolean; paused?: boolean; inline?: boolean }) {
   return (
     <div className={inline ? "flex items-center justify-between gap-4 rounded-lg border border-line bg-surface p-4" : "flex items-center justify-between gap-4"}>
       <div>
@@ -210,8 +211,8 @@ function BuyBar({ plan, canBuy, inline }: { plan: PlanItem; canBuy: boolean; inl
         <div className="tabular text-lg font-semibold">{formatPrice(plan.price, plan.currency)}</div>
       </div>
       <div className="text-right">
-        {canBuy ? <LinkButton to="/checkout/$planId" params={{ planId: plan.id }}>Weiter</LinkButton> : <Button disabled>Bald verfügbar</Button>}
-        <p className="mt-1 text-xs text-ink-muted">{canBuy ? "Sofort per E-Mail · Sichere Zahlung" : "Der Kauf wird gerade vorbereitet."}</p>
+        {canBuy ? <LinkButton to="/checkout/$planId" params={{ planId: plan.id }}>Weiter</LinkButton> : <Button disabled>{paused ? "Gerade nicht verfügbar" : "Bald verfügbar"}</Button>}
+        <p className="mt-1 text-xs text-ink-muted">{canBuy ? "Sofort per E-Mail · Sichere Zahlung" : paused ? "Vorübergehend nicht verfügbar." : "Der Kauf wird gerade vorbereitet."}</p>
       </div>
     </div>
   );

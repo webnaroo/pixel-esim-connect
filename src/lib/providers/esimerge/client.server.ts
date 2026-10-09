@@ -2,7 +2,7 @@
 // a simple circuit breaker and request logging. No provider details here.
 
 import { esimergeConfig, type EndpointDef } from "./config";
-import { parseEsmError, errorSummary, retryDelays, ESM_CALLS_PER_MINUTE } from "../../esimerge-errors";
+import { parseEsmError, errorSummary, errorRule, retryDelays, ESM_CALLS_PER_MINUTE } from "../../esimerge-errors";
 import { ProviderNotConfiguredError, ProviderRequestError, ProviderUnavailableError } from "../types";
 
 const breaker = { failures: 0, openUntil: 0 };
@@ -105,6 +105,10 @@ export async function providerRequest(name: string, def: EndpointDef | null, opt
     if (attempt < delays.length) { lastErr = err; await sleepFn(delays[attempt]!); continue; }
     if (res.status >= 500) { breaker.failures++; if (breaker.failures >= BREAKER_THRESHOLD) breaker.openUntil = Date.now() + BREAKER_COOLDOWN_MS; }
     else breaker.failures = 0;
+    const rule = errorRule(info.code, res.status);
+    if (rule.pause && throttleEnabled) {
+      try { const { pauseSales } = await import("../../fulfillment.server"); await pauseSales(rule.pause, { code: info.code, request_id: info.requestId }); } catch { /* never mask the original error */ }
+    }
     throw err;
   }
   breaker.failures++;

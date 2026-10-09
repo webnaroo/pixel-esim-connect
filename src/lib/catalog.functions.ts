@@ -3,7 +3,7 @@ import { queryOptions } from "@tanstack/react-query";
 import { z } from "zod";
 import { publicDb } from "./public-db.server";
 
-export type ShopState = "not_configured" | "catalog_empty" | "ready_disabled" | "live";
+export type ShopState = "not_configured" | "catalog_empty" | "ready_disabled" | "paused" | "live";
 
 export type DestinationListItem = {
   id: string;
@@ -39,12 +39,15 @@ export const getShopState = createServerFn({ method: "GET" }).handler(async (): 
   const status = providerSetupStatus();
   if (!status.configured) return { state: "not_configured" };
   const db = publicDb();
-  const [{ count }, { data: setting }] = await Promise.all([
+  const [{ count }, { data: setting }, { data: paused }] = await Promise.all([
     db.from("public_plans").select("id", { count: "exact", head: true }),
     db.from("app_settings").select("value").eq("key", "shop_enabled").maybeSingle(),
+    db.from("app_settings").select("value").eq("key", "sales_paused").maybeSingle(),
   ]);
   if (!count) return { state: "catalog_empty" };
   if (setting?.value !== true) return { state: "ready_disabled" };
+  // Sales pause (e.g. eSIMerge balance/key): customers never see the reason.
+  if (paused?.value === true) return { state: "paused" };
   return { state: "live" };
 });
 
