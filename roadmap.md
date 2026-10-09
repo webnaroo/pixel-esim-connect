@@ -19,3 +19,6 @@
 - [ ] Real order email sending (blocked: sender-domain DNS verification; order triggers still need wiring)
 
 - [ ] Offen (juristisch): Soll im Widerrufs-/Bestelltext eine Bestätigung der Gerätekompatibilität stehen? Wartet auf Rechtsprüfung.
+- [x] Go-Live: E-Mail-Checkliste/Test/Vorschauen, eSIMerge Sandbox/Live-Trennung, Preis-Prüfliste, Stripe-Live-Sperre, Streitfälle
+- [ ] Anmelde-Mails (Registrierung/Passwort) im GlobeSIM-Design (wartet auf Freigabe durch Umut)
+- [ ] Go-Live-Schritte außerhalb von Lovable (Secrets, eSIMerge-Portal, Stripe-Dashboard) durch Umut
