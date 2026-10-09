@@ -35,7 +35,8 @@ function Discounts() {
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    const f = new FormData(e.currentTarget);
+    const form = e.currentTarget;
+    const f = new FormData(form);
     const validUntilRaw = String(f.get("valid_until") ?? "").trim();
     setBusy(true);
     try {
@@ -47,7 +48,7 @@ function Discounts() {
         validUntil: validUntilRaw ? new Date(validUntilRaw).toISOString() : null,
         note: String(f.get("note") ?? "").trim() || null,
       } });
-      if (r.ok) { toast.success(`Code „${r.code}“ angelegt.`); e.currentTarget.reset(); refresh(); }
+      if (r.ok) { toast.success(`Code „${r.code}“ angelegt.`); form.reset(); setType("percent"); refresh(); }
       else toast.error(r.error);
     } catch {
       toast.error("Bitte Eingaben prüfen.");
