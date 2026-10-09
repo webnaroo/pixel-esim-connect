@@ -3,7 +3,8 @@ import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 import { toast } from "sonner";
 import { priceCheckQuery, releasePlans } from "@/lib/golive.functions";
-import { toCsv } from "@/lib/golive-rules";
+import { toCsv, type buildPriceCheck } from "@/lib/golive-rules";
+import type { FeeSettings } from "@/lib/pricing";
 import { Button } from "@/components/ui-kit";
 
 const eur = (v: number | null) => (v == null ? "–" : `${v.toFixed(2).replace(".", ",")} €`);
@@ -17,7 +18,7 @@ export function PriceCheck() {
   const [open, setOpen] = useState<string | null>(null);
   if (q.isLoading) return <p className="text-sm text-ink-muted">Prüfliste wird geladen …</p>;
   if (!q.data) return <p className="text-sm text-danger">Prüfliste konnte nicht geladen werden.</p>;
-  const d = q.data;
+  const d = q.data as unknown as ReturnType<typeof buildPriceCheck> & { fees: FeeSettings; lastSync: string | null };
   const byId = new Map(d.rows.map((r) => [r.id, r]));
   const label = (id: string) => { const r = byId.get(id); return r ? `${r.destinationName ?? "?"} · ${r.type === "unlimited" ? "Unlimited" : `${Math.round((r.dataMb ?? 0) / 102.4) / 10} GB`} · ${r.validityDays} T · ${r.providerPlanId}` : id; };
   const items: { key: string; title: string; ids: string[]; extra?: (id: string) => string; action?: React.ReactNode }[] = [
