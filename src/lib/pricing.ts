@@ -69,7 +69,7 @@ export function computePrice(input: PriceInput, rules: PricingRule[], fx: FxLook
 // ---------- Margin / net result (admin view) ----------
 export type FeeSettings = { percent: number; fixed: number };
 export const DEFAULT_STRIPE_FEES: FeeSettings = { percent: 2.9, fixed: 0.3 };
-export const DEFAULT_MIN_NET_RESULT = 1.5;
+export const DEFAULT_MIN_NET_RESULT = 0;
 export type Margin = { costEur: number; fee: number; result: number; resultPercent: number; belowMin: boolean };
 
 /** Payment fee on the gross amount; net result = net sell price − EUR cost − fee. Percent is relative to EUR cost. */
