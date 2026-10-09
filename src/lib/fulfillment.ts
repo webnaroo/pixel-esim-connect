@@ -1,3 +1,4 @@
+import { buildCustomerReference } from "./esimerge-order";
 // Pure fulfillment core. I/O is injected so the "never deliver twice" rules are testable.
 import { ProviderRequestError, type EsimDetails, type ProviderOrderResult } from "./providers/types";
 
@@ -14,7 +15,7 @@ export type ClaimedOrder = { id: string; attempts: number; idempotencyKey: strin
 export interface FulfillmentStore {
   /** Atomically claims a paid order, or a 'fulfilling' order whose retry is due. Null when held elsewhere or not due. */
   claim(orderId: string, maxAttempts: number): Promise<ClaimedOrder | null>;
-  markFulfilled(orderId: string, providerOrderId: string, esim: EsimDetails | undefined): Promise<void>;
+  markFulfilled(orderId: string, providerOrderId: string, esim: EsimDetails | undefined, amountUsd?: number): Promise<void>;
   /** Keeps status 'fulfilling' and sets the next attempt time. */
   scheduleRetry(orderId: string, at: Date, error: string): Promise<void>;
   markFailed(orderId: string, error: string): Promise<void>;
@@ -32,7 +33,7 @@ export function isClearRejection(e: unknown): boolean {
 
 export type FulfillDeps = {
   store: FulfillmentStore;
-  createOrder: (input: { providerPlanId: string; customerEmail: string; idempotencyKey: string }) => Promise<ProviderOrderResult>;
+  createOrder: (input: { providerPlanId: string; customerEmail: string; idempotencyKey: string; customerReference?: string }) => Promise<ProviderOrderResult>;
   now?: () => Date;
 };
 
@@ -53,8 +54,9 @@ export async function fulfillOrder(deps: FulfillDeps, orderId: string): Promise<
       customerEmail: claimed.email,
       // Same key on every retry, so the provider never creates a second eSIM.
       idempotencyKey: claimed.idempotencyKey,
+      customerReference: buildCustomerReference(orderId), // our order id only, no personal data
     });
-    await deps.store.markFulfilled(orderId, res.providerOrderId, res.esim);
+    await deps.store.markFulfilled(orderId, res.providerOrderId, res.esim, res.amountUsd);
     return "fulfilled";
   } catch (e) {
     const err = safeError(e);
