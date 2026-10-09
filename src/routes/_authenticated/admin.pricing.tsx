@@ -84,12 +84,44 @@ function Pricing() {
         ) : (
           <ul className="mt-4 divide-y divide-line text-sm">
             {data.rules.map((r) => (
-              <li key={r.id} className="flex flex-wrap items-center justify-between gap-2 py-3">
-                <span>
-                  <strong>{SCOPES.find((s) => s.v === r.scope)?.l ?? r.scope}</strong>
-                  {r.scope_ref ? ` · ${r.scope_ref}` : ""} · {r.type === "percent" ? `+${r.value} %` : `+${eur(r.value)}`} · Rundung {r.rounding === "49_99" ? ",49/,99" : "keine"} · Prio {r.priority}
-                </span>
-                <button className="text-sm font-medium text-danger" onClick={async () => { await del({ data: { id: r.id } }); refresh(); }}>Löschen</button>
+              <li key={r.id} className="py-3">
+                {editingId === r.id ? (
+                  <form className="flex flex-wrap items-center gap-2" onSubmit={async (e) => {
+                    e.preventDefault();
+                    try {
+                      await update({ data: { id: r.id, scope: r.scope as "global", scope_ref: r.scope_ref, type: r.type as "percent", value: num(editValue.value), rounding: editValue.rounding as "49_99", priority: Number(editValue.priority) || 0 } });
+                      toast.success("Regel gespeichert. Preise werden neu berechnet.");
+                      setEditingId(null);
+                      refresh();
+                    } catch {
+                      toast.error("Bitte Eingaben prüfen (Wert).");
+                    }
+                  }}>
+                    <span className="font-medium">{SCOPES.find((s) => s.v === r.scope)?.l ?? r.scope}{r.scope_ref ? ` · ${r.scope_ref}` : ""} · {r.type === "percent" ? "+ %" : "+ €"}</span>
+                    <Input className="w-24" value={editValue.value} onChange={(e) => setEditValue({ ...editValue, value: e.target.value })} aria-label="Wert" inputMode="decimal" required />
+                    <select aria-label="Rundung" className={sel + " w-auto"} value={editValue.rounding} onChange={(e) => setEditValue({ ...editValue, rounding: e.target.value })}>
+                      <option value="49_99">Auf ,49/,99</option>
+                      <option value="none">Keine</option>
+                    </select>
+                    <Input className="w-20" value={editValue.priority} onChange={(e) => setEditValue({ ...editValue, priority: e.target.value })} aria-label="Priorität" inputMode="numeric" />
+                    <Button type="submit">Speichern</Button>
+                    <button type="button" className="text-sm font-medium text-ink-muted" onClick={() => setEditingId(null)}>Abbrechen</button>
+                  </form>
+                ) : (
+                  <span className="flex flex-wrap items-center justify-between gap-2">
+                    <span>
+                      <strong>{SCOPES.find((s) => s.v === r.scope)?.l ?? r.scope}</strong>
+                      {r.scope_ref ? ` · ${r.scope_ref}` : ""} · {r.type === "percent" ? `+${r.value} %` : `+${eur(r.value)}`} · Rundung {r.rounding === "49_99" ? ",49/,99" : "keine"} · Prio {r.priority}
+                    </span>
+                    <span className="flex gap-3">
+                      <button className="text-sm font-medium" onClick={() => {
+                        setEditingId(r.id);
+                        setEditValue({ value: String(r.value), rounding: r.rounding === "none" ? "none" : "49_99", priority: String(r.priority) });
+                      }}>Bearbeiten</button>
+                      <button className="text-sm font-medium text-danger" onClick={async () => { await del({ data: { id: r.id } }); refresh(); }}>Löschen</button>
+                    </span>
+                  </span>
+                )}
               </li>
             ))}
           </ul>
