@@ -124,9 +124,8 @@ function Pricing() {
               <dt>MwSt. ({Math.round(data.vatRate * 100)} %)</dt><dd className="text-right">{eur(preview.vat)}</dd>
               <dt><strong>Verkauf brutto</strong></dt><dd className="text-right"><strong>{eur(preview.gross)}</strong></dd>
               <dt>Stripe-Gebühr ({data.fees.percent.toLocaleString("de-DE")} % + {eur(data.fees.fixed)})</dt><dd className="text-right">−{eur(margin.fee)}</dd>
-              <dt className={margin.belowMin ? "font-semibold text-danger" : "font-semibold"}>Nettoergebnis</dt>
-              <dd className={`text-right font-semibold ${margin.belowMin ? "text-danger" : ""}`}>{eur(margin.result)} · {margin.resultPercent.toLocaleString("de-DE")} % vom Einkauf</dd>
-              {margin.belowMin && <dd className="col-span-2 text-danger">Unter Mindestwert {eur(data.minNet)}</dd>}
+              <dt className="font-semibold">Nettoergebnis</dt>
+              <dd className="text-right font-semibold">{eur(margin.result)} · {margin.resultPercent.toLocaleString("de-DE")} % vom Einkauf</dd>
             </dl>
           ) : preview.ok ? (
             <>Netto {eur(preview.net)} · MwSt. {eur(preview.vat)} · <strong>Brutto {eur(preview.gross)}</strong></>
@@ -137,19 +136,18 @@ function Pricing() {
       </section>
 
       <section className="rounded-lg border border-line bg-surface p-6">
-        <h2 className="text-xl">Gebühren & Mindestergebnis</h2>
+        <h2 className="text-xl">Gebühren (Stripe)</h2>
         <p className="mt-1 text-sm text-ink-muted">Bitte prüfen: Stripe-Gebühren hängen von Kartenart und Vertrag ab. Standard 2,9 % + 0,30 € ist nur eine Annahme.</p>
         <form className="mt-4 grid grid-cols-2 gap-3" onSubmit={async (e) => {
           e.preventDefault();
           const f = new FormData(e.currentTarget);
           try {
-            await saveMargin({ data: { percent: num(f.get("percent")), fixed: num(f.get("fixed")), minNet: num(f.get("minNet")) } });
+            await saveMargin({ data: { percent: num(f.get("percent")), fixed: num(f.get("fixed")), minNet: 0 } });
             toast.success("Einstellungen gespeichert."); refresh();
           } catch { toast.error("Bitte Werte prüfen."); }
         }}>
           <label className="text-sm">Gebühr in %<Input name="percent" inputMode="decimal" defaultValue={String(data.fees.percent).replace(".", ",")} /></label>
           <label className="text-sm">Fixbetrag in €<Input name="fixed" inputMode="decimal" defaultValue={String(data.fees.fixed).replace(".", ",")} /></label>
-          <label className="col-span-2 text-sm">Mindest-Nettoergebnis in €<Input name="minNet" inputMode="decimal" defaultValue={String(data.minNet).replace(".", ",")} /></label>
           <Button type="submit" className="col-span-2 justify-self-start">Speichern</Button>
         </form>
       </section>
