@@ -2,7 +2,8 @@ import { CompatCheck } from "@/components/compat-check";
 import { UnlimitedLabel, UnlimitedNote } from "@/components/unlimited-claim";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useSuspenseQuery, useQueryClient } from "@tanstack/react-query";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { cartDiscount } from "@/lib/cart";
 import { EmbeddedCheckoutProvider, EmbeddedCheckout } from "@stripe/react-stripe-js";
 import { getStripe, getStripeEnvironment } from "@/lib/stripe";
 import { ShieldCheck, Zap, Mail, Lock } from "lucide-react";
@@ -101,13 +102,14 @@ function CheckoutPage() {
     return { ...discountedTotals(plan.price.gross, amount, plan.price.vatRate), discountAmount: amount };
   }, [plan?.price, discount]);
 
-  const applyCode = async () => {
+  const applyCode = async (raw: string = codeInput) => {
     setCodeMessage(null);
-    if (!codeInput.trim()) return;
+    if (!raw.trim()) return;
     setCodeChecking(true);
     try {
-      const r = await checkCode({ data: { code: codeInput } });
-      if (r.ok) setDiscount({ code: codeInput.trim().toUpperCase(), type: r.type, value: r.value });
+      const r = await checkCode({ data: { code: raw } });
+      if (r.ok) setDiscount({ code: raw.trim().toUpperCase(), type: r.type, value: r.value });
+      else if (raw !== codeInput) cartDiscount.set(null); // stored cart code no longer valid
       else setCodeMessage(
         r.reason === "rate_limited" ? "Zu viele Versuche. Bitte warte eine Minute."
         : r.reason === "invalid_format" ? "So sieht kein Rabattcode aus. Bitte prüfe die Schreibweise."
@@ -120,6 +122,13 @@ function CheckoutPage() {
       setCodeChecking(false);
     }
   };
+
+  // Code entered in the cart: re-checked on the server here, then sent with the order (Stripe gets the reduced amount).
+  useEffect(() => {
+    const stored = cartDiscount.get();
+    if (stored && !discount) { setCodeInput(stored.code); void applyCode(stored.code); }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   if (!plan) {
     return (
@@ -230,7 +239,7 @@ function CheckoutPage() {
                         <span className="text-sm text-ink-muted">
                           {discount.type === "percent" ? `${discount.value.toLocaleString("de-DE")} % Rabatt` : `${formatPrice(discount.value, plan.price?.currency ?? "EUR")} Rabatt`} angerechnet.
                         </span>
-                        <button type="button" onClick={() => { setDiscount(null); setCodeMessage(null); }} className="ml-auto text-sm font-medium text-ink-muted hover:text-danger">
+                        <button type="button" onClick={() => { setDiscount(null); setCodeMessage(null); cartDiscount.set(null); }} className="ml-auto text-sm font-medium text-ink-muted hover:text-danger">
                           Entfernen
                         </button>
                       </div>
@@ -238,7 +247,7 @@ function CheckoutPage() {
                       <div className="mt-2 flex gap-2">
                         <Input value={codeInput} onChange={(e) => setCodeInput(e.target.value.toUpperCase())} maxLength={40} placeholder="z. B. SOMMER10" className="font-mono uppercase" aria-label="Rabattcode eingeben" autoComplete="off"
                           onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); applyCode(); } }} />
-                        <Button type="button" variant="secondary" loading={codeChecking} onClick={applyCode} className="shrink-0">Einlösen</Button>
+                        <Button type="button" variant="secondary" loading={codeChecking} onClick={() => applyCode()} className="shrink-0">Einlösen</Button>
                       </div>
                     )}
                     {codeMessage && !discount && <p className="mt-2 text-sm text-danger">{codeMessage}</p>}
