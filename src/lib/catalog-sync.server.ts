@@ -124,7 +124,7 @@ export async function runCatalogSync(trigger: "cron" | "manual"): Promise<SyncSu
     const uniq = new Map(rows.map((r) => [`${r.provider_plan_id}|${r.destination_id}`, r]));
     const all = [...uniq.values()];
     for (let i = 0; i < all.length; i += 500) {
-      const { data: ups, error } = await db.from("plans").upsert(all.slice(i, i + 500), { onConflict: "provider,provider_plan_id,destination_id" }).select("id,provider_plan_id,destination_id");
+      const { data: ups, error } = await db.from("plans").upsert(all.slice(i, i + 500) as never, { onConflict: "provider,provider_plan_id,destination_id" }).select("id,provider_plan_id,destination_id");
       if (error) throw new Error(`Upsert fehlgeschlagen: ${error.message}`);
       for (const up of ups ?? []) {
         if (known.has(`${up.provider_plan_id}|${up.destination_id}`)) counts.updated++;
