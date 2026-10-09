@@ -34,11 +34,10 @@ describe("price check", () => {
     expect(r.net).toBe(13.5);
     expect(r.fee).toBe(0.77);
     expect(r.rest).toBe(3.73);
-    expect(r.lowRest).toBe(false);
   });
-  it("flags rest under 1.00 €", () => {
+  it("no warning for low rest after fee", () => {
     const r = buildPriceCheck({ ...base, rules: [{ ...rule, value: 5 }], plans: [plan({})] });
-    expect(r.lists.lowRest).toEqual(["p1"]);
+    expect(r.lists).not.toHaveProperty("lowRest");
   });
   it("lists plans without cost, without rule and with paid deviation", () => {
     const r = buildPriceCheck({ ...base, rules: [], lastPaid: { esm1: 10.5 }, plans: [plan({}), plan({ id: "p2", providerPlanId: "esm2", costPrice: null })] });
@@ -63,7 +62,7 @@ import { canSwitchShopOn, evaluateStep, tickStep, SHOP_CONFIRM_PHRASE, type Wiza
 const facts = (o: Partial<WizardFacts> = {}): WizardFacts => ({
   key: { set: true, sandbox: false, pingOk: true, pingMessage: "ok" },
   webhook: { liveSecretSet: true, liveValidEvents: 1, recent401: 0, sandboxEndpointRemovedConfirmed: true },
-  catalog: { lastSyncOk: true, lastSyncAt: null, activePlans: 5, countries: 3, unpriced: 0, noMargin: 0, lowRest: 0 },
+  catalog: { lastSyncOk: true, lastSyncAt: null, activePlans: 5, countries: 3, unpriced: 0, noMargin: 0 },
   stripe: { liveKey: true, liveSecret: true, liveEvents: 1, dashboardConfirmed: true },
   email: { authTemplates: true, testOk: true, replyConfirmed: true },
   purchase: { orderId: "o", paid: true, issuedWebhook: true, installData: true, emailSent: true, costMatches: true, refunded: true },

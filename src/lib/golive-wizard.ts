@@ -4,7 +4,7 @@ export const SHOP_CONFIRM_PHRASE = "Shop jetzt einschalten";
 export type WizardFacts = {
   key: { set: boolean; sandbox: boolean; pingOk: boolean; pingMessage: string };
   webhook: { liveSecretSet: boolean; liveValidEvents: number; recent401: number; sandboxEndpointRemovedConfirmed: boolean };
-  catalog: { lastSyncOk: boolean; lastSyncAt: string | null; activePlans: number; countries: number; unpriced: number; noMargin: number; lowRest: number };
+  catalog: { lastSyncOk: boolean; lastSyncAt: string | null; activePlans: number; countries: number; unpriced: number; noMargin: number };
   stripe: { liveKey: boolean; liveSecret: boolean; liveEvents: number; dashboardConfirmed: boolean };
   email: { authTemplates: boolean; testOk: boolean; replyConfirmed: boolean };
   purchase: { orderId: string | null; paid: boolean; issuedWebhook: boolean; installData: boolean; emailSent: boolean; costMatches: boolean | null; refunded: boolean };
@@ -36,11 +36,11 @@ export function evaluateStep(step: number, f: WizardFacts): StepResult {
       return { ok: true, checked, next: "Live-Katalog synchronisieren." };
     }
     case 3: {
-      const checked = ["letzter Sync erfolgreich", "aktive Tarife", "Tarife ohne Preis", "Tarife ohne Marge", "Rest unter 1,00 € nach Stripe-Gebühr"];
+      const checked = ["letzter Sync erfolgreich", "aktive Tarife", "Tarife ohne Preis", "Tarife ohne Marge"];
       if (f.key.sandbox || !f.key.set) return { ok: false, checked, reason: "Schlüssel ist nicht Live – der Katalog wäre der Sandbox-Katalog.", next: "Schritt 1 abschließen." };
       if (!f.catalog.lastSyncOk) return { ok: false, checked, reason: "Der letzte Sync ist nicht erfolgreich gelaufen.", next: "„Live-Sync starten“ drücken." };
       if (f.catalog.activePlans === 0) return { ok: false, checked, reason: "Keine aktiven Tarife.", next: "Wechselkurs und Margenregeln prüfen, dann neu synchronisieren." };
-      if (f.catalog.noMargin > 0 || f.catalog.lowRest > 0) return { ok: false, checked, reason: `${f.catalog.noMargin} Tarife ohne Marge, ${f.catalog.lowRest} mit Rest unter 1,00 €.`, next: "Vorschlag unten ansehen; Preise änderst nur du unter „Preise“." };
+      if (f.catalog.noMargin > 0) return { ok: false, checked, reason: `${f.catalog.noMargin} Tarife ohne Marge.`, next: "Vorschlag unten ansehen; Preise änderst nur du unter „Preise“." };
       return { ok: true, checked, next: "Sandbox-Daten ausblenden." };
     }
     case 4: {

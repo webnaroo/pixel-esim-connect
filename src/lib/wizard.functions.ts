@@ -43,11 +43,11 @@ async function collectFacts(state: WizardState) {
     a.from("webhook_events").select("id", { count: "exact", head: true }).eq("source", "stripe").like("event_id", "live:%").not("processed_at", "is", null),
   ]);
   // Price summary uses the same rules as the price check.
-  let unpriced = 0, noMargin = 0, lowRest = 0;
+  let unpriced = 0, noMargin = 0;
   try {
     const { getPriceCheckData } = await import("./price-check.server");
     const pc = await getPriceCheckData();
-    unpriced = pc.lists.noCost.length; noMargin = pc.lists.noMargin.length; lowRest = pc.lists.lowRest.length;
+    unpriced = pc.lists.noCost.length; noMargin = pc.lists.noMargin.length;
   } catch { /* summary unavailable */ }
   const { loadEmailSettings } = await import("./email.server");
   const mail = await loadEmailSettings();
@@ -74,7 +74,7 @@ async function collectFacts(state: WizardState) {
   return {
     key: { set: s.apiKeySet, sandbox: s.sandbox, pingOk, pingMessage },
     webhook: { liveSecretSet: s.webhookSecretLiveSet, liveValidEvents: liveValid ?? 0, recent401: r401 ?? 0, sandboxEndpointRemovedConfirmed: Boolean(state.confirmations["sandbox_endpoint_removed"]) },
-    catalog: { lastSyncOk: lastRun?.status === "ok" || lastRun?.status === "ok_with_warnings", lastSyncAt: lastRun?.finished_at ?? null, activePlans: activePlans ?? 0, countries: new Set((dests ?? []).map((d) => d.destination_id)).size, unpriced, noMargin, lowRest },
+    catalog: { lastSyncOk: lastRun?.status === "ok" || lastRun?.status === "ok_with_warnings", lastSyncAt: lastRun?.finished_at ?? null, activePlans: activePlans ?? 0, countries: new Set((dests ?? []).map((d) => d.destination_id)).size, unpriced, noMargin },
     stripe: { liveKey: Boolean(process.env["STRIPE_LIVE_API_KEY"]), liveSecret: Boolean(process.env["PAYMENTS_LIVE_WEBHOOK_SECRET"]), liveEvents: stripeLive ?? 0, dashboardConfirmed: Boolean(state.confirmations["stripe_dashboard"]) },
     email: { authTemplates: true, testOk: mail.test_result?.ok === true, replyConfirmed: Boolean(mail.reply_confirmed_at) },
     purchase,
