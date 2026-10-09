@@ -1,0 +1,1 @@
+- Templates live here; /lovable/* routes self-authenticate and bypass app redirects/CSRF — previews work without a public send endpoint.

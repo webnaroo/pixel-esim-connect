@@ -27,13 +27,11 @@
 - The root loader preloads legalIndexQuery into the shared query cache and the footer consumes it with useSuspenseQuery — published legal links must match during SSR and hydration.
 - FAQ texts may state prices, coverage or throttling only through DB placeholders (src/lib/faq-rules.ts, checked on save; unfillable entries are hidden) — keeps public claims tied to real data.
 - Customer emails go only through src/lib/email.server.ts and only with a verified sender domain (email-rules.ts); otherwise orders get email_status pending_domain — no mail from an unverified domain.
-- Email templates live in src/lib/email-templates; /lovable/* routes self-authenticate and bypass app redirects/CSRF — previews work without a public send endpoint.
 - Account deletion anonymises orders (kept for tax) and clears eSIM installation data before deleting the login (src/lib/anonymize.ts) — GDPR without losing bookkeeping records.
 - Admin list views (admin-lists.functions.ts) never select activation code, LPA or QR columns — installation data is visible only to the owner via getMyInstallData.
 - FX uses only ECB XML or ECB-based Frankfurter fallback; all prices use loadFx().lookup and tested fx.ts rules — no rate, no price.
 - plans is closed to client roles; public pages read public.public_plans (released columns, active+priced only); admin code reads plans only via supabaseAdmin after has_role — keeps cost prices and raw provider data server-only.
-- Public pages use shared SEO helpers with leaf-only canonicals; sitemap uses the public origin, paginated reads, 503 on errors
-- SEO AI streams through an admin-verified route with durable access blocks; admin history stores analyses, audits and content-trigger/manual changes
-- SEO tests and admin audits share one sitemap-driven validator; shared Markdown wraps long words
 - esim_devices: public read (active) via RLS, writes only via admin server fns; rules in src/lib/devices.ts — no invented device data.
 - Ratgeber posts (blog_posts) are public only with status=published (RLS + server fns); src/lib/ratgeber.ts publishBlockers() checks completeness+score only; AI omits unsure claims, no markers (owner decision). All active destinations count as available; prices only via {{LIVE_PREISE:ISO}}.
+- eSIM install UI lives only in src/components/esim-install-panel.tsx (device rules in src/lib/install-device.ts), used by account and /install — both views must stay identical.
+- SEO: shared helpers, leaf-only canonicals; sitemap uses public origin, paginated reads, 503 on errors; tests and admin audits share one sitemap validator; SEO AI runs only via an admin-verified route with history.

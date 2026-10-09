@@ -1,3 +1,4 @@
+import { EsimInstallPanel } from "@/components/esim-install-panel";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -102,11 +103,6 @@ function EsimCard({ e }: { e: Data["esims"][number] }) {
         <Chip tone={e.status === "ready" || e.status === "active" ? "active" : "default"}>{e.status === "ready" ? "Bereit" : e.status === "active" ? "Aktiv" : e.status === "expired" ? "Abgelaufen" : e.status}</Chip>
       </div>
       {e.usageThreshold ? <p className="mt-3 text-sm text-ink">{e.usageThreshold >= 100 ? "Dein Datenvolumen ist aufgebraucht." : `${e.usageThreshold} % deines Datenvolumens sind verbraucht.`}</p> : null}
-      <dl className="mt-3 space-y-1 text-sm">
-        {e.plan.validity_days ? <div className="flex gap-2"><dt className="text-ink-muted">Tarif-Laufzeit:</dt><dd className="text-ink">{e.plan.validity_days} Tag{e.plan.validity_days === 1 ? "" : "e"}{e.activatedAt ? `, aktiviert am ${formatDate(e.activatedAt)}` : ", startet mit der Aktivierung"}</dd></div> : null}
-        {/* expires_at from eSIMerge is the profile's lifetime (install window), NOT the plan validity. */}
-        {left !== null && !e.activatedAt && <div className="text-ink-muted">{left > 0 ? `Profil bis ${formatDate(e.expiresAt!)} installierbar` : "Installationsfenster abgelaufen"}</div>}
-      </dl>
       {pct !== null && usage && (
         <div className="mt-3">
           <div className="h-2 rounded-full bg-muted" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100} aria-label="Datenverbrauch">
@@ -118,16 +114,10 @@ function EsimCard({ e }: { e: Data["esims"][number] }) {
       <div className="mt-4">
         {install === undefined ? (
           <Button variant="secondary" onClick={() => installFn({ data: { orderId: e.orderId } }).then(setInstall).catch(() => setInstall(null))}>Installationsdaten anzeigen</Button>
-        ) : install === null ? (
+        ) : install === null || !install.lpa ? (
           <p className="text-sm text-ink-muted">Installationsdaten sind noch nicht verfügbar.</p>
         ) : (
-          <dl className="space-y-2 break-all text-sm">
-            {install.iosUrl && <div><a className="text-primary underline" href={install.iosUrl} target="_blank" rel="noopener noreferrer">Auf dem iPhone installieren</a></div>}
-            {install.androidUrl && <div><a className="text-primary underline" href={install.androidUrl} target="_blank" rel="noopener noreferrer">Auf Android installieren</a></div>}
-            {install.smdp && <div><dt className="text-ink-muted">SM-DP+-Adresse</dt><dd className="font-mono">{install.smdp}</dd></div>}
-            {install.activationCode && <div><dt className="text-ink-muted">Aktivierungscode</dt><dd className="font-mono">{install.activationCode}</dd></div>}
-            {install.lpa && <div><dt className="text-ink-muted">LPA</dt><dd className="font-mono">{install.lpa}</dd></div>}
-          </dl>
+          <EsimInstallPanel data={{ ...install, lpa: install.lpa!, validityDays: e.plan.validity_days ?? null, activatedAt: e.activatedAt, installUntil: e.expiresAt }} />
         )}
       </div>
     </li>
