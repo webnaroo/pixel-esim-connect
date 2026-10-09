@@ -6,7 +6,7 @@ export type GuardOptions = {
   name: string; // bucket prefix, e.g. "stripe-webhook"
   secretEnv?: string; // env var holding the secret; missing => 503, never bypassed
   secretDb?: string; // or: name in public.internal_secrets (server-only table), used by scheduled jobs
-  auth: { kind: "hmac-sha256"; header: string; prefix?: string } | { kind: "bearer" } | { kind: "stripe"; toleranceSeconds?: number };
+  auth: { kind: "hmac-sha256"; header: string; prefix?: string } | { kind: "bearer" } | { kind: "stripe"; toleranceSeconds?: number } | { kind: "esimerge" };
   limit?: { windowSeconds: number; max: number };
 };
 
@@ -33,6 +33,10 @@ export async function verifyAuth(opts: GuardOptions["auth"], secret: string, hea
     return h.startsWith("Bearer ") && timingSafeEqual(h.slice(7), secret);
   }
   if (opts.kind === "stripe") return verifyStripeSignature(headers.get("stripe-signature") ?? "", rawBody, secret, Math.floor(Date.now() / 1000), opts.toleranceSeconds);
+  if (opts.kind === "esimerge") {
+    const { verifyEsimergeSignature } = await import("./esimerge-webhook");
+    return verifyEsimergeSignature(headers.get("x-esimerge-signature"), rawBody, secret, Math.floor(Date.now() / 1000));
+  }
   let given = headers.get(opts.header) ?? "";
   if (opts.prefix) {
     if (!given.startsWith(opts.prefix)) return false;

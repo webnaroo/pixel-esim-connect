@@ -17,7 +17,7 @@
 - Webhooks are deduplicated via webhook_events (source, event_id) with processWebhookOnce(); on handler failure the record is removed so the provider's retry can succeed.
 - All payment calls go through src/lib/payments.server.ts — one place to wire the payment provider; checkout never accepts a client price (strict schema in checkout-rules.ts).
 - Guest order/installation pages are authorised only by a signed, expiring token (guest-token.ts, GUEST_TOKEN_SECRET); activation data is returned only after token verification.
-- eSIMerge has no webhooks; order/eSIM status is polled by /api/public/cron/esim-status-poll (pg_cron, 5 min) — the provider webhook route only returns 501.
+- eSIMerge webhooks (/api/public/webhooks/esimerge) are verified by src/lib/esimerge-webhook.ts, stored once in provider_webhook_events and only change status after an eSIMerge API read confirms it; the 5-min status poll stays as fallback and retries pending events.
 - An unclear provider outcome on createOrder (timeout/network) sets orders.status needs_review and is never retried automatically — protects against double orders; only HTTP rejections are retried.
 - eSIMerge mapping is derived only from captured sandbox responses (sandbox.fixtures.ts); unmappable plans are recorded in sync_runs.unmapped, never dropped silently.
 - Comparison visibility rules (source, 90-day age, GlobeSIM conditions) live in src/lib/comparison.ts with tests and are mirrored by RLS on comparison_facts — nothing unsourced or stale can reach the public page.

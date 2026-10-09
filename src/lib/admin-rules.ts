@@ -13,7 +13,7 @@ export function evaluateSyncThreshold(previousActive: number, fetched: number): 
   return { abort: false };
 }
 
-export type ShopChecklist = { providerReachable: boolean; providerSandbox: boolean; catalogCount: number; stripeConfigured: boolean; emailVerified?: boolean; legalPublished?: boolean; fxValid?: boolean };
+export type ShopChecklist = { providerReachable: boolean; providerSandbox: boolean; catalogCount: number; stripeConfigured: boolean; emailVerified?: boolean; legalPublished?: boolean; fxValid?: boolean; webhookReady?: boolean };
 
 export function shopChecklistMissing(c: ShopChecklist): string[] {
   const missing: string[] = [];
@@ -24,6 +24,7 @@ export function shopChecklistMissing(c: ShopChecklist): string[] {
   if (!c.stripeConfigured) missing.push("Stripe konfiguriert");
   if (c.emailVerified === false) missing.push("E-Mail-Absender-Domain verifiziert");
   if (c.fxValid === false) missing.push("Wechselkurs aktuell");
+  if (c.webhookReady === false) missing.push("eSIMerge-Webhook eingerichtet");
   if (c.legalPublished === false) missing.push("Rechtsseiten freigegeben");
   return missing;
 }

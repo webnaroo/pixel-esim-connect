@@ -1,6 +1,6 @@
 // Customer emails are only sent from a verified sender domain. Otherwise the order shows "E-Mail ausstehend".
 export type EmailSettings = { sender_domain: string; verified: boolean };
-export type EmailKind = "confirmation" | "install_link" | "failure";
+export type EmailKind = "confirmation" | "install_link" | "failure" | "usage_alert";
 
 export function parseEmailSettings(v: unknown): EmailSettings {
   const o = (v && typeof v === "object" ? v : {}) as Record<string, unknown>;

@@ -1,8 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { guardPublicRoute } from "@/lib/public-route-guard.server";
 
-// eSIMerge documents no webhooks; status comes from the scheduled poll (/api/public/cron/esim-status-poll).
-// The endpoint stays so the URL is reserved, and always answers 501.
+// eSIMerge webhooks: signature "t=<unix>,v1=<hex>" over "<t>.<raw body>" (5-min window), 503 without secret.
+// Answers 200 right after storing; processing runs in the background and is retried by the status poll.
 export const Route = createFileRoute("/api/public/webhooks/esimerge")({
   server: {
     handlers: {
@@ -10,11 +10,24 @@ export const Route = createFileRoute("/api/public/webhooks/esimerge")({
         const guard = await guardPublicRoute(request, {
           name: "esimerge-webhook",
           secretEnv: "ESIMERGE_WEBHOOK_SECRET",
-          auth: { kind: "hmac-sha256", header: "x-esimerge-signature", prefix: "sha256=" },
-          limit: { windowSeconds: 60, max: 30 },
+          auth: { kind: "esimerge" },
+          limit: { windowSeconds: 60, max: 120 },
         });
         if (!guard.ok) return guard.response;
-        return Response.json({ error: "not_implemented", detail: "eSIMerge sendet keine Webhooks." }, { status: 501 });
+        const { parseEvent, receiveEvent } = await import("@/lib/esimerge-webhook");
+        let raw: unknown;
+        try { raw = JSON.parse(guard.rawBody); } catch { return Response.json({ error: "invalid json" }, { status: 400 }); }
+        const deliveryId = request.headers.get("x-esimerge-delivery");
+        const ev = parseEvent(raw, deliveryId);
+        if (!ev) return Response.json({ error: "invalid event" }, { status: 400 });
+        const { providerSetupStatus } = await import("@/lib/providers/index.server");
+        const mode = ev.mode ?? (providerSetupStatus().sandbox ? "sandbox" : "live");
+        const { dbEventStore, dbWebhookDeps } = await import("@/lib/esimerge-webhook.server");
+        const pending: Promise<void>[] = [];
+        const result = await receiveEvent(dbEventStore, dbWebhookDeps, ev, raw, deliveryId, mode, (p) => pending.push(p.catch(() => {})));
+        // Give processing at most 20 s (eSIMerge expects 2xx within 60 s); anything left is picked up by the status poll.
+        if (pending.length) await Promise.race([Promise.all(pending), new Promise((r) => setTimeout(r, 20_000))]);
+        return Response.json({ received: true, duplicate: result === "duplicate" });
       },
     },
   },

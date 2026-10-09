@@ -494,6 +494,7 @@ export type Database = {
       }
       esims: {
         Row: {
+          activated_at: string | null
           activation_code: string | null
           android_install_url: string | null
           created_at: string
@@ -513,11 +514,14 @@ export type Database = {
           smdp_address: string | null
           status: string
           updated_at: string
+          usage_alerts_sent: number[]
           usage_cache: Json | null
           usage_checked_at: string | null
+          usage_threshold: number | null
           user_id: string | null
         }
         Insert: {
+          activated_at?: string | null
           activation_code?: string | null
           android_install_url?: string | null
           created_at?: string
@@ -537,11 +541,14 @@ export type Database = {
           smdp_address?: string | null
           status?: string
           updated_at?: string
+          usage_alerts_sent?: number[]
           usage_cache?: Json | null
           usage_checked_at?: string | null
+          usage_threshold?: number | null
           user_id?: string | null
         }
         Update: {
+          activated_at?: string | null
           activation_code?: string | null
           android_install_url?: string | null
           created_at?: string
@@ -561,8 +568,10 @@ export type Database = {
           smdp_address?: string | null
           status?: string
           updated_at?: string
+          usage_alerts_sent?: number[]
           usage_cache?: Json | null
           usage_checked_at?: string | null
+          usage_threshold?: number | null
           user_id?: string | null
         }
         Relationships: [
@@ -973,6 +982,51 @@ export type Database = {
           endpoint?: string
           id?: string
           status?: number | null
+        }
+        Relationships: []
+      }
+      provider_webhook_events: {
+        Row: {
+          delivery_id: string | null
+          error: string | null
+          event_id: string
+          event_type: string
+          id: string
+          mode: string
+          order_id: string | null
+          payload: Json | null
+          processed_at: string | null
+          received_at: string
+          signature_valid: boolean
+          status: string
+        }
+        Insert: {
+          delivery_id?: string | null
+          error?: string | null
+          event_id: string
+          event_type: string
+          id?: string
+          mode: string
+          order_id?: string | null
+          payload?: Json | null
+          processed_at?: string | null
+          received_at?: string
+          signature_valid?: boolean
+          status?: string
+        }
+        Update: {
+          delivery_id?: string | null
+          error?: string | null
+          event_id?: string
+          event_type?: string
+          id?: string
+          mode?: string
+          order_id?: string | null
+          payload?: Json | null
+          processed_at?: string | null
+          received_at?: string
+          signature_valid?: boolean
+          status?: string
         }
         Relationships: []
       }

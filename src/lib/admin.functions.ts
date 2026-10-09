@@ -37,7 +37,9 @@ async function buildChecklist(): Promise<ShopChecklist & { providerMessage: stri
   const { loadFx } = await import("./fx.server");
   const fx = await loadFx(supabaseAdmin);
   const fxValid = fx.effective("USD") !== null;
-  return { providerReachable, providerSandbox: status.sandbox, providerMessage, catalogCount: count ?? 0, stripeConfigured, emailVerified, fxValid, legalPublished: (unpublished ?? 0) === 0 };
+  const { count: whOk } = await supabaseAdmin.from("provider_webhook_events").select("id", { count: "exact", head: true }).eq("status", "processed");
+  const webhookReady = status.webhookSecretSet && (whOk ?? 0) > 0;
+  return { providerReachable, providerSandbox: status.sandbox, providerMessage, catalogCount: count ?? 0, stripeConfigured, emailVerified, fxValid, webhookReady, legalPublished: (unpublished ?? 0) === 0 };
 }
 
 export const getAdminOverview = createServerFn({ method: "GET" })
@@ -255,3 +257,15 @@ export const saveUnlimitedClaimTexts = createServerFn({ method: "POST" })
     await supabaseAdmin.from("audit_log").insert({ actor_id: context.userId, action: "unlimited_claim_texts", entity: "app_settings", entity_id: "unlimited_claim", meta: data });
     return { ok: true };
   });
+
+export const getWebhookEvents = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertAdmin(context as unknown as Ctx);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { providerSetupStatus } = await import("./providers/index.server");
+    const { data } = await supabaseAdmin.from("provider_webhook_events").select("id,event_id,delivery_id,event_type,mode,status,error,order_id,received_at,processed_at").order("received_at", { ascending: false }).limit(200);
+    return { secretSet: providerSetupStatus().webhookSecretSet, events: data ?? [] };
+  });
+
+export const webhookEventsQuery = () => queryOptions({ queryKey: ["admin", "webhooks"], queryFn: () => getWebhookEvents() });
