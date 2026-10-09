@@ -102,10 +102,10 @@ describe("HTTP-Client", () => {
     await expect(call()).rejects.toBeInstanceOf(ProviderRequestError);
     expect(f).toHaveBeenCalledTimes(1);
   });
-  it("request_in_flight: 2,4,8 s, gleicher Schlüssel", async () => {
+  it("request_in_flight: 2,4,8,16 s, gleicher Schlüssel", async () => {
     const { keys } = mockFetch([{ status: 409, body: errBody("request_in_flight") }]);
     await expect(call()).rejects.toBeInstanceOf(ProviderRequestError);
-    expect(sleeps).toEqual([2000, 4000, 8000]);
+    expect(sleeps).toEqual([2000, 4000, 8000, 16000]);
     expect(new Set(keys)).toEqual(new Set(["KEY-1"]));
   });
   it("Original-Fehlermeldung landet nie im Log", async () => {

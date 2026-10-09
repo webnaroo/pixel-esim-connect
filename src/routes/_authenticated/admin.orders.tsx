@@ -31,12 +31,14 @@ function AdminOrders() {
   const [showSandbox, setShowSandbox] = useState(false);
   if (q.error) throw q.error;
   const all = q.data ?? [];
-  const orders = all.filter((o) => (showSandbox || !o.is_sandbox) && (!status || o.status === status) && (!search || `${o.id} ${o.guest_email}`.toLowerCase().includes(search.toLowerCase())));
+  // Unpaid/aborted checkouts live in their own filter and are hidden from the default list.
+  const OPEN = ["pending", "expired", "cancelled"];
+  const orders = all.filter((o) => (showSandbox || !o.is_sandbox) && (status === "open" ? OPEN.includes(o.status) : status ? o.status === status : !OPEN.includes(o.status)) && (!search || `${o.id} ${o.guest_email}`.toLowerCase().includes(search.toLowerCase())));
   const pendingMail = all.filter((o) => o.email_status === "pending_domain").length;
   const failed = orders.filter((o) => ["fulfillment_failed", "payment_mismatch", "needs_review"].includes(o.status));
 
-  const doRefund = async (id: string, delivered: boolean) => {
-    if (!confirm(delivered ? "Die eSIM wurde schon ausgeliefert. Trotzdem komplett erstatten? Die Installationsdaten sind danach für den Kunden gesperrt." : "Diese Bestellung wirklich erstatten?")) return;
+  const doRefund = async (id: string, delivered: boolean, inProgress = false) => {
+    if (!confirm(inProgress ? "eSIMerge richtet diese eSIM gerade noch ein. Wenn du jetzt erstattest, kann sie trotzdem ausgestellt werden und der Einkaufspreis bleibt offen. Wirklich erstatten?" : delivered ? "Die eSIM wurde schon ausgeliefert. Trotzdem komplett erstatten? Die Installationsdaten sind danach für den Kunden gesperrt." : "Diese Bestellung wirklich erstatten?")) return;
     setBusy(id); setMsg(null);
     try { await refund({ data: { orderId: id } }); await qc.invalidateQueries({ queryKey: ["admin"] }); }
     catch (e) { setMsg(e instanceof Error ? e.message : "Erstattung fehlgeschlagen."); }
@@ -49,7 +51,7 @@ function AdminOrders() {
     const volume = s.data_mb ? (gb >= 1 ? `${+gb.toFixed(2)} GB` : `${s.data_mb} MB`) : "";
     const text = [
       "Erstattungsanfrage GlobeSIM",
-      `eSIMerge-Bestellnummer: ${o.provider_order_id}`,
+      `eSIMerge-Bestellnummer: ${o.provider_order_id ?? "unbekannt (Anfrage lief noch)"}`,
       `GlobeSIM-Bestellnummer: ${o.id}`,
       `Tarif: ${[s.destination, volume, s.validity_days ? `${s.validity_days} Tage` : ""].filter(Boolean).join(" · ")}`,
       `Datum: ${new Date(o.created_at).toLocaleString("de-DE")}`,
@@ -80,8 +82,9 @@ function AdminOrders() {
       <div className="flex flex-wrap gap-3">
         <label className="min-w-[220px] flex-1"><span className="sr-only">Suchen</span><Input placeholder="E-Mail oder Bestellnummer" value={search} onChange={(e) => setSearch(e.target.value)} /></label>
         <select aria-label="Status filtern" className="h-12 rounded-md border border-line bg-surface px-3 text-sm" value={status} onChange={(e) => setStatus(e.target.value)}>
-          <option value="">Alle Status</option>
-          {["pending", "paid", "fulfilling", "fulfilled", "needs_review", "fulfillment_failed", "payment_mismatch", "refunded", "cancelled"].map((s) => <option key={s} value={s}>{s}</option>)}
+          <option value="">Bezahlte Bestellungen</option>
+          <option value="open">Offen/abgebrochen</option>
+          {["paid", "fulfilling", "fulfilled", "needs_review", "fulfillment_failed", "payment_mismatch", "refunded"].map((s) => <option key={s} value={s}>{s}</option>)}
         </select>
         <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={showSandbox} onChange={(e) => setShowSandbox(e.target.checked)} /> Sandbox-Bestellungen anzeigen ({all.filter((o) => o.is_sandbox).length})</label>
       </div>
@@ -105,6 +108,7 @@ function AdminOrders() {
                     {o.is_test && <span className="ml-2 text-xs text-ink-muted">Test</span>}
                     {o.email_status === "pending_domain" && <div className="mt-1 text-xs text-ink-muted">E-Mail ausstehend</div>}
                     {o.last_error && <div className="mt-1 text-xs text-ink-muted">{o.last_error}</div>}
+                    {o.status === "refunded" && !o.provider_order_id && /request_in_flight/.test(o.last_error ?? "") && <div className="mt-1 rounded border border-danger px-2 py-1 text-xs font-semibold text-danger">Erstattet, während eSIMerge noch bearbeitete – im Portal prüfen, ob ausgestellt (Einkaufspreis offen)</div>}
                     {o.provider_refund_requested_at && <div className="mt-1 text-xs text-ink-muted">Bei eSIMerge beantragt {new Date(o.provider_refund_requested_at).toLocaleString("de-DE")}</div>}
                   </td>
                   <td className="p-3">{o.fulfillment_attempts}</td>
@@ -113,8 +117,8 @@ function AdminOrders() {
                       <Button variant="secondary" className="h-10!" loading={busy === o.id}
                         disabled={!["fulfillment_failed", "payment_mismatch", "needs_review", "paid", "fulfilling", "fulfilled"].includes(o.status)}
                         title={o.status === "refunded" ? "Bereits erstattet" : o.status === "pending" || o.status === "expired" ? "Nicht bezahlt" : undefined}
-                        onClick={() => doRefund(o.id, o.status === "fulfilled")}>Erstatten</Button>
-                      <Button variant="secondary" className="h-10!" disabled={!o.provider_order_id}
+                        onClick={() => doRefund(o.id, o.status === "fulfilled", o.status === "fulfilling")}>Erstatten</Button>
+                      <Button variant="secondary" className="h-10!" disabled={!o.provider_order_id && !(o.status === "refunded" && /request_in_flight/.test(o.last_error ?? ""))}
                         title={o.provider_order_id ? "Öffnet die Bestellliste im eSIMerge-Portal; der Anfragetext wird kopiert und hier notiert" : "Keine eSIMerge-Bestellung vorhanden"}
                         onClick={() => requestProviderRefund(o)}>Bei eSIMerge beantragen</Button>
                     </div>
