@@ -1,6 +1,7 @@
 # Roadmap
 - [x] Diagnose margin saving, public price freshness, environment and Turkey HTML/database discrepancy without changing prices
-- [ ] Reliable pricing mechanics from uploaded brief: preview/confirmation, centralized persisted calculation metadata, automatic repricing and 60-second public freshness (awaiting plan approval; current prices must remain unchanged)
+- [x] Reliable pricing mechanics: confirmed atomic saves, shared pricing/metadata, preserved overrides/visibility, 30-second foreground refresh; 5 Turkey prices verified against public HTML, preview cancelled without changing values
+- [ ] Price-change end-to-end live verification (blocked: publication and user's confirmation of a real price change; no prices changed during implementation)
 - [x] Admin checkout with shop disabled: access rules tested; live-payment consent verified in browser without creating a payment (completed payment remains untested)
 - [x] Revise checkout withdrawal wording for unactivated eSIMs within the 14-day withdrawal period, preserving statutory conditions (legal review remains required)
 - [x] Compatibility-check button inside the FAQ device question (faq page and homepage section)

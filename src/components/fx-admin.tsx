@@ -3,7 +3,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Warning } from "@phosphor-icons/react";
-import { decideFxReview, fxAdminQuery, refreshFxNow, setFxBuffer, setManualFx } from "@/lib/fx.functions";
+import { decideFxReview, fxAdminQuery, refreshFxNow, setManualFx } from "@/lib/fx.functions";
 import { FX_WARN_DAYS, FX_MAX_DAYS } from "@/lib/fx";
 import { Button, Input } from "./ui-kit";
 import { usePriceConfirmation } from "./price-change-dialog";
@@ -25,7 +25,6 @@ export function FxSection() {
   const refresh = useServerFn(refreshFxNow);
   const decide = useServerFn(decideFxReview);
   const manual = useServerFn(setManualFx);
-  const buffer = useServerFn(setFxBuffer);
   const [busy, setBusy] = useState(false);
   const [showManual, setShowManual] = useState(false);
   const reload = () => qc.invalidateQueries({ queryKey: ["admin"] });

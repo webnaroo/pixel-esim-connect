@@ -14,7 +14,7 @@ export function usePriceConfirmation() {
   const request = async (change: PriceChangeInput) => {
     setBusy(true);
     try { setPending({ change, preview: await preview({ data: change }) }); }
-    catch (e) { toast.error(e instanceof Error ? e.message : "Vorschau nicht verfügbar."); }
+    catch (e) { toast.error(e instanceof Error ? e.message : "Vorschau nicht verfügbar."); throw e; }
     finally { setBusy(false); }
   };
   const dialog = pending ? (
