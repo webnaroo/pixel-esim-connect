@@ -41,6 +41,11 @@ describe("catalog mapping (sandbox fixtures)", () => {
     const r = mapCatalogItem({ ...base, country_code: "CNA", destination_name: "China Alt" });
     expect(r.ok && r.plan).toMatchObject({ coverage: { kind: "country", countries: ["CNA"] }, destinationKind: "alt" });
   });
+  it("multi-island codes arriving as region (AN) map as territory", () => {
+    const base = byId("esm_plan_eu_5gb_15d") as Record<string, unknown>;
+    const r = mapCatalogItem({ ...base, region_code: "AN", destination_name: "Antilles" });
+    expect(r.ok && r.plan).toMatchObject({ coverage: { kind: "region", regionCode: "AN" }, destinationKind: "territory" });
+  });
   it("unknown special codes are still rejected with a reason", () => {
     const base = byId("esm_plan_sa_5gb_30d") as Record<string, unknown>;
     const r = mapCatalogItem({ ...base, country_code: "ZZZ" });
