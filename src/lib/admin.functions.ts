@@ -214,6 +214,21 @@ export const savePricingRule = createServerFn({ method: "POST" })
     if (error) throw new Error("Regel konnte nicht gespeichert werden.");
     const { repricePlans } = await import("./fx.server");
     const reprice = await repricePlans(context.userId);
+    await (await import("@/integrations/supabase/client.server")).supabaseAdmin.from("audit_log").insert({ actor_id: context.userId, action: "pricing_rule_created", entity: "pricing_rules", meta: data as never });
+    return { ok: true, reprice };
+  });
+
+export const updatePricingRule = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((i) => ruleSchema.extend({ id: z.string().uuid() }).parse(i))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context as unknown as Ctx);
+    const { id, ...patch } = data;
+    const { error } = await context.supabase.from("pricing_rules").update({ ...patch, scope_ref: patch.scope === "global" ? null : patch.scope_ref }).eq("id", id);
+    if (error) throw new Error("Regel konnte nicht gespeichert werden.");
+    const { repricePlans } = await import("./fx.server");
+    const reprice = await repricePlans(context.userId);
+    await (await import("@/integrations/supabase/client.server")).supabaseAdmin.from("audit_log").insert({ actor_id: context.userId, action: "pricing_rule_updated", entity: "pricing_rules", entity_id: id, meta: patch as never });
     return { ok: true, reprice };
   });
 
