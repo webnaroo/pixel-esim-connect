@@ -69,7 +69,7 @@ function OrderPage() {
 
   return (
     <SiteLayout>
-      <section className="container-page max-w-2xl pb-20 pt-8">
+      <section className="container-page max-w-4xl pb-20 pt-8">
         {loading ? (
           <p className="text-ink-muted">Bestellung wird geladen …</p>
         ) : !order ? (
@@ -78,15 +78,19 @@ function OrderPage() {
           </EmptyState>
         ) : (
           <>
-            {(fixture || order.isTest) && <div className="mb-4"><FixtureBadge /></div>}
-
             <div className="flex items-start gap-4">
               <span aria-hidden className="flex size-11 shrink-0 items-center justify-center rounded-full border border-line bg-surface text-primary">
                 <CheckCircle size={22} weight="fill" />
               </span>
               <div className="min-w-0">
-                <p className="text-sm text-ink-muted">Bestellung {fixture ? "TEST" : order.id.slice(0, 8).toUpperCase()}</p>
-                <h1 className="mt-1 text-3xl">{order.status === "fulfilled" ? "Deine eSIM ist bereit" : "Danke für deine Bestellung"}</h1>
+                <div className="flex flex-wrap items-center gap-2">
+                  <Chip tone={order.status === "fulfilled" ? "active" : order.status === "fulfillment_failed" ? "warning" : "default"}>
+                    {STATUS[order.status] ?? order.status}
+                  </Chip>
+                  <span className="text-xs text-ink-muted">Bestellung {fixture ? "TEST" : order.id.slice(0, 8).toUpperCase()}</span>
+                  {(fixture || order.isTest) && <FixtureBadge />}
+                </div>
+                <h1 className="mt-3 text-3xl">{order.status === "fulfilled" ? "Deine eSIM ist bereit" : "Danke für deine Bestellung"}</h1>
                 <p className="mt-2 text-ink-muted">
                   {order.status === "fulfilled"
                     ? "Am einfachsten installierst du die eSIM noch zu Hause im WLAN."
@@ -97,78 +101,80 @@ function OrderPage() {
               </div>
             </div>
 
-            <div className="mt-5">
-              <Chip tone={order.status === "fulfilled" ? "active" : order.status === "fulfillment_failed" ? "warning" : "default"}>
-                {STATUS[order.status] ?? order.status}
-              </Chip>
-            </div>
+            <div className="mt-10 grid gap-10 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] lg:items-start">
+              <div className="min-w-0">
+                <h2 className="font-display text-lg font-semibold tracking-[-0.02em] text-ink">Was passiert als Nächstes</h2>
+                <ol className="mt-5">
+                  {orderSteps(order.status).map((s, i, all) => (
+                    <li key={s.key} className="relative flex gap-4 pb-7 last:pb-0">
+                      {i < all.length - 1 && <span aria-hidden className="absolute left-[13px] top-8 bottom-1 w-px bg-line" />}
+                      <span
+                        aria-hidden
+                        className={cn(
+                          "relative z-10 flex size-7 shrink-0 items-center justify-center rounded-full border bg-surface text-xs font-semibold",
+                          s.state === "done" && "border-primary bg-primary text-primary-foreground",
+                          s.state === "current" && "border-primary text-primary",
+                          s.state === "open" && "border-line text-ink-muted",
+                        )}
+                      >
+                        {s.state === "done" ? <CheckCircle size={15} weight="fill" /> : i + 1}
+                      </span>
+                      <div className="min-w-0 pt-0.5">
+                        <p className="text-sm font-medium text-ink">{s.title}</p>
+                        <p className="mt-1 text-sm text-ink-muted">{s.note}</p>
+                      </div>
+                    </li>
+                  ))}
+                </ol>
 
-            <h2 className="mt-10 font-display text-lg font-semibold tracking-[-0.02em] text-ink">Was passiert als Nächstes</h2>
-            <ol className="mt-4 space-y-3">
-              {orderSteps(order.status).map((s, i) => (
-                <li key={s.key} className="flex gap-3 rounded-lg border border-line bg-surface p-4">
-                  <span
-                    aria-hidden
-                    className={cn(
-                      "flex size-7 shrink-0 items-center justify-center rounded-full border text-xs font-semibold",
-                      s.state === "done" && "border-primary bg-primary text-primary-foreground",
-                      s.state === "current" && "border-primary text-primary",
-                      s.state === "open" && "border-line text-ink-muted",
-                    )}
-                  >
-                    {s.state === "done" ? <CheckCircle size={15} weight="fill" /> : i + 1}
-                  </span>
-                  <div className="min-w-0">
-                    <p className="text-sm font-medium text-ink">{s.title}</p>
-                    <p className="mt-1 text-sm text-ink-muted">{s.note}</p>
+                {!user && (
+                  <div className="mt-8 rounded-lg border border-line bg-surface p-5">
+                    <p className="text-sm font-medium text-ink">Link für später sichern</p>
+                    <p className="mt-1 text-sm text-ink-muted">
+                      Deine Bestellung ist nur über diesen Link zu erreichen. Kopiere ihn dir oder leg ein Konto an – dann findest du sie jederzeit unter „Mein Konto“.
+                    </p>
+                    <button type="button" onClick={copyLink} className="mt-3 inline-flex min-h-11 items-center gap-2 text-sm font-medium text-primary">
+                      <CopySimple size={15} aria-hidden />
+                      {linkCopied ? "Link kopiert" : "Bestelllink kopieren"}
+                    </button>
                   </div>
-                </li>
-              ))}
-            </ol>
-
-            <dl className="mt-8 divide-y divide-line rounded-lg border border-line bg-surface">
-              <Row k="Reiseziel" v={order.plan.destination ?? "–"} />
-              <Row k="Tarif" v={<>{order.plan.type === "unlimited" ? <UnlimitedLabel throttleClaim={order.plan.throttle_claim} /> : formatData(order.plan.data_mb ?? null)} · {formatDays(order.plan.validity_days ?? 0)}{order.plan.type === "unlimited" && <UnlimitedNote throttleClaim={order.plan.throttle_claim} />}</>} />
-              <Row k="E-Mail" v={order.emailStatus === "pending_domain" ? `${order.email} · E-Mail ausstehend` : order.email} />
-              {!fixture && order.discountAmount > 0 && <Row k="Rabatt" v={`${order.discountCode ?? ""} −${formatPrice(order.discountAmount, order.currency)}`} />}
-              <Row k="Betrag" v={fixture ? "Testdaten" : formatPrice(order.amount, order.currency)} />
-            </dl>
-
-            <div className="mt-8 space-y-3">
-              {order.status === "fulfilled" ? (
-                <LinkButton to={`/install/${order.id}?t=${encodeURIComponent(t)}`} className="w-full">eSIM jetzt installieren</LinkButton>
-              ) : (
-                <p className="text-sm text-ink-muted">Diese Seite aktualisiert sich automatisch, sobald es weitergeht.</p>
-              )}
-              <div className="grid gap-3 sm:grid-cols-2">
-                {user ? (
-                  <Link to="/account" search={{ tab: "orders" }} className={btnClass("secondary", "w-full")}>Zu meinen Bestellungen</Link>
-                ) : (
-                  <LinkButton to="/register" variant="secondary" className="w-full">Kostenloses Konto anlegen</LinkButton>
                 )}
-                <LinkButton to="/destinations" variant="secondary" className="w-full">Weitere Reiseziele</LinkButton>
-              </div>
-            </div>
 
-            {!user && (
-              <div className="mt-6 rounded-lg border border-line bg-muted p-4">
-                <p className="text-sm font-medium text-ink">Link für später sichern</p>
-                <p className="mt-1 text-sm text-ink-muted">
-                  Deine Bestellung ist nur über diesen Link zu erreichen. Kopiere ihn dir oder leg ein Konto an – dann findest du sie jederzeit unter „Mein Konto“.
-                </p>
-                <button type="button" onClick={copyLink} className="mt-3 inline-flex min-h-11 items-center gap-2 text-sm font-medium text-primary">
-                  <CopySimple size={15} aria-hidden />
-                  {linkCopied ? "Link kopiert" : "Bestelllink kopieren"}
-                </button>
+                <div className="mt-6 rounded-lg border border-line bg-surface p-5">
+                  <p className="text-sm font-medium text-ink">Fragen zur Bestellung?</p>
+                  <p className="mt-1 text-sm text-ink-muted">Wir helfen dir auch bei der Installation weiter.</p>
+                  <Link to="/help" className="mt-3 inline-flex min-h-11 items-center text-sm font-medium text-primary underline-offset-4 hover:underline">
+                    Hilfe &amp; Kontakt
+                  </Link>
+                </div>
               </div>
-            )}
 
-            <div className="mt-10 rounded-lg border border-line bg-surface p-5">
-              <p className="text-sm font-medium text-ink">Fragen zur Bestellung?</p>
-              <p className="mt-1 text-sm text-ink-muted">Wir helfen dir auch bei der Installation weiter.</p>
-              <Link to="/help" className="mt-3 inline-flex min-h-11 items-center text-sm font-medium text-primary underline-offset-4 hover:underline">
-                Hilfe &amp; Kontakt
-              </Link>
+              <aside className="min-w-0 lg:sticky lg:top-24">
+                <h2 className="font-display text-lg font-semibold tracking-[-0.02em] text-ink">Deine Bestellung</h2>
+                <dl className="mt-4 divide-y divide-line rounded-lg border border-line bg-surface">
+                  <Row k="Reiseziel" v={order.plan.destination ?? "–"} />
+                  <Row k="Tarif" v={<>{order.plan.type === "unlimited" ? <UnlimitedLabel throttleClaim={order.plan.throttle_claim} /> : formatData(order.plan.data_mb ?? null)} · {formatDays(order.plan.validity_days ?? 0)}{order.plan.type === "unlimited" && <UnlimitedNote throttleClaim={order.plan.throttle_claim} />}</>} />
+                  <Row k="E-Mail" v={order.emailStatus === "pending_domain" ? `${order.email} · E-Mail ausstehend` : order.email} />
+                  {!fixture && order.discountAmount > 0 && <Row k="Rabatt" v={`${order.discountCode ?? ""} −${formatPrice(order.discountAmount, order.currency)}`} />}
+                  <Row k="Betrag" v={fixture ? "Testdaten" : formatPrice(order.amount, order.currency)} />
+                </dl>
+
+                <div className="mt-4 space-y-3">
+                  {order.status === "fulfilled" ? (
+                    <LinkButton to={`/install/${order.id}?t=${encodeURIComponent(t)}`} className="w-full">eSIM jetzt installieren</LinkButton>
+                  ) : (
+                    <p className="text-sm text-ink-muted">Diese Seite aktualisiert sich automatisch, sobald es weitergeht.</p>
+                  )}
+                  <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
+                    {user ? (
+                      <Link to="/account" search={{ tab: "orders" }} className={btnClass("secondary", "w-full")}>Zu meinen Bestellungen</Link>
+                    ) : (
+                      <LinkButton to="/register" variant="secondary" className="w-full">Kostenloses Konto anlegen</LinkButton>
+                    )}
+                    <LinkButton to="/destinations" variant="secondary" className="w-full">Weitere Reiseziele</LinkButton>
+                  </div>
+                </div>
+              </aside>
             </div>
           </>
         )}
