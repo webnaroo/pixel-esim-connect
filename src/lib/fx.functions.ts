@@ -74,15 +74,3 @@ export const setManualFx = createServerFn({ method: "POST" })
     return { ok: true as const };
   });
 
-export const setFxBuffer = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
-  .inputValidator((i) => z.object({ percent: z.number().min(0).max(20) }).parse(i))
-  .handler(async ({ data, context }) => {
-    await assertAdmin(context);
-    const uid = (context as unknown as Ctx).userId;
-    const db = await admin();
-    await db.from("app_settings").upsert({ key: "fx_buffer_percent", value: data.percent as never, updated_at: new Date().toISOString() });
-    await db.from("audit_log").insert({ actor_id: uid, action: "fx_buffer_changed", entity: "app_settings", entity_id: "fx_buffer_percent", meta: { percent: data.percent } as never });
-    await (await import("./fx.server")).repricePlans(uid);
-    return { ok: true };
-  });

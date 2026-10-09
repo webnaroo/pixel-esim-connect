@@ -3,6 +3,12 @@ import { computeMargin, type PricingRule } from "./pricing";
 
 export type PriceChange = { kind: "recalculate" | "create" | "update" | "delete" | "settings" | "override"; id?: string; rule?: PricingRule; settings?: Record<string, unknown>; override?: number | null };
 
+function canonicalJson(value: unknown): string {
+  if (value === null || typeof value !== "object") return JSON.stringify(value) ?? "null";
+  if (Array.isArray(value)) return `[${value.map(canonicalJson).join(",")}]`;
+  return `{${Object.entries(value).filter(([, v]) => v !== undefined).sort(([a], [b]) => a.localeCompare(b)).map(([key, v]) => `${JSON.stringify(key)}:${canonicalJson(v)}`).join(",")}}`;
+}
+
 export async function preparePriceChange(change: PriceChange) {
   const { supabaseAdmin: db } = await import("@/integrations/supabase/client.server");
   const ctx = await loadPricingContext(db);
@@ -31,7 +37,7 @@ export async function preparePriceChange(change: PriceChange) {
     }
     if (!data || data.length < 500) break;
   }
-  const encoded = new TextEncoder().encode(JSON.stringify({ change, rules: ctx.rules, settings: ctx.settings, rows, invalid }));
+  const encoded = new TextEncoder().encode(canonicalJson({ change, rules: ctx.rules, settings: ctx.settings, rows, invalid }));
   const digest = Array.from(new Uint8Array(await crypto.subtle.digest("SHA-256", encoded)), (v) => v.toString(16).padStart(2, "0")).join("");
   return { change, rows, rulesBefore: ctx.rules, settingsBefore: ctx.settings, digest, counts: { changed, unchanged, overridden, invalid, belowMin, calculated: rows.length } };
 }

@@ -29,7 +29,7 @@ describe("atomic confirmed price recalculation", () => {
   it("preserves explicitly overridden price", async () => {
     const row = mocks.plans[0];
     if (!row) throw new Error("missing fixture");
-    row.price_override = 13.99; row.sell_price = 13.99;
+    row["price_override"] = 13.99; row["sell_price"] = 13.99;
     const prepared = await preparePriceChange({ kind: "recalculate" });
     expect(prepared.counts.overridden).toBe(1);
     expect(prepared.rows[0]?.gross).toBe(13.99);
