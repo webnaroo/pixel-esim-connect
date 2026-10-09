@@ -28,8 +28,8 @@ export type ParsedEvent = {
   mode: Mode | null; // from payload when present
   refs: { orderId?: string | undefined; esimId?: string | undefined; iccid?: string | undefined };
   threshold?: number;
-  code?: string;
-  reason?: string;
+  code?: string | undefined;
+  reason?: string | undefined;
 };
 
 const str = (v: unknown) => (typeof v === "string" && v ? v : typeof v === "number" ? String(v) : undefined);
