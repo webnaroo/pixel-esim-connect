@@ -32,7 +32,7 @@
 - Admin list views (admin-lists.functions.ts) never select activation code, LPA or QR columns — installation data is visible only to the owner via getMyInstallData.
 - FX uses only ECB XML or ECB-based Frankfurter fallback; all prices use loadFx().lookup and tested fx.ts rules — no rate, no price.
 - plans is closed to client roles; public pages read public.public_plans (released columns, active+priced only); admin code reads plans only via supabaseAdmin after has_role — keeps cost prices and raw provider data server-only.
-- esim_devices: public read (active) via RLS, writes only via admin server fns; rules in src/lib/devices.ts — no invented device data.
+- esim_devices: public read (active), admin-only writes; rules in devices.ts — no invented device data.
 - Ratgeber posts (blog_posts) are public only with status=published (RLS + server fns); src/lib/ratgeber.ts publishBlockers() checks completeness+score only; AI omits unsure claims, no markers (owner decision). All active destinations count as available; prices only via {{LIVE_PREISE:ISO}}.
 - eSIM install UI only in esim-install-panel.tsx (rules: install-device.ts), shared by account and /install — keeps both identical.
 - SEO: shared helpers, leaf-only canonicals; sitemap uses public origin, paginated reads, 503 on errors; tests and admin audits share one sitemap validator; SEO AI runs only via an admin-verified route with history.
