@@ -13,6 +13,9 @@ import { DELETE_CONFIRM_WORD } from "@/lib/anonymize";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/_authenticated/account")({
+  validateSearch: (search: Record<string, unknown>): { tab?: "esims" | "orders" | "settings" } => ({
+    tab: search.tab === "orders" || search.tab === "settings" || search.tab === "esims" ? search.tab : undefined,
+  }),
   head: () => ({
     meta: [
       { title: "Mein Konto | GlobeSIM" },
@@ -33,7 +36,8 @@ type Data = Awaited<ReturnType<typeof import("@/lib/account.functions").getMyAcc
 const STATUS_DE: Record<string, string> = { pending: "Offen", paid: "Bezahlt", fulfilling: "Wird eingerichtet", fulfilled: "Geliefert", fulfillment_failed: "Fehlgeschlagen", refunded: "Erstattet", cancelled: "Abgebrochen", payment_mismatch: "In Prüfung", needs_review: "In Prüfung" };
 
 function Account() {
-  const [tab, setTab] = useState<Tab>("esims");
+  const { tab: initialTab } = Route.useSearch();
+  const [tab, setTab] = useState<Tab>(initialTab ?? "esims");
   const q = useQuery(myAccountQuery());
   return (
     <SiteLayout>

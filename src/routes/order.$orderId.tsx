@@ -1,11 +1,16 @@
 import { UnlimitedLabel, UnlimitedNote } from "@/components/unlimited-claim";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { z } from "zod";
+import { useState } from "react";
+import { CheckCircle, CopySimple } from "@phosphor-icons/react";
 import { SiteLayout } from "@/components/layout";
 import { EmptyState, FixtureBadge, Chip } from "@/components/brand";
-import { LinkButton } from "@/components/ui-kit";
+import { LinkButton, btnClass } from "@/components/ui-kit";
 import { noindexHead, useOrderAccess } from "@/components/order-access";
 import { formatData, formatDays, formatPrice } from "@/lib/format";
+import { orderSteps } from "@/lib/order-steps";
+import { useAuth } from "@/hooks/use-auth";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/order/$orderId")({
   validateSearch: z.object({ t: z.string().max(200).optional().default("") }),
@@ -24,10 +29,43 @@ const STATUS: Record<string, string> = {
   cancelled: "Storniert",
 };
 
+/** Clipboard with a fallback for browsers that block the clipboard API. */
+async function copyText(value: string): Promise<boolean> {
+  try {
+    await navigator.clipboard.writeText(value);
+    return true;
+  } catch {
+    const ta = document.createElement("textarea");
+    ta.value = value;
+    ta.setAttribute("readonly", "");
+    ta.style.position = "fixed";
+    ta.style.opacity = "0";
+    document.body.appendChild(ta);
+    ta.select();
+    let ok = false;
+    try {
+      ok = document.execCommand("copy");
+    } catch {
+      ok = false;
+    }
+    ta.remove();
+    return ok;
+  }
+}
+
 function OrderPage() {
   const { orderId } = Route.useParams();
   const { t } = Route.useSearch();
   const { order, loading, fixture } = useOrderAccess(orderId, t);
+  const { user } = useAuth();
+  const [linkCopied, setLinkCopied] = useState(false);
+
+  const copyLink = async () => {
+    if (await copyText(window.location.href)) {
+      setLinkCopied(true);
+      setTimeout(() => setLinkCopied(false), 1800);
+    }
+  };
 
   return (
     <SiteLayout>
@@ -41,9 +79,52 @@ function OrderPage() {
         ) : (
           <>
             {(fixture || order.isTest) && <div className="mb-4"><FixtureBadge /></div>}
-            <p className="text-sm text-ink-muted">Bestellung {fixture ? "TEST" : order.id.slice(0, 8).toUpperCase()}</p>
-            <h1 className="mt-2 text-3xl">{order.status === "fulfilled" ? "Deine eSIM ist bereit" : "Danke für deine Bestellung"}</h1>
-            <div className="mt-4"><Chip tone={order.status === "fulfilled" ? "active" : order.status === "fulfillment_failed" ? "warning" : "default"}>{STATUS[order.status] ?? order.status}</Chip></div>
+
+            <div className="flex items-start gap-4">
+              <span aria-hidden className="flex size-11 shrink-0 items-center justify-center rounded-full border border-line bg-surface text-primary">
+                <CheckCircle size={22} weight="fill" />
+              </span>
+              <div className="min-w-0">
+                <p className="text-sm text-ink-muted">Bestellung {fixture ? "TEST" : order.id.slice(0, 8).toUpperCase()}</p>
+                <h1 className="mt-1 text-3xl">{order.status === "fulfilled" ? "Deine eSIM ist bereit" : "Danke für deine Bestellung"}</h1>
+                <p className="mt-2 text-ink-muted">
+                  {order.status === "fulfilled"
+                    ? "Am einfachsten installierst du die eSIM noch zu Hause im WLAN."
+                    : order.emailStatus === "pending_domain"
+                      ? "Sobald deine eSIM bereit ist, melden wir uns bei dir."
+                      : `Alle Infos gehen auch per E-Mail an ${order.email}.`}
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-5">
+              <Chip tone={order.status === "fulfilled" ? "active" : order.status === "fulfillment_failed" ? "warning" : "default"}>
+                {STATUS[order.status] ?? order.status}
+              </Chip>
+            </div>
+
+            <h2 className="mt-10 font-display text-lg font-semibold tracking-[-0.02em] text-ink">Was passiert als Nächstes</h2>
+            <ol className="mt-4 space-y-3">
+              {orderSteps(order.status).map((s, i) => (
+                <li key={s.key} className="flex gap-3 rounded-lg border border-line bg-surface p-4">
+                  <span
+                    aria-hidden
+                    className={cn(
+                      "flex size-7 shrink-0 items-center justify-center rounded-full border text-xs font-semibold",
+                      s.state === "done" && "border-primary bg-primary text-primary-foreground",
+                      s.state === "current" && "border-primary text-primary",
+                      s.state === "open" && "border-line text-ink-muted",
+                    )}
+                  >
+                    {s.state === "done" ? <CheckCircle size={15} weight="fill" /> : i + 1}
+                  </span>
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium text-ink">{s.title}</p>
+                    <p className="mt-1 text-sm text-ink-muted">{s.note}</p>
+                  </div>
+                </li>
+              ))}
+            </ol>
 
             <dl className="mt-8 divide-y divide-line rounded-lg border border-line bg-surface">
               <Row k="Reiseziel" v={order.plan.destination ?? "–"} />
@@ -53,12 +134,42 @@ function OrderPage() {
               <Row k="Betrag" v={fixture ? "Testdaten" : formatPrice(order.amount, order.currency)} />
             </dl>
 
-            {order.status === "fulfilled" ? (
-              <LinkButton to={`/install/${order.id}?t=${encodeURIComponent(t)}`} className="mt-8 w-full">eSIM jetzt installieren</LinkButton>
-            ) : (
-              <p className="mt-8 text-sm text-ink-muted">Diese Seite aktualisiert sich automatisch. Du erhältst zusätzlich eine E-Mail, sobald die eSIM bereit ist.</p>
+            <div className="mt-8 space-y-3">
+              {order.status === "fulfilled" ? (
+                <LinkButton to={`/install/${order.id}?t=${encodeURIComponent(t)}`} className="w-full">eSIM jetzt installieren</LinkButton>
+              ) : (
+                <p className="text-sm text-ink-muted">Diese Seite aktualisiert sich automatisch, sobald es weitergeht.</p>
+              )}
+              <div className="grid gap-3 sm:grid-cols-2">
+                {user ? (
+                  <Link to="/account" search={{ tab: "orders" }} className={btnClass("secondary", "w-full")}>Zu meinen Bestellungen</Link>
+                ) : (
+                  <LinkButton to="/register" variant="secondary" className="w-full">Kostenloses Konto anlegen</LinkButton>
+                )}
+                <LinkButton to="/destinations" variant="secondary" className="w-full">Weitere Reiseziele</LinkButton>
+              </div>
+            </div>
+
+            {!user && (
+              <div className="mt-6 rounded-lg border border-line bg-muted p-4">
+                <p className="text-sm font-medium text-ink">Link für später sichern</p>
+                <p className="mt-1 text-sm text-ink-muted">
+                  Deine Bestellung ist nur über diesen Link zu erreichen. Kopiere ihn dir oder leg ein Konto an – dann findest du sie jederzeit unter „Mein Konto“.
+                </p>
+                <button type="button" onClick={copyLink} className="mt-3 inline-flex min-h-11 items-center gap-2 text-sm font-medium text-primary">
+                  <CopySimple size={15} aria-hidden />
+                  {linkCopied ? "Link kopiert" : "Bestelllink kopieren"}
+                </button>
+              </div>
             )}
-            <p className="mt-6 text-sm text-ink-muted">Fragen? <Link to="/help" className="font-medium text-primary">Hilfe & Kontakt</Link></p>
+
+            <div className="mt-10 rounded-lg border border-line bg-surface p-5">
+              <p className="text-sm font-medium text-ink">Fragen zur Bestellung?</p>
+              <p className="mt-1 text-sm text-ink-muted">Wir helfen dir auch bei der Installation weiter.</p>
+              <Link to="/help" className="mt-3 inline-flex min-h-11 items-center text-sm font-medium text-primary underline-offset-4 hover:underline">
+                Hilfe &amp; Kontakt
+              </Link>
+            </div>
           </>
         )}
       </section>
