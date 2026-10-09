@@ -341,11 +341,32 @@ export const getWebhookEvents = createServerFn({ method: "GET" })
     const { data } = await supabaseAdmin.from("provider_webhook_events").select("id,event_id,delivery_id,event_type,mode,status,error,order_id,received_at,processed_at").order("received_at", { ascending: false }).limit(200);
     // Provider alerts for the admin: failed / cancelled orders and purchase-price deviations.
     const { data: alerts } = await supabaseAdmin.from("audit_log").select("id,action,entity_id,meta,created_at").in("action", ["provider_order_failed", "provider_order_cancelled", "cost_mismatch", "provider_error", "plan_unavailable", "auto_refunded", "auto_refund_failed"]).order("created_at", { ascending: false }).limit(50);
+    const { ORDER_PAST_ISSUED } = await import("./webhook-labels");
+    const ids = [...new Set([...(data ?? []).map((e) => e.order_id), ...(alerts ?? []).map((a) => a.entity_id)].filter(Boolean) as string[])];
+    const { data: os } = ids.length ? await supabaseAdmin.from("orders").select("id,status").in("id", ids) : { data: [] };
+    const { data: es } = ids.length ? await supabaseAdmin.from("esims").select("order_id,provider_order_id").in("order_id", ids).not("provider_order_id", "is", null) : { data: [] };
+    const past = new Set([...(os ?? []).filter((o) => ORDER_PAST_ISSUED.includes(o.status)).map((o) => o.id), ...(es ?? []).map((e) => e.order_id)]);
+    const evIds = (data ?? []).map((e) => e.id);
+    const { data: res } = evIds.length ? await supabaseAdmin.from("audit_log").select("entity_id,created_at,meta").eq("action", "webhook_event_resolved").in("entity_id", evIds) : { data: [] };
+    const resolved = new Map((res ?? []).map((r) => [r.entity_id, r]));
+    const live = (alerts ?? []).filter((a) => !((a.meta as { code?: string } | null)?.code === "request_in_flight" && a.entity_id && past.has(a.entity_id)));
     return {
       secretSet: providerSetupStatus().webhookSecretSet,
-      events: data ?? [],
-      alerts: (alerts ?? []).map((a) => ({ id: a.id, action: a.action, orderId: a.entity_id, message: String((a.meta as { message?: string } | null)?.message ?? ""), code: ((a.meta as { code?: string } | null)?.code ?? null) as string | null, requestId: ((a.meta as { request_id?: string } | null)?.request_id ?? null) as string | null, field: ((a.meta as { field?: string } | null)?.field ?? null) as string | null, createdAt: a.created_at })),
+      events: (data ?? []).map((e) => { const r = resolved.get(e.id); return { ...e, resolved_at: r?.created_at ?? null, resolved_note: r ? String((r.meta as { note?: string } | null)?.note ?? "") : null }; }),
+      alerts: live.map((a) => ({ id: a.id, action: a.action, orderId: a.entity_id, message: String((a.meta as { message?: string } | null)?.message ?? ""), code: ((a.meta as { code?: string } | null)?.code ?? null) as string | null, requestId: ((a.meta as { request_id?: string } | null)?.request_id ?? null) as string | null, field: ((a.meta as { field?: string } | null)?.field ?? null) as string | null, createdAt: a.created_at })),
     };
+  });
+
+export const resolveWebhookEvent = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((i) => z.object({ eventId: z.string().uuid(), note: z.string().trim().min(1).max(500) }).parse(i))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context as unknown as Ctx);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: e } = await supabaseAdmin.from("provider_webhook_events").select("id").eq("id", data.eventId).maybeSingle();
+    if (!e) throw new Error("Ereignis nicht gefunden.");
+    await supabaseAdmin.from("audit_log").insert({ actor_id: context.userId, action: "webhook_event_resolved", entity: "provider_webhook_event", entity_id: data.eventId, meta: { note: data.note } });
+    return { ok: true };
   });
 
 export const webhookEventsQuery = () => queryOptions({ queryKey: ["admin", "webhooks"], queryFn: () => getWebhookEvents() });

@@ -24,3 +24,12 @@ export const WEBHOOK_READY_STATUSES = ["processed", "ignored"] as const;
 export function webhookDeliveryVerified(events: { signature_valid: boolean; status: string }[]): boolean {
   return events.some((e) => e.signature_valid && (WEBHOOK_READY_STATUSES as readonly string[]).includes(e.status));
 }
+
+/** Red alert counts only unresolved live events tied to a real order; test messages never count. */
+export function webhookNeedsAttention(e: { mode: string; order_id: string | null; error: string | null; status: string; event_type: string; resolved_at?: string | null }): boolean {
+  if (e.mode !== "live" || !e.order_id || e.error === "test_event" || e.resolved_at) return false;
+  return e.status === "failed" || e.event_type === "order.failed" || e.event_type === "order.topup.failed";
+}
+
+/** "Request still running" alerts are obsolete once the order reached issued or later. */
+export const ORDER_PAST_ISSUED = ["fulfilled", "refunded", "cancelled", "expired"];
