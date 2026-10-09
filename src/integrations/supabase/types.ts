@@ -450,6 +450,48 @@ export type Database = {
           },
         ]
       }
+      discount_codes: {
+        Row: {
+          active: boolean
+          code: string
+          created_at: string
+          created_by: string | null
+          id: string
+          max_uses: number | null
+          note: string | null
+          times_used: number
+          type: string
+          valid_until: string | null
+          value: number
+        }
+        Insert: {
+          active?: boolean
+          code: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          max_uses?: number | null
+          note?: string | null
+          times_used?: number
+          type: string
+          valid_until?: string | null
+          value: number
+        }
+        Update: {
+          active?: boolean
+          code?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          max_uses?: number | null
+          note?: string | null
+          times_used?: number
+          type?: string
+          valid_until?: string | null
+          value?: number
+        }
+        Relationships: []
+      }
       esim_devices: {
         Row: {
           active: boolean
@@ -712,6 +754,8 @@ export type Database = {
           cost_currency: string | null
           created_at: string
           currency: string
+          discount_amount: number
+          discount_code: string | null
           dispute_due_by: string | null
           dispute_id: string | null
           dispute_status: string | null
@@ -749,6 +793,8 @@ export type Database = {
           cost_currency?: string | null
           created_at?: string
           currency?: string
+          discount_amount?: number
+          discount_code?: string | null
           dispute_due_by?: string | null
           dispute_id?: string | null
           dispute_status?: string | null
@@ -786,6 +832,8 @@ export type Database = {
           cost_currency?: string | null
           created_at?: string
           currency?: string
+          discount_amount?: number
+          discount_code?: string | null
           dispute_due_by?: string | null
           dispute_id?: string | null
           dispute_status?: string | null
@@ -1343,6 +1391,15 @@ export type Database = {
     }
     Functions: {
       arm_fulfillment_retry: { Args: never; Returns: undefined }
+      claim_discount_code: {
+        Args: { _code: string }
+        Returns: {
+          code: string
+          id: string
+          type: string
+          value: number
+        }[]
+      }
       claim_order_for_fulfillment: {
         Args: { _max_attempts: number; _order_id: string }
         Returns: {
@@ -1352,6 +1409,8 @@ export type Database = {
           cost_currency: string | null
           created_at: string
           currency: string
+          discount_amount: number
+          discount_code: string | null
           dispute_due_by: string | null
           dispute_id: string | null
           dispute_status: string | null
@@ -1401,6 +1460,7 @@ export type Database = {
         Args: { _bucket: string; _max: number; _window_seconds: number }
         Returns: boolean
       }
+      release_discount_code: { Args: { _code: string }; Returns: undefined }
     }
     Enums: {
       app_role: "admin" | "support" | "user"
