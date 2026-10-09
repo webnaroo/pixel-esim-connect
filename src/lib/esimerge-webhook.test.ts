@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { hmacSha256Hex } from "./public-route-guard.server";
-import { handleEvent, parseEvent, receiveEvent, sanitizePayload, verifyEsimergeSignature, type EventStore, type LocalOrder, type WebhookDeps } from "./esimerge-webhook";
+import { handleEvent, parseEvent, receiveEvent, sanitizePayload, verifyEsimergeSignature, type EventStore, type ApiOrder, type LocalOrder, type WebhookDeps } from "./esimerge-webhook";
 
 const SECRET = "whsec_test_123";
 const now = 1_800_000_000;
@@ -17,10 +17,10 @@ describe("signature", () => {
 });
 
 const order = (o: Partial<LocalOrder> = {}): LocalOrder => ({ id: "o1", status: "fulfilling", isSandbox: true, providerOrderId: "esm_o1", providerEsimId: "esm_e1", hasInstallData: false, alertsSent: [], ...o });
-function deps(o: LocalOrder | null, api: { status: "pending" | "ready"; providerStatus?: string; failed?: boolean }, pct: number | null = null) {
+function deps(o: LocalOrder | null, api: ApiOrder, pct: number | null = null) {
   const d = {
     findOrder: vi.fn(async () => o), getOrder: vi.fn(async () => api), getUsagePercent: vi.fn(async () => pct),
-    markIssued: vi.fn(async () => {}), markFailed: vi.fn(async () => {}), setEsim: vi.fn(async () => {}), sendUsageMail: vi.fn(async () => {}), now: () => new Date(0),
+    markIssued: vi.fn(async () => {}), markFailed: vi.fn(async () => {}), markCancelled: vi.fn(async () => {}), setEsim: vi.fn(async () => {}), sendUsageMail: vi.fn(async () => {}), now: () => new Date(0),
   };
   return d satisfies WebhookDeps;
 }

@@ -42,19 +42,6 @@ function AdminOrders() {
   return (
     <div className="space-y-6">
       <WebhookEvents />
-      {(q.data?.alerts ?? []).length > 0 && (
-        <div role="alert" className="space-y-1 rounded-lg border border-line border-l-4 border-l-warning p-3 text-sm">
-          <p className="font-semibold text-ink">Hinweise von eSIMerge</p>
-          <ul className="space-y-1">
-            {q.data!.alerts.slice(0, 10).map((a) => (
-              <li key={a.id}>
-                <span className="text-ink-muted">{new Date(a.createdAt).toLocaleString("de-DE")} · Bestellung {a.orderId?.slice(0, 8)} · </span>
-                {a.action === "cost_mismatch" ? a.message : a.action === "provider_order_cancelled" ? "Storniert – Erstatten prüfen" : a.message || "Fehlgeschlagen – Erstatten prüfen"}
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
       {failed.length > 0 && (
         <div role="alert" className="rounded-lg border border-line border-l-4 border-l-warning bg-surface p-4 text-sm">
           {failed.length} Bestellung(en) brauchen deine Prüfung: Auslieferung nach allen Versuchen fehlgeschlagen oder gezahlter Betrag weicht ab. Bitte prüfen und erstatten.
@@ -127,6 +114,19 @@ function WebhookEvents() {
         <h2 className="font-semibold text-ink">eSIMerge-Webhooks</h2>
         <span className="text-sm text-ink-muted">Webhook-Geheimnis gesetzt: <strong>{q.data ? (q.data.secretSet ? "Ja" : "Nein") : "…"}</strong></span>
       </div>
+      {(q.data?.alerts ?? []).length > 0 && (
+        <div role="alert" className="space-y-1 rounded-lg border border-line border-l-4 border-l-warning p-3 text-sm">
+          <p className="font-semibold text-ink">Hinweise von eSIMerge</p>
+          <ul className="space-y-1">
+            {q.data!.alerts.slice(0, 10).map((a) => (
+              <li key={a.id}>
+                <span className="text-ink-muted">{new Date(a.createdAt).toLocaleString("de-DE")} · Bestellung {a.orderId?.slice(0, 8)} · </span>
+                {a.action === "cost_mismatch" ? a.message : a.action === "provider_order_cancelled" ? "Storniert – Erstatten prüfen" : a.message || "Fehlgeschlagen – Erstatten prüfen"}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
       {failed.length > 0 && (
         <div role="alert" className="rounded-lg border border-line border-l-4 border-l-warning p-3 text-sm">
           {failed.length} Webhook-Ereignis(se) mit Fehler oder fehlgeschlagener Bestellung/Aufladung. Betroffene Bestellungen unten prüfen und ggf. erstatten.
