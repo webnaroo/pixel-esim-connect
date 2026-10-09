@@ -123,7 +123,7 @@ export function DestinationPage({ slug }: { slug: string }) {
                 ))}
               </div>
               {plans.length === 0 && <p className="mt-6 text-sm text-ink-muted">Keine Tarife für diese Filter.</p>}
-              {selectedPlan && <div className="mt-6 hidden lg:block"><BuyBar plan={selectedPlan} canBuy={canBuy} paused={paused} inline /></div>}
+              {selectedPlan && <div className="mt-6 hidden lg:block"><BuyBar plan={selectedPlan} canBuy={canBuy} paused={paused} destination={d.name} adminTest={adminTest} inline /></div>}
             </div>
           </div>
         )}
@@ -187,7 +187,7 @@ export function DestinationPage({ slug }: { slug: string }) {
 
       {selectedPlan && (
         <div className="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-surface lg:hidden">
-          <div className="container-page py-3"><BuyBar plan={selectedPlan} canBuy={canBuy} paused={paused} /></div>
+          <div className="container-page py-3"><BuyBar plan={selectedPlan} canBuy={canBuy} paused={paused} destination={d.name} adminTest={adminTest} /></div>
         </div>
       )}
     </div>

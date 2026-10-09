@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
+import { Route as CartRouteImport } from './routes/cart'
 import { Route as DestinationsRouteImport } from './routes/destinations'
 import { Route as FaqRouteImport } from './routes/faq'
 import { Route as HelpRouteImport } from './routes/help'
@@ -66,6 +67,11 @@ const IndexRoute = IndexRouteImport.update({
 } as any)
 const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
   id: '/_authenticated',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CartRoute = CartRouteImport.update({
+  id: '/cart',
+  path: '/cart',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DestinationsRoute = DestinationsRouteImport.update({
@@ -322,6 +328,7 @@ const LovableEmailTransactionalPreviewRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/cart': typeof CartRoute
   '/destinations': typeof DestinationsRoute
   '/faq': typeof FaqRoute
   '/help': typeof HelpRoute
@@ -372,6 +379,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/cart': typeof CartRoute
   '/destinations': typeof DestinationsRoute
   '/faq': typeof FaqRoute
   '/help': typeof HelpRoute
@@ -423,6 +431,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
+  '/cart': typeof CartRoute
   '/destinations': typeof DestinationsRoute
   '/faq': typeof FaqRoute
   '/help': typeof HelpRoute
@@ -475,6 +484,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/cart'
     | '/destinations'
     | '/faq'
     | '/help'
@@ -525,6 +535,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/cart'
     | '/destinations'
     | '/faq'
     | '/help'
@@ -575,6 +586,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/_authenticated'
+    | '/cart'
     | '/destinations'
     | '/faq'
     | '/help'
@@ -627,6 +639,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
+  CartRoute: typeof CartRoute
   DestinationsRoute: typeof DestinationsRoute
   FaqRoute: typeof FaqRoute
   HelpRoute: typeof HelpRoute
@@ -673,6 +686,13 @@ declare module '@tanstack/react-router' {
       path: ''
       fullPath: '/'
       preLoaderRoute: typeof AuthenticatedRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/cart': {
+      id: '/cart'
+      path: '/cart'
+      fullPath: '/cart'
+      preLoaderRoute: typeof CartRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/destinations': {
@@ -1062,6 +1082,7 @@ const AuthenticatedRouteRouteWithChildren =
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
+  CartRoute: CartRoute,
   DestinationsRoute: DestinationsRoute,
   FaqRoute: FaqRoute,
   HelpRoute: HelpRoute,
