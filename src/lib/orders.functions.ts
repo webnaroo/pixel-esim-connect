@@ -81,21 +81,61 @@ export const listAdminOrders = createServerFn({ method: "GET" })
 
 export const adminOrdersQuery = () => queryOptions({ queryKey: ["admin", "orders"], queryFn: () => listAdminOrders() });
 
+async function refundOrderNow(orderId: string, actorId: string) {
+  const { supabaseAdmin: db } = await import("@/integrations/supabase/client.server");
+  const { data: o } = await db.from("orders").select("status,stripe_payment_intent_id,stripe_env").eq("id", orderId).single();
+  if (!o || !["paid", "fulfilling", "fulfilled", "fulfillment_failed", "payment_mismatch", "needs_review"].includes(o.status)) throw new Error("Nur bezahlte Bestellungen können erstattet werden.");
+  if (!o.stripe_payment_intent_id) throw new Error("Keine Zahlung zu dieser Bestellung gefunden.");
+  const { refundPayment } = await import("./payments.server");
+  const { refundIdempotencyKey } = await import("./auto-refund");
+  // Same key as the automatic refund: a manual and an automatic refund can never both go through.
+  const r = await refundPayment(o.stripe_env === "live" ? "live" : "sandbox", o.stripe_payment_intent_id, refundIdempotencyKey(orderId));
+  await db.from("orders").update({ status: "refunded", refunded_at: new Date().toISOString(), refund_id: r.refundId, refund_started_at: new Date().toISOString() }).eq("id", orderId);
+  await db.from("audit_log").insert({ actor_id: actorId, action: "order_refunded", entity: "order", entity_id: orderId, meta: { refund_id: r.refundId } });
+}
+
 export const refundOrder = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((i) => z.object({ orderId: z.string().uuid() }).parse(i))
   .handler(async ({ data, context }) => {
     await assertAdmin(context as unknown as Ctx);
+    await refundOrderNow(data.orderId, context.userId);
+    return { ok: true };
+  });
+
+/** Open customer refund requests (support tickets created by requestMyRefund). */
+export const listRefundRequests = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertAdmin(context as unknown as Ctx);
     const { supabaseAdmin: db } = await import("@/integrations/supabase/client.server");
-    const { data: o } = await db.from("orders").select("status,stripe_payment_intent_id,stripe_env").eq("id", data.orderId).single();
-    if (!o || !["paid", "fulfilling", "fulfilled", "fulfillment_failed", "payment_mismatch", "needs_review"].includes(o.status)) throw new Error("Nur bezahlte Bestellungen können erstattet werden.");
-    if (!o.stripe_payment_intent_id) throw new Error("Keine Zahlung zu dieser Bestellung gefunden.");
-    const { refundPayment } = await import("./payments.server");
-    const { refundIdempotencyKey } = await import("./auto-refund");
-    // Same key as the automatic refund: a manual and an automatic refund can never both go through.
-    const r = await refundPayment(o.stripe_env === "live" ? "live" : "sandbox", o.stripe_payment_intent_id, refundIdempotencyKey(data.orderId));
-    await db.from("orders").update({ status: "refunded", refunded_at: new Date().toISOString(), refund_id: r.refundId, refund_started_at: new Date().toISOString() }).eq("id", data.orderId);
-    await db.from("audit_log").insert({ actor_id: context.userId, action: "order_refunded", entity: "order", entity_id: data.orderId, meta: { refund_id: r.refundId } });
+    const { data: t } = await db.from("support_tickets").select("id,email,message,order_id,created_at").like("subject", "Erstattung beantragt:%").neq("status", "closed").order("created_at", { ascending: true }).limit(100);
+    const ids = (t ?? []).map((x) => x.order_id).filter(Boolean) as string[];
+    const { data: os } = ids.length ? await db.from("orders").select("id,status,amount,currency,plan_snapshot").in("id", ids) : { data: [] };
+    const m = new Map((os ?? []).map((o) => [o.id, o]));
+    return (t ?? []).map((x) => {
+      const o = x.order_id ? m.get(x.order_id) : undefined;
+      const s = (o?.plan_snapshot ?? {}) as { destination?: string; data_mb?: number | null; validity_days?: number };
+      return { ...x, order_status: o?.status ?? null, amount: o ? Number(o.amount) : null, currency: o?.currency ?? "EUR", plan: [s.destination, s.data_mb ? `${+(s.data_mb / 1024).toFixed(2)} GB` : null, s.validity_days ? `${s.validity_days} Tage` : null].filter(Boolean).join(" · ") };
+    });
+  });
+export const refundRequestsQuery = () => queryOptions({ queryKey: ["admin", "refund-requests"], queryFn: () => listRefundRequests() });
+
+/** Admin decides: approve = full Stripe refund, then close; reject = close only. */
+export const decideRefundRequest = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((i) => z.object({ ticketId: z.string().uuid(), approve: z.boolean() }).parse(i))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context as unknown as Ctx);
+    const { supabaseAdmin: db } = await import("@/integrations/supabase/client.server");
+    const { data: t } = await db.from("support_tickets").select("id,order_id,status").eq("id", data.ticketId).maybeSingle();
+    if (!t || t.status === "closed") throw new Error("Anfrage nicht gefunden oder schon erledigt.");
+    if (data.approve) {
+      if (!t.order_id) throw new Error("Keine Bestellung zur Anfrage.");
+      await refundOrderNow(t.order_id, context.userId);
+    }
+    await db.from("support_tickets").update({ status: "closed" }).eq("id", t.id);
+    await db.from("audit_log").insert({ actor_id: context.userId, action: data.approve ? "customer_refund_approved" : "customer_refund_rejected", entity: "order", entity_id: t.order_id });
     return { ok: true };
   });
 
