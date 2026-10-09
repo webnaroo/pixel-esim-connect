@@ -61,9 +61,10 @@ export function mapCatalogItem(raw: unknown): CatalogItemResult {
   let destinationKind: NormalizedPlan["destinationKind"];
   if (p.scope === "country") {
     const iso = (p.country_code ?? "").toUpperCase();
-    if (/^[A-Z]{2}$/.test(iso)) destinationKind = "standard";
-    else if (TERRITORY_CODES.has(iso)) destinationKind = "territory";
+    // Special codes first: AN/IC/CB/XK are 2 letters but not real ISO countries.
+    if (TERRITORY_CODES.has(iso)) destinationKind = "territory";
     else if (ALT_PRODUCT_CODES.has(iso)) destinationKind = "alt";
+    else if (/^[A-Z]{2}$/.test(iso)) destinationKind = "standard";
     else return { ok: false, providerPlanId: p.id, reason: "Länderkennung fehlt oder ungültig" };
     coverage = { kind: "country", countries: [iso] };
   } else if (p.scope === "region") {
