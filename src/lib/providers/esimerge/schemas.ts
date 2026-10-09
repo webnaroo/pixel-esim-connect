@@ -22,7 +22,7 @@ export const planSchema = z.object({
   price_usd: z.number().nonnegative(),
   currency: z.string(),
   fair_usage: z.string().nullable().optional(),
-  supports_topup: z.boolean().optional(),
+  supports_topup: z.boolean().nullable().optional(), // live catalog sends null = unknown
   networks: z.array(z.string()).optional(),
   coverage: z.array(coverageEntry).optional(),
 });
