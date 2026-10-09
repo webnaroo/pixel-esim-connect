@@ -44,6 +44,11 @@ export function mapRegion(_raw: unknown): ProviderRegion {
 
 export type CatalogItemResult = { ok: true; plan: NormalizedPlan } | { ok: false; providerPlanId: string | null; reason: string };
 
+// Special codes confirmed by eSIMerge (email, Alex Brandon): territories within a country
+// (own destination in the shop) and alternative product lines (imported hidden by default).
+export const TERRITORY_CODES = new Set(["GB-SCT", "PT-30", "PT-20", "BQ-SA", "BQ-SE", "NOC", "XK", "IC", "AN", "CB"]);
+export const ALT_PRODUCT_CODES = new Set(["SGA", "AUA", "RUA", "RULA", "CNA", "CNMA", "CNM", "CHE", "EUP"]);
+
 /** Maps one catalog entry, or explains why it cannot be mapped (never silently dropped). */
 export function mapCatalogItem(raw: unknown): CatalogItemResult {
   const id = raw && typeof raw === "object" && typeof (raw as { id?: unknown }).id === "string" ? (raw as { id: string }).id : null;
