@@ -9,12 +9,12 @@ export const Route = createFileRoute("/api/public/cron/fulfillment-retry")({
         const guard = await guardPublicRoute(request, { name: "cron-fulfillment-retry", secretDb: "cron", auth: { kind: "bearer" }, limit: { windowSeconds: 60, max: 3 } });
         if (!guard.ok) return guard.response;
         const { supabaseAdmin: db } = await import("@/integrations/supabase/client.server");
-        const { MAX_FULFILLMENT_ATTEMPTS } = await import("@/lib/fulfillment");
+        const { MAX_IN_PROGRESS_ATTEMPTS } = await import("@/lib/fulfillment");
         const { data: due } = await db
           .from("orders")
           .select("id")
           .in("status", ["paid", "fulfilling"])
-          .lt("fulfillment_attempts", MAX_FULFILLMENT_ATTEMPTS)
+          .lt("fulfillment_attempts", MAX_IN_PROGRESS_ATTEMPTS)
           .lte("next_attempt_at", new Date().toISOString())
           .limit(20);
         const { fulfillOrderById } = await import("@/lib/fulfillment.server");
