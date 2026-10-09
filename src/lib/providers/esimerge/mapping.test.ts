@@ -79,3 +79,12 @@ describe("secrets", () => {
     expect(sanitize({ activation_code: "X", nested: { apiKey: "k", name: "ok" } })).toEqual({ activation_code: "***", nested: { apiKey: "***", name: "ok" } });
   });
 });
+
+describe("live catalog: supports_topup null", () => {
+  it("maps the plan and leaves top-up unknown", () => {
+    const base = byId("esm_plan_sa_5gb_30d") as Record<string, unknown>;
+    const r = mapCatalogItem({ ...base, supports_topup: null });
+    expect(r.ok).toBe(true);
+    expect(r.ok && "topUpable" in r.plan).toBe(false);
+  });
+});

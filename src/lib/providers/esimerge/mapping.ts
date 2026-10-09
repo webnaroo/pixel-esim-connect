@@ -88,7 +88,7 @@ export function mapCatalogItem(raw: unknown): CatalogItemResult {
       ...(p.fair_usage ? { fairUse: { note: p.fair_usage } } : {}),
       costPrice: p.price_usd,
       costCurrency: COST_CURRENCY,
-      ...(p.supports_topup !== undefined ? { topUpable: p.supports_topup } : {}),
+      ...(p.supports_topup != null ? { topUpable: p.supports_topup } : {}),
       raw: maskSensitive(raw),
     },
   };
