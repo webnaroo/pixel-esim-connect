@@ -70,3 +70,10 @@ describe("net result after payment fee", () => {
     expect(computeMargin(10, 15.12, 17.99, { percent: 2.9, fixed: 0.3 }, 5).belowMin).toBe(true);
   });
 });
+
+describe("25 % margin with ,49/,99 rounding", () => {
+  it("prices a 10 EUR cost at 14,99 gross", () => {
+    const r = computePrice(input, [rule({ value: 25, rounding: "49_99" })], eurOnly, 0.19);
+    expect(r).toMatchObject({ ok: true, gross: 14.99, net: 12.6 });
+  });
+});
