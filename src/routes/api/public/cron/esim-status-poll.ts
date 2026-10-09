@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { guardPublicRoute } from "@/lib/public-route-guard.server";
 
-// eSIMerge has no webhooks: every 5 minutes the scheduled job checks orders still waiting for
+// Fallback to webhooks: every 5 minutes the scheduled job checks orders still waiting for
 // installation data and refreshes the status of eSIMs that are not expired. Activation data is never logged.
 export const Route = createFileRoute("/api/public/cron/esim-status-poll")({
   server: {
@@ -43,6 +43,8 @@ export const Route = createFileRoute("/api/public/cron/esim-status-poll")({
             errors++;
           }
         }
+        const { processPendingWebhookEvents } = await import("@/lib/esimerge-webhook.server");
+        await processPendingWebhookEvents().catch(() => {});
         return Response.json({ checked: rows?.length ?? 0, ready, refreshed, errors });
       },
     },

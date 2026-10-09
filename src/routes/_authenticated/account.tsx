@@ -90,8 +90,9 @@ function EsimCard({ e }: { e: Data["esims"][number] }) {
           {e.plan.type === "unlimited" && <UnlimitedNote throttleClaim={e.plan.throttle_claim} />}
           {e.iccidTail && <div className="mt-1 text-xs text-ink-muted">ICCID endet auf {e.iccidTail}</div>}
         </div>
-        <Chip tone={e.status === "ready" || e.status === "active" ? "active" : "default"}>{e.status === "ready" ? "Bereit" : e.status}</Chip>
+        <Chip tone={e.status === "ready" || e.status === "active" ? "active" : "default"}>{e.status === "ready" ? "Bereit" : e.status === "active" ? "Aktiv" : e.status === "expired" ? "Abgelaufen" : e.status}</Chip>
       </div>
+      {e.usageThreshold ? <p className="mt-3 text-sm text-ink">{e.usageThreshold >= 100 ? "Dein Datenvolumen ist aufgebraucht." : `${e.usageThreshold} % deines Datenvolumens sind verbraucht.`}</p> : null}
       {left !== null && <p className="mt-3 text-sm text-ink">{left > 0 ? `Noch ${left} Tag${left === 1 ? "" : "e"} gültig` : "Abgelaufen"}</p>}
       {pct !== null && usage && (
         <div className="mt-3">

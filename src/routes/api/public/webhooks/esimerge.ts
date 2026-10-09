@@ -25,9 +25,8 @@ export const Route = createFileRoute("/api/public/webhooks/esimerge")({
         const { dbEventStore, dbWebhookDeps } = await import("@/lib/esimerge-webhook.server");
         const pending: Promise<void>[] = [];
         const result = await receiveEvent(dbEventStore, dbWebhookDeps, ev, raw, deliveryId, mode, (p) => pending.push(p.catch(() => {})));
-        const ctx = (globalThis as { __cfCtx?: { waitUntil(p: Promise<unknown>): void } }).__cfCtx;
-        if (ctx) pending.forEach((p) => ctx.waitUntil(p));
-        else if (pending.length) await Promise.race([Promise.all(pending), new Promise((r) => setTimeout(r, 20_000))]);
+        // Give processing at most 20 s (eSIMerge expects 2xx within 60 s); anything left is picked up by the status poll.
+        if (pending.length) await Promise.race([Promise.all(pending), new Promise((r) => setTimeout(r, 20_000))]);
         return Response.json({ received: true, duplicate: result === "duplicate" });
       },
     },
