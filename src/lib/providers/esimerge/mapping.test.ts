@@ -27,9 +27,24 @@ describe("catalog mapping (sandbox fixtures)", () => {
     const r = mapCatalogItem(byId("esm_plan_eg_unlim_30d"));
     expect(r.ok && r.plan).toMatchObject({ type: "unlimited", dataMb: null, fairUse: { note: "20GB high-speed then throttled" } });
   });
-  it("calling plan is a data plan with minutes and SMS", () => {
+  it("calling plans are not imported for now (owner decision)", () => {
     const r = mapCatalogItem(byId("esm_plan_us_call_30d"));
-    expect(r.ok && r.plan).toMatchObject({ type: "data", dataMb: 5120, voiceSms: { minutes: 100, sms: 100 } });
+    expect(r).toEqual({ ok: false, providerPlanId: "esm_plan_us_call_30d", reason: "Telefonie-Tarif (vorerst nicht importiert)" });
+  });
+  it("territory codes (GB-SCT) map as own destination kind", () => {
+    const base = byId("esm_plan_sa_5gb_30d") as Record<string, unknown>;
+    const r = mapCatalogItem({ ...base, country_code: "GB-SCT", destination_name: "Scotland" });
+    expect(r.ok && r.plan).toMatchObject({ coverage: { kind: "country", countries: ["GB-SCT"] }, destinationKind: "territory", destinationName: "Scotland" });
+  });
+  it("alt product codes (CNA) map as hidden alt kind", () => {
+    const base = byId("esm_plan_sa_5gb_30d") as Record<string, unknown>;
+    const r = mapCatalogItem({ ...base, country_code: "CNA", destination_name: "China Alt" });
+    expect(r.ok && r.plan).toMatchObject({ coverage: { kind: "country", countries: ["CNA"] }, destinationKind: "alt" });
+  });
+  it("unknown special codes are still rejected with a reason", () => {
+    const base = byId("esm_plan_sa_5gb_30d") as Record<string, unknown>;
+    const r = mapCatalogItem({ ...base, country_code: "ZZZ" });
+    expect(r).toEqual({ ok: false, providerPlanId: "esm_plan_sa_5gb_30d", reason: "Länderkennung fehlt oder ungültig" });
   });
   it("EU plan maps to the region only (no invented country list)", () => {
     const r = mapCatalogItem(byId("esm_plan_eu_5gb_15d"));
