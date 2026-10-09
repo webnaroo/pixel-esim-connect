@@ -62,7 +62,7 @@ export const dbWebhookDeps: WebhookDeps = {
     const db = await admin();
     const { errorCodeLabel } = await import("./esimerge-order");
     const err = `${errorCodeLabel(code)}${code ? ` (Code: ${code})` : ""}`.slice(0, 300);
-    await db.from("orders").update({ status: "fulfillment_failed", last_error: err, next_attempt_at: null }).eq("id", orderId).neq("status", "fulfilled");
+    await db.from("orders").update({ status: "fulfillment_failed", last_error: err, next_attempt_at: null, failed_at: new Date().toISOString() }).eq("id", orderId).neq("status", "fulfilled");
     await db.from("audit_log").insert({ action: "provider_order_failed", entity: "order", entity_id: orderId, meta: { code: code ?? null, message: err } });
     const { sendOrderEmail } = await import("./email.server");
     await sendOrderEmail(orderId, "failure");

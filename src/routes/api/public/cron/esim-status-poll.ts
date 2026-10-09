@@ -11,7 +11,10 @@ export const Route = createFileRoute("/api/public/cron/esim-status-poll")({
         if (!guard.ok) return guard.response;
         const { supabaseAdmin: db } = await import("@/integrations/supabase/client.server");
         const { providerSetupStatus, getProvider } = await import("@/lib/providers/index.server");
-        if (!providerSetupStatus().configured) return Response.json({ skipped: "provider_not_configured" });
+        // Automatic refunds (switch "Automatische Erstattung", default off) — independent of provider config.
+        const { runDbAutoRefunds } = await import("@/lib/auto-refund.server");
+        const refunds = await runDbAutoRefunds().catch(() => ({ refunded: [], skipped: 0, errors: 1 }));
+        if (!providerSetupStatus().configured) return Response.json({ skipped: "provider_not_configured", refunds });
         const { dbFulfillmentStore } = await import("@/lib/fulfillment.server");
         const { hasInstallData } = await import("@/lib/providers/esimerge/mapping");
         const provider = getProvider();

@@ -78,8 +78,10 @@ export const refundOrder = createServerFn({ method: "POST" })
     if (!o || !["paid", "fulfilling", "fulfillment_failed", "payment_mismatch", "needs_review"].includes(o.status)) throw new Error("Nur bezahlte, nicht ausgelieferte Bestellungen können hier erstattet werden.");
     if (!o.stripe_payment_intent_id) throw new Error("Keine Zahlung zu dieser Bestellung gefunden.");
     const { refundPayment } = await import("./payments.server");
-    const r = await refundPayment(o.stripe_env === "live" ? "live" : "sandbox", o.stripe_payment_intent_id);
-    await db.from("orders").update({ status: "refunded" }).eq("id", data.orderId);
+    const { refundIdempotencyKey } = await import("./auto-refund");
+    // Same key as the automatic refund: a manual and an automatic refund can never both go through.
+    const r = await refundPayment(o.stripe_env === "live" ? "live" : "sandbox", o.stripe_payment_intent_id, refundIdempotencyKey(data.orderId));
+    await db.from("orders").update({ status: "refunded", refunded_at: new Date().toISOString(), refund_id: r.refundId, refund_started_at: new Date().toISOString() }).eq("id", data.orderId);
     await db.from("audit_log").insert({ actor_id: context.userId, action: "order_refunded", entity: "order", entity_id: data.orderId, meta: { refund_id: r.refundId } });
     return { ok: true };
   });

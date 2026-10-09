@@ -76,7 +76,7 @@ export const dbFulfillmentStore: FulfillmentStore = {
   },
   async markFailed(orderId, error) {
     const db = await admin();
-    await db.from("orders").update({ status: "fulfillment_failed", last_error: error }).eq("id", orderId);
+    await db.from("orders").update({ status: "fulfillment_failed", last_error: error, failed_at: new Date().toISOString(), next_attempt_at: null }).eq("id", orderId);
     await audit("fulfillment_failed", orderId, { attempts: MAX_FULFILLMENT_ATTEMPTS });
     const { sendOrderEmail } = await import("./email.server");
     await sendOrderEmail(orderId, "failure");
