@@ -4,7 +4,7 @@ import { queryOptions } from "@tanstack/react-query";
 import { createClient } from "@supabase/supabase-js";
 import { z } from "zod";
 import type { Database } from "@/integrations/supabase/types";
-import { checkoutRequestSchema, type CheckoutError } from "./checkout-rules";
+import { checkoutAccess, checkoutRequestSchema, type CheckoutError } from "./checkout-rules";
 import { computePrice, type PricingRule } from "./pricing";
 import { discountAmount, discountRedeemSchema, discountRejection, discountedTotals, isCodeFormatValid, normalizeCode, type DiscountRow } from "./discount-rules";
 
@@ -106,10 +106,12 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
     const caller = await callerIdentity();
     const { data: shop } = await db.from("app_settings").select("value").eq("key", "shop_enabled").maybeSingle();
     const live = shop?.value === true;
-    // While the shop switch is off, only admins may place (test) orders.
-    if (!live && !caller.isAdmin) return { ok: false, error: "shop_unavailable" };
     const { data: paused } = await db.from("app_settings").select("value").eq("key", "sales_paused").maybeSingle();
-    if (paused?.value === true) return { ok: false, error: "shop_unavailable" }; // sales pause applies to everyone
+    const accessError = checkoutAccess({ shopLive: live, isAdmin: caller.isAdmin, paused: paused?.value === true, environment: parsed.data.environment, realPaymentConsent: parsed.data.realPaymentConsent });
+    if (accessError) return { ok: false, error: accessError };
+    const { paymentsConfigured, createPayment } = await import("./payments.server");
+    const env = parsed.data.environment;
+    if (!paymentsConfigured(env)) return { ok: false, error: "payment_unavailable" };
 
     const r = await loadPricedPlan(parsed.data.planId);
     if (!r) return { ok: false, error: "plan_unavailable" };
@@ -138,12 +140,6 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
     if (totals.gross < 0.5) { await releaseDiscount(); return { ok: false, error: "discount_minimum" }; }
 
 
-    const { paymentsConfigured, createPayment } = await import("./payments.server");
-    const env = parsed.data.environment;
-    if (!paymentsConfigured(env)) return { ok: false, error: "payment_unavailable" };
-    // Live payments only once the shop is live; test payments only for admin test orders.
-    if ((env === "live") !== live) return { ok: false, error: "shop_unavailable" };
-
     const { data: order, error } = await db
       .from("orders")
       .insert({
@@ -162,7 +158,7 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
         discount_amount: discount?.amount ?? 0,
         status: "pending",
         withdrawal_consent_at: new Date().toISOString(),
-        is_test: !live,
+        is_test: env === "sandbox",
         is_sandbox: (await import("./providers/index.server")).providerSetupStatus().sandbox,
         stripe_env: env,
         // Margin traceability + price frozen for 30 minutes from checkout start.
@@ -186,7 +182,7 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
         returnUrl: `${parsed.data.returnOrigin}/order/${order.id}?t=${encodeURIComponent(token)}`,
       });
       await db.from("orders").update({ stripe_session_id: pay.sessionId }).eq("id", order.id);
-      return { ok: true, orderId: order.id, clientSecret: pay.clientSecret, token, isTest: !live };
+      return { ok: true, orderId: order.id, clientSecret: pay.clientSecret, token, isTest: env === "sandbox" };
     } catch (e) {
       const { getStripeErrorMessage } = await import("./stripe.server");
       await db.from("orders").update({ status: "cancelled", last_error: getStripeErrorMessage(e).slice(0, 300) }).eq("id", order.id);

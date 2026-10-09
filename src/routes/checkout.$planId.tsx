@@ -44,6 +44,7 @@ const MESSAGES: Record<CheckoutError, string> = {
   discount_invalid: "Dieser Rabattcode existiert nicht. Bitte prüfe die Schreibweise.",
   discount_rejected: "Dieser Rabattcode ist nicht mehr gültig – entweder abgelaufen, ausgeschaltet oder das Nutzungslimit ist erreicht.",
   discount_minimum: "Mit diesem Rabattcode läge der Endpreis unter dem erlaubten Mindestbetrag. Bitte kontaktiere support@globesim.de.",
+  real_payment_consent_required: "Admin-Probekauf: Diese Kasse verwendet echte Zahlungen. Es wird der angezeigte Betrag berechnet. Bitte bestätige dies unten.",
 };
 
 
@@ -83,6 +84,8 @@ function CheckoutPage() {
   const qc = useQueryClient();
   const [email, setEmail] = useState("");
   const [consent, setConsent] = useState(false);
+  const [realPaymentConsent, setRealPaymentConsent] = useState(false);
+  const [needsRealPaymentConsent, setNeedsRealPaymentConsent] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [clientSecret, setClientSecret] = useState<string | null>(null);
@@ -140,9 +143,10 @@ function CheckoutPage() {
     setBusy(true);
     try {
       // Only plan, email and consent are sent. The price is calculated on the server.
-      const r = await submit({ data: { planId, email, withdrawalConsent: true, environment, returnOrigin: window.location.origin, discountCode: discount?.code } });
+      const r = await submit({ data: { planId, email, withdrawalConsent: true, environment, realPaymentConsent, returnOrigin: window.location.origin, discountCode: discount?.code } });
       if (!r.ok) {
         setError(MESSAGES[r.error]);
+        if (r.error === "real_payment_consent_required") setNeedsRealPaymentConsent(true);
         if (r.error.startsWith("discount_")) { setDiscount(null); setCodeMessage(null); }
       }
       else setClientSecret(r.clientSecret);
@@ -214,7 +218,7 @@ function CheckoutPage() {
                     <input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} className="mt-1 size-5 shrink-0 accent-[var(--color-primary)]" required />
                     <span className="text-sm text-ink">
                       <span className="mb-1 block text-xs font-semibold uppercase tracking-wide text-ink">Widerrufsrecht</span>
-                      Ich stimme ausdrücklich zu, dass GlobeSIM vor Ablauf der Widerrufsfrist mit der Bereitstellung der eSIM beginnt. Mir ist bekannt, dass ich dadurch mein Widerrufsrecht verliere.
+                      Ich stimme ausdrücklich zu, dass GlobeSIM vor Ablauf der Widerrufsfrist mit der Bereitstellung der eSIM beginnt. Für eine nicht aktivierte eSIM gewährt GlobeSIM mir weiterhin ein Widerrufsrecht innerhalb von 14 Tagen nach Vertragsschluss. Nach der Aktivierung kann das gesetzliche Widerrufsrecht nur erlöschen, wenn die gesetzlichen Voraussetzungen erfüllt sind; die Aktivierung allein genügt nicht.
                     </span>
                   </label>
 
@@ -241,6 +245,12 @@ function CheckoutPage() {
                   </div>
 
                   {error && <ErrorBox message={error} />}
+                  {needsRealPaymentConsent && (
+                    <label className="flex items-start gap-3 text-sm text-ink">
+                      <input type="checkbox" checked={realPaymentConsent} onChange={(e) => setRealPaymentConsent(e.target.checked)} className="mt-1 size-5 shrink-0 accent-[var(--color-primary)]" />
+                      <span>Ich bestätige den Admin-Probekauf mit einer echten Zahlung über {totals ? formatPrice(totals.gross, plan.price?.currency ?? "EUR") : "den angezeigten Betrag"}. Dies ist keine kostenlose Testzahlung.</span>
+                    </label>
+                  )}
                   <Button type="submit" loading={busy} className="h-12 w-full text-base" disabled={!totals}>
                     <ShieldCheck className="mr-2 size-5" aria-hidden />Weiter zur Zahlung{totals ? ` · ${formatPrice(totals.gross, plan.price?.currency ?? "EUR")}` : ""}
                   </Button>

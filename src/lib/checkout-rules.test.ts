@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { checkoutRequestSchema } from "./checkout-rules";
+import { checkoutAccess, checkoutRequestSchema } from "./checkout-rules";
 
 const base = { planId: "8f14e45f-ceea-4e7a-9f6b-2b1f3c4d5e6f", email: "Gast@Example.de", withdrawalConsent: true, environment: "sandbox", returnOrigin: "https://globesim.example" };
 
@@ -13,5 +13,25 @@ describe("checkout request", () => {
   });
   it("requires the withdrawal checkbox", () => {
     expect(checkoutRequestSchema.safeParse({ ...base, withdrawalConsent: false }).success).toBe(false);
+  });
+});
+
+describe("admin checkout while shop is disabled", () => {
+  const input = { shopLive: false, isAdmin: true, paused: false, environment: "sandbox" as const };
+  it("allows verified admins to start test payments", () => {
+    expect(checkoutAccess(input)).toBeNull();
+  });
+  it("requires explicit consent for a real admin payment", () => {
+    expect(checkoutAccess({ ...input, environment: "live" })).toBe("real_payment_consent_required");
+    expect(checkoutAccess({ ...input, environment: "live", realPaymentConsent: true })).toBeNull();
+  });
+  it("never lets customers bypass the closed shop", () => {
+    expect(checkoutAccess({ ...input, isAdmin: false, environment: "live", realPaymentConsent: true })).toBe("shop_unavailable");
+  });
+  it("keeps the emergency sales pause for admins", () => {
+    expect(checkoutAccess({ ...input, paused: true })).toBe("shop_unavailable");
+  });
+  it("does not allow sandbox payments in the public live shop", () => {
+    expect(checkoutAccess({ ...input, shopLive: true })).toBe("shop_unavailable");
   });
 });
