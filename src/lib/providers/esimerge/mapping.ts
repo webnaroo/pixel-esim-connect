@@ -58,9 +58,13 @@ export function mapCatalogItem(raw: unknown): CatalogItemResult {
   if (p.currency.toUpperCase() !== COST_CURRENCY) return { ok: false, providerPlanId: p.id, reason: `Unbekannte Einkaufswährung ${p.currency}` };
 
   let coverage: NormalizedPlan["coverage"];
+  let destinationKind: NormalizedPlan["destinationKind"];
   if (p.scope === "country") {
     const iso = (p.country_code ?? "").toUpperCase();
-    if (!/^[A-Z]{2}$/.test(iso)) return { ok: false, providerPlanId: p.id, reason: "Länderkennung fehlt oder ungültig" };
+    if (/^[A-Z]{2}$/.test(iso)) destinationKind = "standard";
+    else if (TERRITORY_CODES.has(iso)) destinationKind = "territory";
+    else if (ALT_PRODUCT_CODES.has(iso)) destinationKind = "alt";
+    else return { ok: false, providerPlanId: p.id, reason: "Länderkennung fehlt oder ungültig" };
     coverage = { kind: "country", countries: [iso] };
   } else if (p.scope === "region") {
     if (!p.region_code) return { ok: false, providerPlanId: p.id, reason: "Regionskennung fehlt" };
@@ -73,7 +77,9 @@ export function mapCatalogItem(raw: unknown): CatalogItemResult {
   }
 
   let type: NormalizedPlan["type"];
-  if (p.type === "fixed" || p.type === "calling") type = "data";
+  // Owner decision: calling plans (voice/SMS) are not imported for now.
+  if (p.type === "calling") return { ok: false, providerPlanId: p.id, reason: "Telefonie-Tarif (vorerst nicht importiert)" };
+  if (p.type === "fixed") type = "data";
   else if (p.type === "unlimited") type = "unlimited";
   else return { ok: false, providerPlanId: p.id, reason: `Unbekannter Tariftyp ${p.type}` };
 
