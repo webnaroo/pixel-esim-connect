@@ -2,7 +2,10 @@ import { CompatCheck } from "@/components/compat-check";
 import { UnlimitedLabel, UnlimitedNote } from "@/components/unlimited-claim";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import { EmbeddedCheckoutProvider, EmbeddedCheckout } from "@stripe/react-stripe-js";
+import { getStripe, getStripeEnvironment } from "@/lib/stripe";
+import { ShieldCheck, Zap, Mail, Lock } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
 import { SiteLayout } from "@/components/layout";
 import { Flag, EmptyState, ErrorBox, FixtureBadge } from "@/components/brand";
@@ -39,16 +42,32 @@ const MESSAGES: Record<CheckoutError, string> = {
   rate_limited: "Zu viele Versuche. Bitte warte eine Minute.",
 };
 
+
 function Steps({ current }: { current: number }) {
   const steps = ["Angaben", "Zahlung", "Fertig"];
   return (
-    <ol className="flex gap-2 text-sm" aria-label="Schritte">
+    <ol className="grid grid-cols-3 gap-2 text-sm" aria-label="Schritte">
       {steps.map((s, i) => (
-        <li key={s} aria-current={i === current ? "step" : undefined} className={`flex-1 border-t-2 pt-2 ${i <= current ? "border-primary text-ink" : "border-line text-ink-muted"}`}>
-          {i + 1}. {s}
+        <li key={s} aria-current={i === current ? "step" : undefined} className="min-w-0">
+          <div className={`h-1.5 rounded-full ${i <= current ? "bg-primary" : "bg-line"}`} />
+          <div className={`mt-2 flex items-center gap-2 truncate ${i <= current ? "font-medium text-ink" : "text-ink-muted"}`}>
+            <span className={`grid size-6 shrink-0 place-items-center rounded-full text-xs ${i < current ? "bg-primary text-primary-foreground" : i === current ? "border-2 border-primary text-primary" : "border border-line text-ink-muted"}`}>{i < current ? "✓" : i + 1}</span>
+            <span className="truncate">{s}</span>
+          </div>
         </li>
       ))}
     </ol>
+  );
+}
+
+function PaymentForm({ clientSecret }: { clientSecret: string }) {
+  const options = useMemo(() => ({ fetchClientSecret: async () => clientSecret }), [clientSecret]);
+  return (
+    <div id="checkout" className="overflow-hidden rounded-xl border border-line bg-surface p-2 sm:p-4">
+      <EmbeddedCheckoutProvider stripe={getStripe()} options={options}>
+        <EmbeddedCheckout />
+      </EmbeddedCheckoutProvider>
+    </div>
   );
 }
 
@@ -60,6 +79,7 @@ function CheckoutPage() {
   const [consent, setConsent] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [clientSecret, setClientSecret] = useState<string | null>(null);
 
   if (!plan) {
     return (
@@ -78,12 +98,14 @@ function CheckoutPage() {
     setError(null);
     if (!isEmail(email)) return setError("Bitte gib eine gültige E-Mail-Adresse ein.");
     if (!consent) return setError("Bitte bestätige den Hinweis zum Widerrufsrecht.");
+    let environment: "sandbox" | "live";
+    try { environment = getStripeEnvironment(); } catch { return setError(MESSAGES.payment_unavailable); }
     setBusy(true);
     try {
       // Only plan, email and consent are sent. The price is calculated on the server.
-      const r = await submit({ data: { planId, email, withdrawalConsent: true } });
+      const r = await submit({ data: { planId, email, withdrawalConsent: true, environment, returnOrigin: window.location.origin } });
       if (!r.ok) setError(MESSAGES[r.error]);
-      // TODO(STRIPE): mount the payment form with r.clientSecret, then go to /order/$orderId?t=token.
+      else setClientSecret(r.clientSecret);
     } catch {
       setError("Etwas ist schiefgelaufen. Bitte versuche es erneut.");
     } finally {
@@ -91,53 +113,78 @@ function CheckoutPage() {
     }
   };
 
+  const summary = (
+    <aside className="rounded-2xl border border-line bg-surface p-5 sm:p-6 lg:sticky lg:top-24">
+      <h2 className="text-sm font-semibold uppercase tracking-wide text-ink-muted">Deine Bestellung</h2>
+      <div className="mt-4 flex items-center gap-4">
+        <Flag code={plan.destination.flagCode} size={48} />
+        <div className="min-w-0 flex-1">
+          <div className="truncate text-lg font-semibold text-ink">{plan.destination.name}</div>
+          <div className="text-sm text-ink-muted">{plan.type === "unlimited" ? <UnlimitedLabel throttleClaim={plan.throttleClaim} /> : formatData(plan.dataMb)} · {formatDays(plan.validityDays)}</div>
+        </div>
+      </div>
+      {plan.type === "unlimited" && <div className="mt-2"><UnlimitedNote throttleClaim={plan.throttleClaim} /></div>}
+      {!clientSecret && <Link to="/countries/$slug" params={{ slug: plan.destination.slug }} className="mt-3 inline-block text-sm font-medium text-primary">Tarif ändern</Link>}
+      <dl className="mt-5 space-y-2 border-t border-line pt-4 text-sm">
+        {plan.price ? (
+          <>
+            <div className="flex justify-between text-ink-muted"><dt>Netto</dt><dd className="tabular">{formatPrice(plan.price.net, plan.price.currency)}</dd></div>
+            <div className="flex justify-between text-ink-muted"><dt>MwSt. ({Math.round(plan.price.vatRate * 100)} %)</dt><dd className="tabular">{formatPrice(plan.price.vat, plan.price.currency)}</dd></div>
+            <div className="flex items-baseline justify-between border-t border-line pt-3 text-ink"><dt className="font-semibold">Gesamt</dt><dd className="tabular text-2xl font-semibold">{formatPrice(plan.price.gross, plan.price.currency)}</dd></div>
+            <p className="text-xs text-ink-muted">inkl. MwSt. · einmalige Zahlung, kein Abo</p>
+          </>
+        ) : (
+          <p className="text-ink-muted">Für diesen Tarif liegt aktuell kein gültiger Preis vor.</p>
+        )}
+      </dl>
+      <ul className="mt-5 space-y-2.5 border-t border-line pt-4 text-sm text-ink">
+        <li className="flex items-center gap-2.5"><Zap className="size-4 shrink-0 text-primary" aria-hidden />eSIM direkt nach der Zahlung per E-Mail</li>
+        <li className="flex items-center gap-2.5"><Lock className="size-4 shrink-0 text-primary" aria-hidden />Verschlüsselte Zahlung über Stripe</li>
+        <li className="flex items-center gap-2.5"><Mail className="size-4 shrink-0 text-primary" aria-hidden />Hilfe unter support@globesim.de</li>
+      </ul>
+    </aside>
+  );
+
   return (
     <SiteLayout>
-      <section className="container-page max-w-2xl pb-20 pt-8">
-        <Steps current={0} />
-        <h1 className="mt-8 text-3xl">Kasse</h1>
+      <section className="container-page max-w-5xl pb-20 pt-8">
+        <Steps current={clientSecret ? 1 : 0} />
+        <div className="mt-8 grid gap-8 lg:grid-cols-[minmax(0,1fr)_360px]">
+          <div className="min-w-0">
+            <h1 className="text-3xl">{clientSecret ? "Sicher bezahlen" : "Kasse"}</h1>
+            <p className="mt-2 text-ink-muted">{clientSecret ? "Wähle deine Zahlungsart. Danach bekommst du deine eSIM sofort." : "Nur noch zwei Angaben, dann geht es zur Zahlung."}</p>
 
-        <div className="mt-6 flex items-center gap-4 rounded-lg border border-line bg-surface p-4">
-          <Flag code={plan.destination.flagCode} size={40} />
-          <div className="min-w-0 flex-1">
-            <div className="font-medium text-ink">{plan.destination.name}</div>
-            <div className="text-sm text-ink-muted">{plan.type === "unlimited" ? <UnlimitedLabel throttleClaim={plan.throttleClaim} /> : formatData(plan.dataMb)} · {formatDays(plan.validityDays)}</div>
-            {plan.type === "unlimited" && <UnlimitedNote throttleClaim={plan.throttleClaim} />}
+            {clientSecret ? (
+              <div className="mt-6"><PaymentForm clientSecret={clientSecret} /></div>
+            ) : (
+              <>
+                <CompatCheck className="mt-6" />
+                {/* TODO(LEGAL): Offene Frage – soll im Widerrufs-/Bestelltext eine Bestätigung der Gerätekompatibilität stehen? Juristische Prüfung ausstehend; bewusst keine Pflicht-Checkbox. */}
+                <form onSubmit={onSubmit} className="mt-6 space-y-5" noValidate>
+                  <label className="block">
+                    <span className="text-sm font-medium text-ink">E-Mail für die eSIM</span>
+                    <Input type="email" inputMode="email" autoComplete="email" value={email} maxLength={254} onChange={(e) => setEmail(e.target.value)} className="mt-2 text-base" placeholder="name@beispiel.de" />
+                    <span className="mt-1.5 block text-xs text-ink-muted">Hierhin schicken wir deinen Installationslink.</span>
+                  </label>
+
+                  <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-line bg-surface p-4">
+                    <input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} className="mt-1 size-5 shrink-0 accent-[var(--color-primary)]" required />
+                    <span className="text-sm text-ink">
+                      <span className="mb-1 block text-xs font-semibold uppercase tracking-wide text-ink">Platzhalter – juristische Prüfung ausstehend</span>
+                      Ich stimme ausdrücklich zu, dass GlobeSIM vor Ablauf der Widerrufsfrist mit der Bereitstellung der eSIM beginnt. Mir ist bekannt, dass ich dadurch mein Widerrufsrecht verliere.
+                    </span>
+                  </label>
+
+                  {error && <ErrorBox message={error} />}
+                  <Button type="submit" loading={busy} className="h-12 w-full text-base" disabled={!plan.price}>
+                    <ShieldCheck className="mr-2 size-5" aria-hidden />Weiter zur Zahlung{plan.price ? ` · ${formatPrice(plan.price.gross, plan.price.currency)}` : ""}
+                  </Button>
+                </form>
+              </>
+            )}
           </div>
-          <Link to="/countries/$slug" params={{ slug: plan.destination.slug }} className="text-sm font-medium text-primary">Ändern</Link>
+          {summary}
         </div>
-        <CompatCheck className="mt-3" />
-        {/* TODO(LEGAL): Offene Frage – soll im Widerrufs-/Bestelltext eine Bestätigung der Gerätekompatibilität stehen? Juristische Prüfung ausstehend; bewusst keine Pflicht-Checkbox. */}
-
-        <dl className="mt-4 space-y-1 text-sm">
-          {plan.price ? (
-            <>
-              <div className="flex justify-between text-ink-muted"><dt>Netto</dt><dd className="tabular">{formatPrice(plan.price.net, plan.price.currency)}</dd></div>
-              <div className="flex justify-between text-ink-muted"><dt>MwSt. ({Math.round(plan.price.vatRate * 100)} %)</dt><dd className="tabular">{formatPrice(plan.price.vat, plan.price.currency)}</dd></div>
-              <div className="flex justify-between pt-1 text-base font-semibold text-ink"><dt>Gesamt</dt><dd className="tabular">{formatPrice(plan.price.gross, plan.price.currency)}</dd></div>
-            </>
-          ) : (
-            <p className="text-ink-muted">Für diesen Tarif liegt aktuell kein gültiger Preis vor.</p>
-          )}
-        </dl>
-
-        <form onSubmit={onSubmit} className="mt-8 space-y-5" noValidate>
-          <label className="block">
-            <span className="text-sm font-medium text-ink">E-Mail für die eSIM</span>
-            <Input type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} className="mt-2" placeholder="name@beispiel.de" />
-          </label>
-
-          <label className="flex items-start gap-3 rounded-lg border border-line bg-surface p-4">
-            <input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} className="mt-1 size-5 shrink-0 accent-[var(--color-primary)]" required />
-            <span className="text-sm text-ink">
-              <span className="mb-1 block text-xs font-semibold uppercase tracking-wide text-ink">Platzhalter – juristische Prüfung ausstehend</span>
-              Ich stimme ausdrücklich zu, dass GlobeSIM vor Ablauf der Widerrufsfrist mit der Bereitstellung der eSIM beginnt. Mir ist bekannt, dass ich dadurch mein Widerrufsrecht verliere.
-            </span>
-          </label>
-
-          {error && <ErrorBox message={error} />}
-          <Button type="submit" loading={busy} className="w-full" disabled={!plan.price}>Weiter zur Zahlung</Button>
-        </form>
 
         {USE_FIXTURES && (
           <div className="mt-10 flex flex-wrap items-center gap-3 rounded-lg border border-dashed border-line-strong p-4 text-sm">

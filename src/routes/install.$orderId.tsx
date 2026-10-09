@@ -50,6 +50,7 @@ function Copy({ label, value }: { label: string; value: string }) {
           {state === "done" ? "Kopiert" : "Kopieren"}
         </button>
       </div>
+      {state === "manual" && <p className="mt-2 text-xs text-ink-muted" role="status">Kopieren ist hier blockiert. Tipp lange auf den Text, um ihn zu markieren und zu kopieren.</p>}
     </div>
   );
 }
