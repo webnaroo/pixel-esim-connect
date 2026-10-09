@@ -98,6 +98,26 @@ function CheckoutPage() {
     return { ...discountedTotals(plan.price.gross, amount, plan.price.vatRate), discountAmount: amount };
   }, [plan?.price, discount]);
 
+  const applyCode = async () => {
+    setCodeMessage(null);
+    if (!codeInput.trim()) return;
+    setCodeChecking(true);
+    try {
+      const r = await checkCode({ data: { code: codeInput } });
+      if (r.ok) setDiscount({ code: codeInput.trim().toUpperCase(), type: r.type, value: r.value });
+      else setCodeMessage(
+        r.reason === "rate_limited" ? "Zu viele Versuche. Bitte warte eine Minute."
+        : r.reason === "invalid_format" ? "So sieht kein Rabattcode aus. Bitte prüfe die Schreibweise."
+        : r.reason === "unknown" ? "Diesen Rabattcode gibt es nicht. Bitte prüfe die Schreibweise."
+        : "Dieser Rabattcode ist nicht mehr gültig – abgelaufen, ausgeschaltet oder Nutzungslimit erreicht.",
+      );
+    } catch {
+      setCodeMessage("Der Code konnte gerade nicht geprüft werden. Bitte versuche es erneut.");
+    } finally {
+      setCodeChecking(false);
+    }
+  };
+
   if (!plan) {
     return (
       <SiteLayout>
