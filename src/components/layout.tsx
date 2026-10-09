@@ -7,6 +7,20 @@ import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { legalIndexQuery } from "@/lib/content.functions";
+import { ShoppingCart } from "@phosphor-icons/react";
+import { useCart } from "@/lib/cart";
+
+function CartLink() {
+  const items = useCart();
+  return (
+    <Link to="/cart" aria-label={`Warenkorb (${items.length})`} className="relative flex size-12 items-center justify-center rounded-md text-ink hover:bg-muted lg:size-10">
+      <ShoppingCart size={22} aria-hidden />
+      {items.length > 0 && (
+        <span className="absolute right-1 top-1 flex min-w-[18px] items-center justify-center rounded-full bg-primary px-1 text-[11px] font-semibold leading-[18px] text-primary-foreground">{items.length}</span>
+      )}
+    </Link>
+  );
+}
 
 const NAV = [
   { to: "/destinations", label: "Reiseziele" },
@@ -69,6 +83,7 @@ export function Header() {
           {showHeaderSearch && <SearchBox size="sm" />}
         </div>
         <div className="ml-auto flex shrink-0 items-center gap-1 lg:ml-0">
+          <CartLink />
           <Link
             to={user ? "/account" : "/login"}
             className="hidden h-10 items-center gap-2 rounded-md px-3 text-[15px] font-medium text-ink hover:bg-muted lg:inline-flex"

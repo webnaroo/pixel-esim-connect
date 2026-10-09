@@ -1,4 +1,9 @@
 import { guideForCountryQuery } from "@/lib/content.functions";
+import { useServerFn } from "@tanstack/react-start";
+import { toast } from "sonner";
+import { useAuth } from "@/hooks/use-auth";
+import { getMyRole } from "@/lib/account.functions";
+import { cart, useCart } from "@/lib/cart";
 import { FixtureBadge } from "./brand";
 import { CompatCheck } from "./compat-check";
 import { NoThrottleClaim, UnlimitedLabel } from "./unlimited-claim";
@@ -21,6 +26,9 @@ type Filters = { days: number | null; minGb: number | null };
 export function DestinationPage({ slug }: { slug: string }) {
   const { data: d } = useSuspenseQuery(destinationQuery(slug));
   const { data: shop } = useQuery(shopStateQuery());
+  const { user } = useAuth();
+  const getRole = useServerFn(getMyRole);
+  const { data: role } = useQuery({ queryKey: ["my-role", user?.id], queryFn: () => getRole(), enabled: Boolean(user) });
   const [selected, setSelected] = useState<string | null>(null);
   const [filters, setFilters] = useState<Filters>({ days: null, minGb: null });
 
@@ -35,8 +43,10 @@ export function DestinationPage({ slug }: { slug: string }) {
     (p) => (filters.days == null || p.validityDays === filters.days) && (filters.minGb == null || p.type === "unlimited" || (p.dataMb ?? 0) >= filters.minGb * 1024),
   );
   const selectedPlan = d.plans.find((p) => p.id === selected) ?? null;
-  const canBuy = shop?.state === "live" && !d.fixturePlans;
   const paused = shop?.state === "paused";
+  // Admins may place test orders while the shop switch is off (the server enforces this again).
+  const adminTest = Boolean(role?.isAdmin) && shop?.state !== "live" && !paused && !d.fixturePlans;
+  const canBuy = (shop?.state === "live" && !d.fixturePlans) || adminTest;
   const isCountry = d.type === "country";
   const fromPrice = hasPlans ? Math.min(...d.plans.map((p) => p.price)) : null;
   const allDays = [...new Set((tab === "data" ? dataPlans : unlimitedPlans).map((p) => p.validityDays))].sort((a, b) => a - b);
@@ -113,7 +123,7 @@ export function DestinationPage({ slug }: { slug: string }) {
                 ))}
               </div>
               {plans.length === 0 && <p className="mt-6 text-sm text-ink-muted">Keine Tarife für diese Filter.</p>}
-              {selectedPlan && <div className="mt-6 hidden lg:block"><BuyBar plan={selectedPlan} canBuy={canBuy} paused={paused} inline /></div>}
+              {selectedPlan && <div className="mt-6 hidden lg:block"><BuyBar plan={selectedPlan} canBuy={canBuy} paused={paused} destination={d.name} adminTest={adminTest} inline /></div>}
             </div>
           </div>
         )}
@@ -177,7 +187,7 @@ export function DestinationPage({ slug }: { slug: string }) {
 
       {selectedPlan && (
         <div className="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-surface lg:hidden">
-          <div className="container-page py-3"><BuyBar plan={selectedPlan} canBuy={canBuy} paused={paused} /></div>
+          <div className="container-page py-3"><BuyBar plan={selectedPlan} canBuy={canBuy} paused={paused} destination={d.name} adminTest={adminTest} /></div>
         </div>
       )}
     </div>
@@ -203,7 +213,10 @@ function Info({ k, v }: { k: string; v: string }) {
   );
 }
 
-function BuyBar({ plan, canBuy, paused, inline }: { plan: PlanItem; canBuy: boolean; paused?: boolean; inline?: boolean }) {
+function BuyBar({ plan, canBuy, paused, inline, destination, adminTest }: { plan: PlanItem; canBuy: boolean; paused?: boolean; inline?: boolean; destination: string; adminTest?: boolean }) {
+  const items = useCart();
+  const inCart = items.some((i) => i.planId === plan.id);
+  const label = `${plan.type === "unlimited" ? "Unlimited" : formatData(plan.dataMb)} · ${formatDays(plan.validityDays)}`;
   return (
     <div className={inline ? "flex items-center justify-between gap-4 rounded-lg border border-line bg-surface p-4" : "flex items-center justify-between gap-4"}>
       <div>
@@ -211,8 +224,15 @@ function BuyBar({ plan, canBuy, paused, inline }: { plan: PlanItem; canBuy: bool
         <div className="tabular text-lg font-semibold">{formatPrice(plan.price, plan.currency)}</div>
       </div>
       <div className="text-right">
-        {canBuy ? <LinkButton to="/checkout/$planId" params={{ planId: plan.id }}>Weiter</LinkButton> : <Button disabled>{paused ? "Gerade nicht verfügbar" : "Bald verfügbar"}</Button>}
-        <p className="mt-1 text-xs text-ink-muted">{canBuy ? "Sofort per E-Mail · Sichere Zahlung" : paused ? "Vorübergehend nicht verfügbar." : "Der Kauf wird gerade vorbereitet."}</p>
+        {canBuy ? (
+          <div className="flex items-center justify-end gap-2">
+            <Button variant="secondary" disabled={inCart} onClick={() => { cart.add({ planId: plan.id, destination, label, price: plan.price, currency: plan.currency }); toast.success("Zum Warenkorb hinzugefügt."); }}>
+              {inCart ? "Im Warenkorb" : "In den Warenkorb"}
+            </Button>
+            <LinkButton to="/checkout/$planId" params={{ planId: plan.id }}>Weiter</LinkButton>
+          </div>
+        ) : <Button disabled>{paused ? "Gerade nicht verfügbar" : "Bald verfügbar"}</Button>}
+        <p className="mt-1 text-xs text-ink-muted">{adminTest ? "Admin-Testkauf · Shop ist noch aus" : canBuy ? "Sofort per E-Mail · Sichere Zahlung" : paused ? "Vorübergehend nicht verfügbar." : "Der Kauf wird gerade vorbereitet."}</p>
       </div>
     </div>
   );
