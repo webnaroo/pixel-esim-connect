@@ -20,9 +20,10 @@ export const dbFulfillmentStore: FulfillmentStore = {
     if (!snap.provider_plan_id) return null;
     return { id: row.id, attempts: row.fulfillment_attempts, idempotencyKey: row.idempotency_key, providerPlanId: snap.provider_plan_id, email: row.guest_email };
   },
-  async markFulfilled(orderId, providerOrderId, esim) {
+  async markFulfilled(orderId, providerOrderId, esim, amountUsd) {
     const db = await admin();
     const { data: order } = await db.from("orders").select("user_id").eq("id", orderId).single();
+    if (amountUsd != null) await recordActualCost(orderId, amountUsd);
     const lpa = esim?.lpaString ?? (esim?.smdpAddress && esim.activationCode ? `LPA:1$${esim.smdpAddress}$${esim.activationCode}` : null);
     await db.from("esims").upsert(
       {
@@ -111,5 +112,18 @@ export async function pollPendingInstallData(orderId: string, opts: { maxMs?: nu
   const { hasInstallData } = await import("./providers/esimerge/mapping");
   const p = getProvider();
   const res = await pollUntilReady(() => p.getOrder!(e.provider_order_id!), (r) => hasInstallData(r.esim), opts);
-  if (res) await dbFulfillmentStore.markFulfilled(orderId, res.providerOrderId, res.esim);
+  if (res) await dbFulfillmentStore.markFulfilled(orderId, res.providerOrderId, res.esim, res.amountUsd);
+}
+
+/** Stores amount_usd as the real purchase price and warns (audit) when it differs from the catalog. Customer price is untouched. */
+export async function recordActualCost(orderId: string, amountUsd: number) {
+  const db = await admin();
+  const { data: o } = await db.from("orders").select("plan_id,cost_amount").eq("id", orderId).maybeSingle();
+  if (!o || (o.cost_amount != null && Number(o.cost_amount) === amountUsd)) return;
+  await db.from("orders").update({ cost_amount: amountUsd, cost_currency: "USD" }).eq("id", orderId);
+  if (!o.plan_id) return;
+  const { data: p } = await db.from("plans").select("cost_price,cost_currency").eq("id", o.plan_id).maybeSingle();
+  const { costDeviation } = await import("./esimerge-order");
+  const warn = p && p.cost_currency.toUpperCase() === "USD" ? costDeviation(amountUsd, Number(p.cost_price)) : null;
+  if (warn) await audit("cost_mismatch", orderId, { message: warn, actual_usd: amountUsd, catalog_usd: Number(p!.cost_price) });
 }

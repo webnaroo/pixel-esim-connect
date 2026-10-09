@@ -29,8 +29,13 @@ export const dbWebhookDeps: WebhookDeps = {
     if (refs.orderId) q = q.eq("provider_order_id", refs.orderId);
     else if (refs.esimId) q = q.eq("provider_esim_id", refs.esimId);
     else if (refs.iccid) q = q.eq("iccid", refs.iccid);
+    else if (refs.customerReference && /^[0-9a-f-]{36}$/i.test(refs.customerReference)) q = q.eq("order_id", refs.customerReference);
     else return null;
-    const { data } = await q.maybeSingle();
+    let { data } = await q.maybeSingle();
+    // Fallback: our own reference (customer_reference = our order id) when the eSIMerge id is not stored yet.
+    if (!data && refs.orderId && refs.customerReference && /^[0-9a-f-]{36}$/i.test(refs.customerReference)) {
+      ({ data } = await db.from("esims").select("order_id,provider_order_id,provider_esim_id,lpa_string,usage_alerts_sent,orders!inner(id,status,is_sandbox)").eq("order_id", refs.customerReference).limit(1).maybeSingle());
+    }
     if (!data) return null;
     const o = data.orders as unknown as { id: string; status: string; is_sandbox: boolean };
     return { id: o.id, status: o.status, isSandbox: o.is_sandbox, providerOrderId: data.provider_order_id, providerEsimId: data.provider_esim_id, hasInstallData: Boolean(data.lpa_string), alertsSent: data.usage_alerts_sent ?? [] };
@@ -38,7 +43,7 @@ export const dbWebhookDeps: WebhookDeps = {
   async getOrder(id) {
     const { getProvider } = await import("./providers/index.server");
     const r = await getProvider().getOrder!(id);
-    return { status: r.status, providerStatus: r.esim?.providerStatus, esim: r.esim };
+    return { amountUsd: r.amountUsd, status: r.status, orderStatus: r.orderStatus, errorCode: r.errorCode, activatedAt: r.activatedAt, providerStatus: r.esim?.providerStatus, esim: r.esim };
   },
   async getUsagePercent(esimId) {
     const { getProvider } = await import("./providers/index.server");
@@ -50,14 +55,23 @@ export const dbWebhookDeps: WebhookDeps = {
     const db = await admin();
     const { data } = await db.from("esims").select("provider_order_id").eq("order_id", orderId).single();
     await dbFulfillmentStore.markFulfilled(orderId, data!.provider_order_id!, api.esim as never);
+    const amount = api.amountUsd;
+    if (amount != null) { const { recordActualCost } = await import("./fulfillment.server"); await recordActualCost(orderId, amount); }
   },
-  async markFailed(orderId, code, reason) {
+  async markFailed(orderId, code) {
     const db = await admin();
-    const err = `eSIMerge: ${code ?? "Fehler"}${reason ? ` – ${reason}` : ""}`.slice(0, 300);
+    const { errorCodeLabel } = await import("./esimerge-order");
+    const err = `${errorCodeLabel(code)}${code ? ` (Code: ${code})` : ""}`.slice(0, 300);
     await db.from("orders").update({ status: "fulfillment_failed", last_error: err, next_attempt_at: null }).eq("id", orderId).neq("status", "fulfilled");
-    await db.from("audit_log").insert({ action: "provider_order_failed", entity: "order", entity_id: orderId, meta: { code: code ?? null, reason: reason ?? null } });
+    await db.from("audit_log").insert({ action: "provider_order_failed", entity: "order", entity_id: orderId, meta: { code: code ?? null, message: err } });
     const { sendOrderEmail } = await import("./email.server");
     await sendOrderEmail(orderId, "failure");
+  },
+  async markCancelled(orderId) {
+    const db = await admin();
+    await db.from("orders").update({ status: "cancelled", last_error: "eSIMerge: Bestellung storniert – Erstatten prüfen", next_attempt_at: null }).eq("id", orderId);
+    await db.from("esims").update({ status: "cancelled" }).eq("order_id", orderId);
+    await db.from("audit_log").insert({ action: "provider_order_cancelled", entity: "order", entity_id: orderId, meta: { message: "Von eSIMerge storniert – Erstatten prüfen" } });
   },
   async setEsim(orderId, patch) {
     const db = await admin();

@@ -53,8 +53,12 @@ export const esimSchema = z.object({
 export const orderSchema = z.object({
   id: z.string(),
   object: z.literal("order"),
-  status: z.string(), // seen: issued
+  status: z.string(), // documented: pending | issued | active | expired | cancelled | failed
   esim: esimSchema.nullable().optional(),
+  amount_usd: z.number().nullable().optional(),
+  customer_reference: z.string().nullable().optional(),
+  activated_at: z.string().nullable().optional(),
+  error: z.object({ code: z.string().nullable().optional(), message: z.string().nullable().optional() }).nullable().optional(),
 });
 
 export const usageSchema = z.object({

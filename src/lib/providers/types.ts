@@ -26,6 +26,13 @@ export type ProviderOrderResult = {
   providerOrderId: string;
   status: "pending" | "ready";
   esim?: EsimDetails;
+  /** Order status as reported by the provider API (eSIMerge: pending|issued|active|expired|cancelled|failed). */
+  orderStatus?: import("../esimerge-order").EsmOrderStatus;
+  /** Provider error code when failed (admin only; never shown raw to customers). */
+  errorCode?: string;
+  /** Actual purchase price of this order in USD. */
+  amountUsd?: number;
+  activatedAt?: string;
 };
 
 export type EsimDetails = {
@@ -61,7 +68,7 @@ export interface ProviderAdapter {
   listPlansDetailed?(): Promise<{ plans: NormalizedPlan[]; unmapped: { providerPlanId: string | null; reason: string }[] }>;
   listPlans(scope?: { countryIso2?: string; regionCode?: string }): Promise<NormalizedPlan[]>;
   checkAvailability(providerPlanId: string): Promise<{ available: boolean; reason?: string }>;
-  createOrder(input: { providerPlanId: string; customerEmail: string; idempotencyKey: string }): Promise<ProviderOrderResult>;
+  createOrder(input: { providerPlanId: string; customerEmail: string; idempotencyKey: string; customerReference?: string }): Promise<ProviderOrderResult>;
   getEsim(providerOrderId: string): Promise<EsimDetails>;
   getOrder?(providerOrderId: string): Promise<ProviderOrderResult>;
   getUsage?(providerEsimId: string): Promise<EsimUsage>;

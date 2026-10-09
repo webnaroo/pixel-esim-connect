@@ -266,7 +266,13 @@ export const getWebhookEvents = createServerFn({ method: "GET" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { providerSetupStatus } = await import("./providers/index.server");
     const { data } = await supabaseAdmin.from("provider_webhook_events").select("id,event_id,delivery_id,event_type,mode,status,error,order_id,received_at,processed_at").order("received_at", { ascending: false }).limit(200);
-    return { secretSet: providerSetupStatus().webhookSecretSet, events: data ?? [] };
+    // Provider alerts for the admin: failed / cancelled orders and purchase-price deviations.
+    const { data: alerts } = await supabaseAdmin.from("audit_log").select("id,action,entity_id,meta,created_at").in("action", ["provider_order_failed", "provider_order_cancelled", "cost_mismatch"]).order("created_at", { ascending: false }).limit(50);
+    return {
+      secretSet: providerSetupStatus().webhookSecretSet,
+      events: data ?? [],
+      alerts: (alerts ?? []).map((a) => ({ id: a.id, action: a.action, orderId: a.entity_id, message: String((a.meta as { message?: string } | null)?.message ?? ""), createdAt: a.created_at })),
+    };
   });
 
 export const webhookEventsQuery = () => queryOptions({ queryKey: ["admin", "webhooks"], queryFn: () => getWebhookEvents() });

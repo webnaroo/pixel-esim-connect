@@ -1,3 +1,4 @@
+import { mapOrderStatus } from "../../esimerge-order";
 import { maskSensitive } from "@/lib/mask";
 // eSIMerge -> internal type mapping, written against real SANDBOX responses (sandbox.fixtures.ts).
 // Pure functions only.
@@ -130,7 +131,15 @@ export function hasInstallData(e: EsimDetails | undefined): boolean {
 export function mapOrder(raw: unknown): ProviderOrderResult {
   const o = orderSchema.parse(raw);
   const esim = o.esim ? mapEsim(o.esim) : undefined;
-  return { providerOrderId: o.id, status: hasInstallData(esim) ? "ready" : "pending", ...(esim ? { esim } : {}) };
+  return {
+    providerOrderId: o.id,
+    status: hasInstallData(esim) ? "ready" : "pending",
+    orderStatus: mapOrderStatus(o.status),
+    ...(esim ? { esim } : {}),
+    ...(o.error?.code ? { errorCode: o.error.code } : {}), // error.message is deliberately not passed on
+    ...(typeof o.amount_usd === "number" ? { amountUsd: o.amount_usd } : {}),
+    ...(o.activated_at ?? o.esim?.activated_at ? { activatedAt: (o.activated_at ?? o.esim?.activated_at)! } : {}),
+  };
 }
 
 export function mapUsage(raw: unknown): EsimUsage {
@@ -143,8 +152,8 @@ export function mapWebhookEvent(_raw: unknown): NormalizedProviderEvent {
   throw new ProviderNotConfiguredError("capabilities.webhooks");
 }
 
-export function buildCreateOrderBody(input: { providerPlanId: string }): unknown {
-  return { plan_id: input.providerPlanId };
+export function buildCreateOrderBody(input: { providerPlanId: string; customerReference?: string }): unknown {
+  return { plan_id: input.providerPlanId, ...(input.customerReference ? { customer_reference: input.customerReference.slice(0, 120) } : {}) };
 }
 
 export function buildLpaString(smdpAddress: string, activationCode: string): string {
