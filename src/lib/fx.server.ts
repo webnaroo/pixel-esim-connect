@@ -2,6 +2,18 @@
 import { DEFAULT_BUFFER_PERCENT, decideNewRate, effectiveRate, fetchQuotes, invertEurRate, lastAutoRate, parseEcbXml, parseFrankfurter, shouldReprice, type FxRow } from "./fx";
 import { computePrice, type PricingRule } from "./pricing";
 
+type PlanRow = {
+  id: string;
+  provider_plan_id: string;
+  type: string;
+  cost_price: number | string;
+  cost_currency: string;
+  sell_price: number | string;
+  is_active: boolean;
+  last_synced_at: string | null;
+  destination: { slug: string } | null;
+};
+
 export const ECB_URL = "https://www.ecb.europa.eu/stats/eurofxref/eurofxref-daily.xml";
 export const FALLBACK_URL = "https://api.frankfurter.dev/v1/latest?base=EUR";
 
