@@ -74,7 +74,7 @@ export const listAdminOrders = createServerFn({ method: "GET" })
     const { data: es } = ids.length ? await db.from("esims").select("order_id,provider_order_id").in("order_id", ids) : { data: [] };
     const prov = new Map((es ?? []).map((e) => [e.order_id, e.provider_order_id]));
     const withProv = (data ?? []).map((o) => ({ ...o, provider_order_id: prov.get(o.id) ?? null }));
-    return data ?? [];
+    return withProv;
   });
 
 export const adminOrdersQuery = () => queryOptions({ queryKey: ["admin", "orders"], queryFn: () => listAdminOrders() });
