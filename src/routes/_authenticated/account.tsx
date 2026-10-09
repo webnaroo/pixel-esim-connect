@@ -132,7 +132,7 @@ function RefundRequest({ orderId }: { orderId: string }) {
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
   if (msg) return <p className="text-sm text-ink-muted">{msg}</p>;
-  if (!open) return <button type="button" className="text-sm text-primary underline-offset-2 hover:underline" onClick={() => setOpen(true)}>Erstattung beantragen</button>;
+  if (!open) return <Button variant="secondary" onClick={() => setOpen(true)}>Erstattung beantragen</Button>;
   return (
     <div className="w-full space-y-2">
       <Input value={reason} onChange={(ev) => setReason(ev.target.value)} placeholder="Grund (optional)" maxLength={1000} aria-label="Grund für die Erstattung" />
