@@ -61,7 +61,6 @@ export function buildPriceCheck(i: PriceCheckInput) {
     const paid = i.lastPaid[r.providerPlanId];
     return paid != null && r.costPrice != null && Math.abs(paid - r.costPrice) > 0.005;
   });
-  const newSet = new Set(i.newIds);
   type Sample = { iso: string; kind: "none" | "cheapest" | "biggest"; row: CheckRow | null };
   const samples: Sample[] = SAMPLE_COUNTRIES.flatMap((iso): Sample[] => {
     const list = rows.filter((r) => r.iso === iso && r.isActive && r.costPrice);
@@ -77,7 +76,7 @@ export function buildPriceCheck(i: PriceCheckInput) {
       noMargin: ids(noRule),
       unmapped: i.unmapped,
       deviation: deviation.map((r) => ({ id: r.id, catalog: r.costPrice!, paid: i.lastPaid[r.providerPlanId]! })),
-      newPlans: ids(rows.filter((r) => newSet.has(r.id) || !r.released)),
+      newPlans: ids(rows.filter((r) => !r.released)),
       gone: i.goneIds,
     },
     samples,
