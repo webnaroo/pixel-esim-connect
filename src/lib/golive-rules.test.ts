@@ -56,5 +56,5 @@ describe("price check", () => {
 });
 
 describe("receipt gaps", () => {
-  it("names missing company fields", () => expect(receiptGaps({ company_name: "GlobeSIM", street: "x", zip: "24143", city: "Kiel" })).toEqual(["USt-IdNr."]));
+  it("names missing company fields", () => expect(receiptGaps({ company_name: "GlobeSIM", street: "Karlstal 27a", zip: "24143", city: "Kiel" })).toEqual(["USt-IdNr."]));
 });

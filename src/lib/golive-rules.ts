@@ -63,7 +63,8 @@ export function buildPriceCheck(i: PriceCheckInput) {
     return paid != null && r.costPrice != null && Math.abs(paid - r.costPrice) > 0.005;
   });
   const newSet = new Set(i.newIds);
-  const samples = SAMPLE_COUNTRIES.flatMap((iso) => {
+  type Sample = { iso: string; kind: "none" | "cheapest" | "biggest"; row: CheckRow | null };
+  const samples: Sample[] = SAMPLE_COUNTRIES.flatMap((iso): Sample[] => {
     const list = rows.filter((r) => r.iso === iso && r.isActive && r.costPrice);
     if (!list.length) return [{ iso, kind: "none" as const, row: null }];
     const cheapest = [...list].sort((a, b) => (a.costPrice ?? 0) - (b.costPrice ?? 0))[0]!;
