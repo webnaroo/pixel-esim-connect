@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { Lightning, QrCode, ShieldCheck, ShoppingCart, SimCard, Trash } from "@phosphor-icons/react";
 import { cart, useCart } from "@/lib/cart";
 import { formatPrice } from "@/lib/format";
+import { SiteLayout } from "@/components/layout";
 import { LinkButton } from "@/components/ui-kit";
 
 export const Route = createFileRoute("/cart")({
@@ -29,6 +30,7 @@ function CartPage() {
   const items = useCart();
   const totals = items.reduce<Record<string, number>>((a, i) => ({ ...a, [i.currency]: (a[i.currency] ?? 0) + i.price }), {});
   return (
+    <SiteLayout>
     <div className="container-page max-w-5xl py-10">
       <h1 className="text-3xl">Warenkorb</h1>
       {items.length === 0 ? (
@@ -78,5 +80,6 @@ function CartPage() {
         </div>
       )}
     </div>
+    </SiteLayout>
   );
 }
