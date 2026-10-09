@@ -18,8 +18,8 @@ export function usePriceConfirmation() {
     finally { setBusy(false); }
   };
   const dialog = pending ? (
-    <div className="fixed inset-0 z-50 grid place-items-center bg-overlay p-4" role="presentation">
-      <div role="dialog" aria-modal="true" aria-labelledby="price-confirm-title" className="w-full max-w-lg rounded-lg border border-line bg-surface p-6 shadow-lg">
+    <div className="fixed inset-0 z-50 grid place-items-center bg-ink/60 p-4" role="presentation">
+      <div role="dialog" aria-modal="true" aria-labelledby="price-confirm-title" className="w-full max-w-lg rounded-lg border border-line bg-surface p-6">
         <h2 id="price-confirm-title" className="text-xl">Preisänderung bestätigen</h2>
         <dl className="mt-4 grid grid-cols-[1fr_auto] gap-2 text-sm tabular">
           <dt>Preise ändern sich</dt><dd>{pending.preview.counts.changed}</dd>

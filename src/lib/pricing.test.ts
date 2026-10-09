@@ -77,3 +77,24 @@ describe("25 % margin with ,49/,99 rounding", () => {
     expect(r).toMatchObject({ ok: true, gross: 14.99, net: 12.6 });
   });
 });
+
+
+describe("reliable pricing mechanics", () => {
+  const fees = { percent: 2.9, fixed: 0.3 };
+  it("markup changes update the gross", () => {
+    expect(computePrice(input, [rule({ value: 25, rounding: "49_99" })], eurOnly, 0.19, "EUR", { fees, minNet: 0 })).toMatchObject({ gross: 14.99 });
+    expect(computePrice(input, [rule({ value: 55, rounding: "49_99" })], eurOnly, 0.19, "EUR", { fees, minNet: 0 })).toMatchObject({ gross: 18.49 });
+  });
+  it("preserves manual price despite minimum and markup", () => {
+    expect(computePrice({ ...input, manualPrice: 13.99 }, [rule({ value: 55 })], eurOnly, 0.19, "EUR", { fees, minNet: 5 })).toMatchObject({ gross: 13.99, ruleId: "manual" });
+  });
+  it("enforces 1.50 EUR profit after 2.9 % + 0.30 EUR", () => {
+    const r = computePrice(input, [rule({ value: 0, rounding: "49_99" })], eurOnly, 0.19, "EUR", { fees, minNet: 1.5 });
+    expect(r).toMatchObject({ gross: 14.99 });
+    if (!r.ok) throw new Error("price missing");
+    expect(computeMargin(10, r.net, r.gross, fees, 1.5)).toMatchObject({ fee: 0.73, result: 1.87, belowMin: false });
+  });
+  it("uses real Turkey costs, 3.5 % buffer, 55 % markup, 19 % VAT", () => {
+    expect(computePrice({ ...input, costPrice: 0.96, costCurrency: "USD" }, [rule({ value: 55, rounding: "49_99" })], () => 0.892379 * 1.035, 0.19, "EUR", { fees, minNet: 0 })).toMatchObject({ gross: 1.99, net: 1.67 });
+  });
+});

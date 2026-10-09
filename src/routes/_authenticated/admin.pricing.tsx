@@ -1,9 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useSuspenseQuery, useQueryClient } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 import { toast } from "sonner";
-import { deletePricingRule, pricingQuery, saveMarginSettings, savePricingRule, updatePricingRule } from "@/lib/admin.functions";
+import { pricingQuery } from "@/lib/admin.functions";
 import { fxAdminQuery } from "@/lib/fx.functions";
 import { FxSection } from "@/components/fx-admin";
 import { useQuery } from "@tanstack/react-query";
@@ -33,12 +32,8 @@ function Pricing() {
   const { data } = useSuspenseQuery(pricingQuery());
   const qc = useQueryClient();
   const confirmation = usePriceConfirmation();
-  const save = useServerFn(savePricingRule);
-  const update = useServerFn(updatePricingRule);
-  const del = useServerFn(deletePricingRule);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editValue, setEditValue] = useState({ value: "0", rounding: "49_99", priority: "0" });
-  const saveMargin = useServerFn(saveMarginSettings);
   const fxq = useQuery(fxAdminQuery());
   const refresh = () => qc.invalidateQueries(); // prices feed admin tables and public pages
   const [scope, setScope] = useState<string>("global");
@@ -178,8 +173,7 @@ function Pricing() {
           e.preventDefault();
           const f = new FormData(e.currentTarget);
           try {
-            await saveMargin({ data: { percent: num(f.get("percent")), fixed: num(f.get("fixed")), minNet: 0 } });
-            toast.success("Einstellungen gespeichert."); refresh();
+            await confirmation.request({ kind: "settings", settings: { stripe_fees: { percent: num(f.get("percent")), fixed: num(f.get("fixed")) }, min_net_result: num(f.get("minNet")) } });
           } catch { toast.error("Bitte Werte prüfen."); }
         }}>
           <label className="text-sm">Gebühr in %<Input name="percent" inputMode="decimal" defaultValue={String(data.fees.percent).replace(".", ",")} /></label>
