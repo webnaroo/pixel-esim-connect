@@ -23,5 +23,9 @@ export const fixtureOrder: OrderView = {
     smdp: "testdaten.invalid",
     activationCode: "NUR-TESTDATEN",
     directInstallUrl: null,
+    iosUrl: null,
+    androidUrl: null,
+    installUntil: null,
+    activatedAt: null,
   },
 };
