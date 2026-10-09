@@ -3,7 +3,7 @@ import { useSuspenseQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 import { toast } from "sonner";
-import { deletePricingRule, pricingQuery, saveMarginSettings, savePricingRule } from "@/lib/admin.functions";
+import { deletePricingRule, pricingQuery, saveMarginSettings, savePricingRule, updatePricingRule } from "@/lib/admin.functions";
 import { fxAdminQuery } from "@/lib/fx.functions";
 import { FxSection } from "@/components/fx-admin";
 import { useQuery } from "@tanstack/react-query";
