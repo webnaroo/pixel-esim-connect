@@ -897,6 +897,10 @@ export type Database = {
           last_synced_at: string | null
           network_type: string | null
           networks: string[] | null
+          price_calculated_at: string | null
+          price_inputs: Json | null
+          price_override: number | null
+          price_source: string | null
           provider: string
           provider_plan_id: string
           raw: Json | null
@@ -925,6 +929,10 @@ export type Database = {
           last_synced_at?: string | null
           network_type?: string | null
           networks?: string[] | null
+          price_calculated_at?: string | null
+          price_inputs?: Json | null
+          price_override?: number | null
+          price_source?: string | null
           provider?: string
           provider_plan_id: string
           raw?: Json | null
@@ -953,6 +961,10 @@ export type Database = {
           last_synced_at?: string | null
           network_type?: string | null
           networks?: string[] | null
+          price_calculated_at?: string | null
+          price_inputs?: Json | null
+          price_override?: number | null
+          price_source?: string | null
           provider?: string
           provider_plan_id?: string
           raw?: Json | null
@@ -1390,6 +1402,16 @@ export type Database = {
       }
     }
     Functions: {
+      apply_price_calculation: {
+        Args: {
+          _actor: string
+          _change: Json
+          _rows: Json
+          _rules_before: Json
+          _settings_before: Json
+        }
+        Returns: number
+      }
       arm_fulfillment_retry: { Args: never; Returns: undefined }
       claim_discount_code: {
         Args: { _code: string }
