@@ -55,6 +55,14 @@ export async function createPayment(input: {
   return { clientSecret: session.client_secret, sessionId: session.id };
 }
 
+/** Ends an unpaid checkout session so it can no longer be paid. Throws if Stripe refuses (e.g. already paid). */
+export async function expirePaymentSession(env: StripeEnv, sessionId: string): Promise<void> {
+  const stripe = await client(env);
+  const s = await stripe.checkout.sessions.retrieve(sessionId);
+  if (s.status === "complete") throw new Error("session_complete");
+  if (s.status === "open") await stripe.checkout.sessions.expire(sessionId);
+}
+
 /** Full refund. idempotencyKey is fixed per order (refund-<orderId>), so Stripe never refunds twice. */
 export async function refundPayment(env: StripeEnv, paymentIntentId: string, idempotencyKey: string): Promise<{ refundId: string }> {
   const stripe = await client(env);

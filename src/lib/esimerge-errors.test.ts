@@ -75,7 +75,7 @@ describe("Zuordnung je Code", () => {
   it("Wiederholung nur bei 429/500/502/503/504", () => {
     for (const s of [429, 500, 502, 503, 504]) expect(retryDelays(null, s)).toEqual([1000, 2000, 4000, 8000]);
     for (const s of [400, 401, 402, 403, 404, 405, 409, 422]) expect(retryDelays(null, s)).toEqual([]);
-    expect(retryDelays("request_in_flight", 409)).toEqual([2000, 4000, 8000]);
+    expect(retryDelays("request_in_flight", 409)).toEqual([2000, 4000, 8000, 16000]);
   });
   it("Zusammenfassung enthält Code, Feld, request_id, nie die Meldung", () => {
     const s = errorSummary(parseEsmError(422, JSON.parse(errBody("validation_error", { field: "plan_id" }))));
@@ -102,10 +102,10 @@ describe("HTTP-Client", () => {
     await expect(call()).rejects.toBeInstanceOf(ProviderRequestError);
     expect(f).toHaveBeenCalledTimes(1);
   });
-  it("request_in_flight: 2,4,8 s, gleicher Schlüssel", async () => {
+  it("request_in_flight: 2,4,8,16 s, gleicher Schlüssel", async () => {
     const { keys } = mockFetch([{ status: 409, body: errBody("request_in_flight") }]);
     await expect(call()).rejects.toBeInstanceOf(ProviderRequestError);
-    expect(sleeps).toEqual([2000, 4000, 8000]);
+    expect(sleeps).toEqual([2000, 4000, 8000, 16000]);
     expect(new Set(keys)).toEqual(new Set(["KEY-1"]));
   });
   it("Original-Fehlermeldung landet nie im Log", async () => {

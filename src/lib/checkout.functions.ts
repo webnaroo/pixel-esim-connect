@@ -140,6 +140,20 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
     if (totals.gross < 0.5) { await releaseDiscount(); return { ok: false, error: "discount_minimum" }; }
 
 
+    // One open checkout per customer and plan: an earlier unpaid order (also with another discount code)
+    // is closed before the new one is created. Its Stripe session is expired first so it can never be paid.
+    {
+      const who = caller.userId ? `user_id.eq.${caller.userId},guest_email.eq.${parsed.data.email}` : `guest_email.eq.${parsed.data.email}`;
+      const { data: open } = await db.from("orders").select("id,stripe_session_id,stripe_env,discount_code").eq("status", "pending").eq("plan_id", r.plan.id).or(who);
+      for (const o of open ?? []) {
+        try {
+          if (o.stripe_session_id) await (await import("./payments.server")).expirePaymentSession(o.stripe_env === "live" ? "live" : "sandbox", o.stripe_session_id);
+        } catch { continue; } // possibly paid meanwhile: leave it for the payment webhook
+        const { data: closed } = await db.from("orders").update({ status: "cancelled", last_error: "superseded_by_new_checkout" }).eq("id", o.id).eq("status", "pending").select("id");
+        if (closed?.length && o.discount_code) await db.rpc("release_discount_code", { _code: o.discount_code });
+      }
+    }
+
     const { data: order, error } = await db
       .from("orders")
       .insert({
