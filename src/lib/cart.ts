@@ -32,3 +32,26 @@ export function useCart(): CartItem[] {
     () => EMPTY,
   );
 }
+
+// Discount code entered in the cart; checked again at checkout (server applies it to the Stripe amount).
+export type CartDiscount = { code: string; type: "percent" | "fixed"; value: number };
+const CODE_KEY = "globesim-cart-code";
+const codeListeners = new Set<() => void>();
+let codeCache: CartDiscount | null | undefined;
+function readCode(): CartDiscount | null {
+  if (typeof window === "undefined") return null;
+  if (codeCache !== undefined) return codeCache;
+  try { codeCache = JSON.parse(localStorage.getItem(CODE_KEY) ?? "null"); } catch { codeCache = null; }
+  return codeCache ?? null;
+}
+export const cartDiscount = {
+  get: readCode,
+  set(d: CartDiscount | null) {
+    codeCache = d;
+    if (d) localStorage.setItem(CODE_KEY, JSON.stringify(d)); else localStorage.removeItem(CODE_KEY);
+    codeListeners.forEach((l) => l());
+  },
+};
+export function useCartDiscount(): CartDiscount | null {
+  return useSyncExternalStore((l) => { codeListeners.add(l); return () => codeListeners.delete(l); }, readCode, () => null);
+}
