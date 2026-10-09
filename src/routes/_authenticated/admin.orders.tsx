@@ -3,6 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 import { adminOrdersQuery, refundOrder } from "@/lib/orders.functions";
+import { webhookEventsQuery } from "@/lib/admin.functions";
 import { Chip, ErrorBox, EmptyState } from "@/components/brand";
 import { Button, Input } from "@/components/ui-kit";
 import { formatPrice } from "@/lib/format";
@@ -39,6 +40,7 @@ function AdminOrders() {
 
   return (
     <div className="space-y-6">
+      <WebhookEvents />
       {failed.length > 0 && (
         <div role="alert" className="rounded-lg border border-line border-l-4 border-l-warning bg-surface p-4 text-sm">
           {failed.length} Bestellung(en) brauchen deine Prüfung: Auslieferung nach allen Versuchen fehlgeschlagen oder gezahlter Betrag weicht ab. Bitte prüfen und erstatten.
@@ -90,5 +92,57 @@ function AdminOrders() {
         </div>
       )}
     </div>
+  );
+}
+
+const WH_STATUS: Record<string, string> = { pending: "Wartet", processed: "Verarbeitet", ignored: "Ignoriert", failed: "Fehlgeschlagen" };
+
+function WebhookEvents() {
+  const q = useQuery(webhookEventsQuery());
+  const [type, setType] = useState("");
+  const [st, setSt] = useState("");
+  const [mode, setMode] = useState("");
+  const all = q.data?.events ?? [];
+  const failed = all.filter((e) => e.status === "failed" || e.event_type === "order.failed" || e.event_type === "order.topup.failed");
+  const rows = all.filter((e) => (!type || e.event_type === type) && (!st || e.status === st) && (!mode || e.mode === mode));
+  const types = [...new Set(all.map((e) => e.event_type))];
+  const sel = "h-10 rounded-md border border-line bg-surface px-3 text-sm";
+  return (
+    <section className="space-y-3 rounded-lg border border-line bg-surface p-4">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <h2 className="font-semibold text-ink">eSIMerge-Webhooks</h2>
+        <span className="text-sm text-ink-muted">Webhook-Geheimnis gesetzt: <strong>{q.data ? (q.data.secretSet ? "Ja" : "Nein") : "…"}</strong></span>
+      </div>
+      {failed.length > 0 && (
+        <div role="alert" className="rounded-lg border border-line border-l-4 border-l-warning p-3 text-sm">
+          {failed.length} Webhook-Ereignis(se) mit Fehler oder fehlgeschlagener Bestellung/Aufladung. Betroffene Bestellungen unten prüfen und ggf. erstatten.
+        </div>
+      )}
+      <div className="flex flex-wrap gap-2">
+        <select aria-label="Typ filtern" className={sel} value={type} onChange={(e) => setType(e.target.value)}><option value="">Alle Typen</option>{types.map((t) => <option key={t}>{t}</option>)}</select>
+        <select aria-label="Status filtern" className={sel} value={st} onChange={(e) => setSt(e.target.value)}><option value="">Alle Status</option>{Object.entries(WH_STATUS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select>
+        <select aria-label="Modus filtern" className={sel} value={mode} onChange={(e) => setMode(e.target.value)}><option value="">Sandbox + Live</option><option value="sandbox">Sandbox</option><option value="live">Live</option></select>
+      </div>
+      {rows.length === 0 ? <p className="text-sm text-ink-muted">{q.isLoading ? "Wird geladen …" : "Noch keine Webhook-Ereignisse."}</p> : (
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[720px] text-sm">
+            <thead className="text-left text-ink-muted"><tr><th className="p-2">Zeit</th><th className="p-2">Typ</th><th className="p-2">Modus</th><th className="p-2">Status</th><th className="p-2">Fehler</th><th className="p-2">Delivery-ID</th><th className="p-2">Bestellung</th></tr></thead>
+            <tbody className="divide-y divide-line">
+              {rows.map((e) => (
+                <tr key={e.id}>
+                  <td className="p-2 whitespace-nowrap">{new Date(e.received_at).toLocaleString("de-DE")}</td>
+                  <td className="p-2 font-mono text-xs">{e.event_type}</td>
+                  <td className="p-2">{e.mode === "live" ? "Live" : "Sandbox"}</td>
+                  <td className="p-2"><Chip tone={e.status === "processed" ? "active" : e.status === "failed" ? "warning" : "default"}>{WH_STATUS[e.status] ?? e.status}</Chip></td>
+                  <td className="p-2 text-xs text-ink-muted">{e.error ?? ""}</td>
+                  <td className="p-2 font-mono text-xs">{e.delivery_id ?? ""}</td>
+                  <td className="p-2 font-mono text-xs">{e.order_id ? e.order_id.slice(0, 8) : ""}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </section>
   );
 }

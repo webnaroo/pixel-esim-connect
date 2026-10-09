@@ -44,14 +44,14 @@ export const esimergeConfig: EsimergeConfig = {
   // Catalog response: limit/offset/has_more/next_offset; default limit 1000 (sandbox: 8 plans, one page).
   paging: { style: "offset", pageSize: 1000 },
   capabilities: {
-    usage: true, topUp: false, cancel: false, webhooks: false,
+    usage: true, topUp: false, cancel: false, webhooks: true,
     directInstallLink: false,
     unlimitedPlans: true, // catalog has type "unlimited" (data_mb 0 + fair_usage text)
     // Verified 2026-10-08: POST /v1/orders REQUIRES "Idempotency-Key"; the same key replays the
     // same order (header "idempotent-replayed: true"). Our DB claim lock stays in place as well.
     idempotencyKey: true,
   },
-  webhook: { signatureHeader: null, algorithm: null, secretEnv: "ESIMERGE_WEBHOOK_SECRET", eventIdField: null }, // no webhooks documented
+  webhook: { signatureHeader: "X-eSimerge-Signature", algorithm: "hmac-sha256", secretEnv: "ESIMERGE_WEBHOOK_SECRET", eventIdField: "id" }, // owner docs: "t=<unix>,v1=<hex>", see src/lib/esimerge-webhook.ts
   currency: { cost: "USD" }, // catalog: currency "USD", cost field price_usd
   limits: { rateLimitPerMinute: null, timeoutMs: 8000 },
 };
