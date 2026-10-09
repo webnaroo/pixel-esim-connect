@@ -9,6 +9,10 @@ export interface NormalizedPlan {
   providerPlanId: string;
   type: "data" | "unlimited";
   coverage: { kind: "country" | "region" | "global"; countries: string[]; regionCode?: string };
+  /** Provider name for the destination (used when a special code needs a new destination). */
+  destinationName?: string;
+  /** standard = ISO country; territory = area within a country (own destination); alt = alternative product line (imported hidden). */
+  destinationKind?: "standard" | "territory" | "alt";
   dataMb: number | null;
   validityDays: number;
   networks?: string[];

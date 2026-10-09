@@ -15,6 +15,8 @@ export const planSchema = z.object({
   type: z.string(), // seen: fixed | unlimited | calling
   country_code: z.string().nullable().optional(),
   region_code: z.string().nullable().optional(),
+  destination_name: z.string().nullable().optional(),
+  country_name: z.string().nullable().optional(),
   data_mb: z.number().nullable(),
   minutes: z.number().nullable().optional(),
   sms: z.number().nullable().optional(),

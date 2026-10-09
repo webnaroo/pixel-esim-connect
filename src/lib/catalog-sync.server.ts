@@ -74,11 +74,37 @@ export async function runCatalogSync(trigger: "cron" | "manual"): Promise<SyncSu
     const newIds: string[] = [];
     const rows: Array<Record<string, unknown> & { provider_plan_id: string; destination_id: string }> = [];
 
+    // Special codes (territories like GB-SCT, alt product lines like CNA) get their own
+    // destination on first sight: territories visible, alt lines hidden until the admin enables them.
+    type DestRow = NonNullable<(typeof dests)[number]>;
+    const createdDests = new Map<string, DestRow>();
+    const ensureSpecialDest = async (code: string, kind: "territory" | "alt", name: string | undefined) => {
+      const key = code.toUpperCase();
+      const cached = createdDests.get(key) ?? byIso.get(key);
+      if (cached) return cached;
+      const slug = key.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+      const label = name?.trim() || key;
+      const { data: existingRow } = await db.from("destinations").select("id,type,slug,iso_code,provider_ref").eq("slug", slug).maybeSingle();
+      if (existingRow) { createdDests.set(key, existingRow); byIso.set(key, existingRow); return existingRow; }
+      const { data: ins, error } = await db.from("destinations").insert({
+        type: "country", slug, iso_code: key, name_de: label, name_en: label, aliases: [],
+        provider_ref: { code: key, kind }, is_active: kind === "territory",
+      } as never).select("id,type,slug,iso_code,provider_ref").single();
+      if (error) return null;
+      createdDests.set(key, ins); byIso.set(key, ins);
+      await db.from("audit_log").insert({ action: "destination_auto_created", entity: "destinations", entity_id: ins.id, meta: { code: key, kind, name: label } as never });
+      return ins;
+    };
+
     for (const p of fetched) {
-      const dest =
+      let dest =
         p.coverage.kind === "country" ? byIso.get((p.coverage.countries[0] ?? "").toUpperCase())
         : p.coverage.kind === "region" ? byRegion.get((p.coverage.regionCode ?? "").toUpperCase())
         : globalDest;
+      if (!dest && (p.destinationKind === "territory" || p.destinationKind === "alt")) {
+        const code = p.coverage.kind === "country" ? p.coverage.countries[0] ?? "" : p.coverage.kind === "region" ? p.coverage.regionCode ?? "" : "";
+        if (code) dest = (await ensureSpecialDest(code, p.destinationKind, p.destinationName)) ?? undefined;
+      }
       if (!dest) {
         unmapped.push({ providerPlanId: p.providerPlanId, reason: p.coverage.kind === "country" ? `Kein Reiseziel für Land ${p.coverage.countries[0]}` : p.coverage.kind === "region" ? `Keine Region für Code ${p.coverage.regionCode}` : "Kein globales Reiseziel" });
         continue;

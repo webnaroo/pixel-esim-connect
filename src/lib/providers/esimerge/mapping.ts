@@ -44,6 +44,11 @@ export function mapRegion(_raw: unknown): ProviderRegion {
 
 export type CatalogItemResult = { ok: true; plan: NormalizedPlan } | { ok: false; providerPlanId: string | null; reason: string };
 
+// Special codes confirmed by eSIMerge (email, Alex Brandon): territories within a country
+// (own destination in the shop) and alternative product lines (imported hidden by default).
+export const TERRITORY_CODES = new Set(["GB-SCT", "PT-30", "PT-20", "BQ-SA", "BQ-SE", "NOC", "XK", "IC", "AN", "CB"]);
+export const ALT_PRODUCT_CODES = new Set(["SGA", "AUA", "RUA", "RULA", "CNA", "CNMA", "CNM", "CHE", "EUP"]);
+
 /** Maps one catalog entry, or explains why it cannot be mapped (never silently dropped). */
 export function mapCatalogItem(raw: unknown): CatalogItemResult {
   const id = raw && typeof raw === "object" && typeof (raw as { id?: unknown }).id === "string" ? (raw as { id: string }).id : null;
@@ -53,12 +58,20 @@ export function mapCatalogItem(raw: unknown): CatalogItemResult {
   if (p.currency.toUpperCase() !== COST_CURRENCY) return { ok: false, providerPlanId: p.id, reason: `Unbekannte Einkaufswährung ${p.currency}` };
 
   let coverage: NormalizedPlan["coverage"];
+  let destinationKind: NormalizedPlan["destinationKind"];
   if (p.scope === "country") {
     const iso = (p.country_code ?? "").toUpperCase();
-    if (!/^[A-Z]{2}$/.test(iso)) return { ok: false, providerPlanId: p.id, reason: "Länderkennung fehlt oder ungültig" };
+    // Special codes first: AN/IC/CB/XK are 2 letters but not real ISO countries.
+    if (TERRITORY_CODES.has(iso)) destinationKind = "territory";
+    else if (ALT_PRODUCT_CODES.has(iso)) destinationKind = "alt";
+    else if (/^[A-Z]{2}$/.test(iso)) destinationKind = "standard";
+    else return { ok: false, providerPlanId: p.id, reason: "Länderkennung fehlt oder ungültig" };
     coverage = { kind: "country", countries: [iso] };
   } else if (p.scope === "region") {
     if (!p.region_code) return { ok: false, providerPlanId: p.id, reason: "Regionskennung fehlt" };
+    const rc = p.region_code.toUpperCase();
+    if (TERRITORY_CODES.has(rc)) destinationKind = "territory";
+    else if (ALT_PRODUCT_CODES.has(rc)) destinationKind = "alt";
     // No country list is provided for regions: shown on the region page only.
     coverage = { kind: "region", countries: [], regionCode: p.region_code.toUpperCase() };
   } else if (p.scope === "global") {
@@ -68,7 +81,9 @@ export function mapCatalogItem(raw: unknown): CatalogItemResult {
   }
 
   let type: NormalizedPlan["type"];
-  if (p.type === "fixed" || p.type === "calling") type = "data";
+  // Owner decision: calling plans (voice/SMS) are not imported for now.
+  if (p.type === "calling") return { ok: false, providerPlanId: p.id, reason: "Telefonie-Tarif (vorerst nicht importiert)" };
+  if (p.type === "fixed") type = "data";
   else if (p.type === "unlimited") type = "unlimited";
   else return { ok: false, providerPlanId: p.id, reason: `Unbekannter Tariftyp ${p.type}` };
 
@@ -81,6 +96,8 @@ export function mapCatalogItem(raw: unknown): CatalogItemResult {
       providerPlanId: p.id,
       type,
       coverage,
+      ...(destinationKind && destinationKind !== "standard" ? { destinationKind } : {}),
+      ...(p.destination_name ?? p.country_name ? { destinationName: (p.destination_name ?? p.country_name)! } : {}),
       dataMb: type === "unlimited" ? null : p.data_mb,
       validityDays: p.validity_days,
       ...(p.networks?.length ? { networks: p.networks } : {}),
