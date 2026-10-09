@@ -10,6 +10,7 @@ import { Chip } from "@/components/brand";
 import { AdminError } from "./admin";
 import { ComparisonRecheckHint } from "@/components/admin-comparison";
 import { privateHead } from "@/lib/seo";
+import { RefundRequests } from "@/components/admin-refund-requests";
 
 export const Route = createFileRoute("/_authenticated/admin/")({
   head: () => privateHead("Admin-Übersicht", "Shop-Checkliste und Katalogstatus im GlobeSIM-Admin."),
@@ -81,6 +82,7 @@ function Overview() {
 
   return (
     <div className="grid gap-8 lg:grid-cols-2">
+      <div className="lg:col-span-2 empty:hidden"><RefundRequests /></div>
       {data.provider.sandbox && (
         <div role="alert" className="flex gap-3 rounded-lg border-2 border-warning bg-surface p-4 lg:col-span-2">
           <Warning size={22} className="shrink-0 text-warning" weight="fill" />

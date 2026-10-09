@@ -37,7 +37,7 @@ export function RefundRequests() {
             </div>
             <div className="flex gap-2">
               <Button loading={busy === r.id} onClick={() => act(r.id, true)}>Erstattung freigeben</Button>
-              <Button variant="outline" disabled={busy === r.id} onClick={() => act(r.id, false)}>Ablehnen</Button>
+              <Button variant="secondary" disabled={busy === r.id} onClick={() => act(r.id, false)}>Ablehnen</Button>
             </div>
           </li>
         ))}
