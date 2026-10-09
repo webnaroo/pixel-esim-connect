@@ -239,7 +239,7 @@ function CheckoutPage() {
                         <span className="text-sm text-ink-muted">
                           {discount.type === "percent" ? `${discount.value.toLocaleString("de-DE")} % Rabatt` : `${formatPrice(discount.value, plan.price?.currency ?? "EUR")} Rabatt`} angerechnet.
                         </span>
-                        <button type="button" onClick={() => { setDiscount(null); setCodeMessage(null); }} className="ml-auto text-sm font-medium text-ink-muted hover:text-danger">
+                        <button type="button" onClick={() => { setDiscount(null); setCodeMessage(null); cartDiscount.set(null); }} className="ml-auto text-sm font-medium text-ink-muted hover:text-danger">
                           Entfernen
                         </button>
                       </div>
