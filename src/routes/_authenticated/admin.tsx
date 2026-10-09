@@ -27,6 +27,7 @@ const tabs = [
   { to: "/admin/golive", label: "Go-Live" },
   { to: "/admin/orders", label: "Bestellungen" },
   { to: "/admin/customers", label: "Kunden" },
+  { to: "/admin/discount", label: "Rabattcodes" },
   { to: "/admin/esims", label: "eSIMs" },
   { to: "/admin/plans", label: "Tarife" },
   { to: "/admin/pricing", label: "Preise" },

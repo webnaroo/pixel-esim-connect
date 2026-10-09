@@ -38,6 +38,7 @@ import { Route as AuthenticatedAdminCompareRouteImport } from './routes/_authent
 import { Route as AuthenticatedAdminContentRouteImport } from './routes/_authenticated/admin.content'
 import { Route as AuthenticatedAdminCustomersRouteImport } from './routes/_authenticated/admin.customers'
 import { Route as AuthenticatedAdminDevicesRouteImport } from './routes/_authenticated/admin.devices'
+import { Route as AuthenticatedAdminDiscountRouteImport } from './routes/_authenticated/admin.discount'
 import { Route as AuthenticatedAdminEsimsRouteImport } from './routes/_authenticated/admin.esims'
 import { Route as AuthenticatedAdminExplorerRouteImport } from './routes/_authenticated/admin.explorer'
 import { Route as AuthenticatedAdminGoliveRouteImport } from './routes/_authenticated/admin.golive'
@@ -206,6 +207,12 @@ const AuthenticatedAdminDevicesRoute =
     path: '/devices',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
+const AuthenticatedAdminDiscountRoute =
+  AuthenticatedAdminDiscountRouteImport.update({
+    id: '/discount',
+    path: '/discount',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
 const AuthenticatedAdminEsimsRoute = AuthenticatedAdminEsimsRouteImport.update({
   id: '/esims',
   path: '/esims',
@@ -341,6 +348,7 @@ export interface FileRoutesByFullPath {
   '/admin/content': typeof AuthenticatedAdminContentRoute
   '/admin/customers': typeof AuthenticatedAdminCustomersRoute
   '/admin/devices': typeof AuthenticatedAdminDevicesRoute
+  '/admin/discount': typeof AuthenticatedAdminDiscountRoute
   '/admin/esims': typeof AuthenticatedAdminEsimsRoute
   '/admin/explorer': typeof AuthenticatedAdminExplorerRoute
   '/admin/golive': typeof AuthenticatedAdminGoliveRoute
@@ -389,6 +397,7 @@ export interface FileRoutesByTo {
   '/admin/content': typeof AuthenticatedAdminContentRoute
   '/admin/customers': typeof AuthenticatedAdminCustomersRoute
   '/admin/devices': typeof AuthenticatedAdminDevicesRoute
+  '/admin/discount': typeof AuthenticatedAdminDiscountRoute
   '/admin/esims': typeof AuthenticatedAdminEsimsRoute
   '/admin/explorer': typeof AuthenticatedAdminExplorerRoute
   '/admin/golive': typeof AuthenticatedAdminGoliveRoute
@@ -440,6 +449,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/content': typeof AuthenticatedAdminContentRoute
   '/_authenticated/admin/customers': typeof AuthenticatedAdminCustomersRoute
   '/_authenticated/admin/devices': typeof AuthenticatedAdminDevicesRoute
+  '/_authenticated/admin/discount': typeof AuthenticatedAdminDiscountRoute
   '/_authenticated/admin/esims': typeof AuthenticatedAdminEsimsRoute
   '/_authenticated/admin/explorer': typeof AuthenticatedAdminExplorerRoute
   '/_authenticated/admin/golive': typeof AuthenticatedAdminGoliveRoute
@@ -491,6 +501,7 @@ export interface FileRouteTypes {
     | '/admin/content'
     | '/admin/customers'
     | '/admin/devices'
+    | '/admin/discount'
     | '/admin/esims'
     | '/admin/explorer'
     | '/admin/golive'
@@ -539,6 +550,7 @@ export interface FileRouteTypes {
     | '/admin/content'
     | '/admin/customers'
     | '/admin/devices'
+    | '/admin/discount'
     | '/admin/esims'
     | '/admin/explorer'
     | '/admin/golive'
@@ -589,6 +601,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/content'
     | '/_authenticated/admin/customers'
     | '/_authenticated/admin/devices'
+    | '/_authenticated/admin/discount'
     | '/_authenticated/admin/esims'
     | '/_authenticated/admin/explorer'
     | '/_authenticated/admin/golive'
@@ -851,6 +864,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminDevicesRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/_authenticated/admin/discount': {
+      id: '/_authenticated/admin/discount'
+      path: '/discount'
+      fullPath: '/admin/discount'
+      preLoaderRoute: typeof AuthenticatedAdminDiscountRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
     '/_authenticated/admin/esims': {
       id: '/_authenticated/admin/esims'
       path: '/esims'
@@ -992,6 +1012,7 @@ interface AuthenticatedAdminRouteChildren {
   AuthenticatedAdminContentRoute: typeof AuthenticatedAdminContentRoute
   AuthenticatedAdminCustomersRoute: typeof AuthenticatedAdminCustomersRoute
   AuthenticatedAdminDevicesRoute: typeof AuthenticatedAdminDevicesRoute
+  AuthenticatedAdminDiscountRoute: typeof AuthenticatedAdminDiscountRoute
   AuthenticatedAdminEsimsRoute: typeof AuthenticatedAdminEsimsRoute
   AuthenticatedAdminExplorerRoute: typeof AuthenticatedAdminExplorerRoute
   AuthenticatedAdminGoliveRoute: typeof AuthenticatedAdminGoliveRoute
@@ -1009,6 +1030,7 @@ const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
   AuthenticatedAdminContentRoute: AuthenticatedAdminContentRoute,
   AuthenticatedAdminCustomersRoute: AuthenticatedAdminCustomersRoute,
   AuthenticatedAdminDevicesRoute: AuthenticatedAdminDevicesRoute,
+  AuthenticatedAdminDiscountRoute: AuthenticatedAdminDiscountRoute,
   AuthenticatedAdminEsimsRoute: AuthenticatedAdminEsimsRoute,
   AuthenticatedAdminExplorerRoute: AuthenticatedAdminExplorerRoute,
   AuthenticatedAdminGoliveRoute: AuthenticatedAdminGoliveRoute,

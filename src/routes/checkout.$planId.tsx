@@ -1,7 +1,7 @@
 import { CompatCheck } from "@/components/compat-check";
 import { UnlimitedLabel, UnlimitedNote } from "@/components/unlimited-claim";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useSuspenseQuery } from "@tanstack/react-query";
+import { useSuspenseQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { EmbeddedCheckoutProvider, EmbeddedCheckout } from "@stripe/react-stripe-js";
 import { getStripe, getStripeEnvironment } from "@/lib/stripe";
@@ -10,7 +10,8 @@ import { useServerFn } from "@tanstack/react-start";
 import { SiteLayout } from "@/components/layout";
 import { Flag, EmptyState, ErrorBox, FixtureBadge } from "@/components/brand";
 import { Button, Input, LinkButton } from "@/components/ui-kit";
-import { checkoutPlanQuery, createCheckoutSession } from "@/lib/checkout.functions";
+import { checkoutPlanQuery, createCheckoutSession, validateDiscountCode } from "@/lib/checkout.functions";
+import { discountAmount, discountedTotals } from "@/lib/discount-rules";
 import type { CheckoutError } from "@/lib/checkout-rules";
 import { formatData, formatDays, formatPrice, USE_FIXTURES } from "@/lib/format";
 import { FIXTURE_ORDER_ID } from "@/lib/fixtures/order";
@@ -40,6 +41,9 @@ const MESSAGES: Record<CheckoutError, string> = {
   payment_unavailable: "Die Zahlung ist noch nicht verbunden.",
   invalid_request: "Bitte prüfe deine E-Mail-Adresse und bestätige den Hinweis zum Widerruf.",
   rate_limited: "Zu viele Versuche. Bitte warte eine Minute.",
+  discount_invalid: "Dieser Rabattcode existiert nicht. Bitte prüfe die Schreibweise.",
+  discount_rejected: "Dieser Rabattcode ist nicht mehr gültig – entweder abgelaufen, ausgeschaltet oder das Nutzungslimit ist erreicht.",
+  discount_minimum: "Mit diesem Rabattcode läge der Endpreis unter dem erlaubten Mindestbetrag. Bitte kontaktiere support@globesim.de.",
 };
 
 
@@ -75,11 +79,44 @@ function CheckoutPage() {
   const { planId } = Route.useParams();
   const { data: plan } = useSuspenseQuery(checkoutPlanQuery(planId));
   const submit = useServerFn(createCheckoutSession);
+  const checkCode = useServerFn(validateDiscountCode);
+  const qc = useQueryClient();
   const [email, setEmail] = useState("");
   const [consent, setConsent] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [clientSecret, setClientSecret] = useState<string | null>(null);
+  const [codeInput, setCodeInput] = useState("");
+  const [codeChecking, setCodeChecking] = useState(false);
+  const [codeMessage, setCodeMessage] = useState<string | null>(null);
+  const [discount, setDiscount] = useState<{ code: string; type: "percent" | "fixed"; value: number } | null>(null);
+
+  const totals = useMemo(() => {
+    if (!plan?.price) return null;
+    if (!discount) return { gross: plan.price.gross, net: plan.price.net, vat: plan.price.vat, discountAmount: 0 };
+    const amount = discountAmount(discount, plan.price.gross);
+    return { ...discountedTotals(plan.price.gross, amount, plan.price.vatRate), discountAmount: amount };
+  }, [plan?.price, discount]);
+
+  const applyCode = async () => {
+    setCodeMessage(null);
+    if (!codeInput.trim()) return;
+    setCodeChecking(true);
+    try {
+      const r = await checkCode({ data: { code: codeInput } });
+      if (r.ok) setDiscount({ code: codeInput.trim().toUpperCase(), type: r.type, value: r.value });
+      else setCodeMessage(
+        r.reason === "rate_limited" ? "Zu viele Versuche. Bitte warte eine Minute."
+        : r.reason === "invalid_format" ? "So sieht kein Rabattcode aus. Bitte prüfe die Schreibweise."
+        : r.reason === "unknown" ? "Diesen Rabattcode gibt es nicht. Bitte prüfe die Schreibweise."
+        : "Dieser Rabattcode ist nicht mehr gültig – abgelaufen, ausgeschaltet oder Nutzungslimit erreicht.",
+      );
+    } catch {
+      setCodeMessage("Der Code konnte gerade nicht geprüft werden. Bitte versuche es erneut.");
+    } finally {
+      setCodeChecking(false);
+    }
+  };
 
   if (!plan) {
     return (
@@ -103,8 +140,11 @@ function CheckoutPage() {
     setBusy(true);
     try {
       // Only plan, email and consent are sent. The price is calculated on the server.
-      const r = await submit({ data: { planId, email, withdrawalConsent: true, environment, returnOrigin: window.location.origin } });
-      if (!r.ok) setError(MESSAGES[r.error]);
+      const r = await submit({ data: { planId, email, withdrawalConsent: true, environment, returnOrigin: window.location.origin, discountCode: discount?.code } });
+      if (!r.ok) {
+        setError(MESSAGES[r.error]);
+        if (r.error.startsWith("discount_")) { setDiscount(null); setCodeMessage(null); }
+      }
       else setClientSecret(r.clientSecret);
     } catch {
       setError("Etwas ist schiefgelaufen. Bitte versuche es erneut.");
@@ -126,11 +166,14 @@ function CheckoutPage() {
       {plan.type === "unlimited" && <div className="mt-2"><UnlimitedNote throttleClaim={plan.throttleClaim} /></div>}
       {!clientSecret && <Link to="/countries/$slug" params={{ slug: plan.destination.slug }} className="mt-3 inline-block text-sm font-medium text-primary">Tarif ändern</Link>}
       <dl className="mt-5 space-y-2 border-t border-line pt-4 text-sm">
-        {plan.price ? (
+        {totals && plan.price ? (
           <>
-            <div className="flex justify-between text-ink-muted"><dt>Netto</dt><dd className="tabular">{formatPrice(plan.price.net, plan.price.currency)}</dd></div>
-            <div className="flex justify-between text-ink-muted"><dt>MwSt. ({Math.round(plan.price.vatRate * 100)} %)</dt><dd className="tabular">{formatPrice(plan.price.vat, plan.price.currency)}</dd></div>
-            <div className="flex items-baseline justify-between border-t border-line pt-3 text-ink"><dt className="font-semibold">Gesamt</dt><dd className="tabular text-2xl font-semibold">{formatPrice(plan.price.gross, plan.price.currency)}</dd></div>
+            <div className="flex justify-between text-ink-muted"><dt>Netto</dt><dd className="tabular">{formatPrice(totals.net, plan.price.currency)}</dd></div>
+            <div className="flex justify-between text-ink-muted"><dt>MwSt. ({Math.round(plan.price.vatRate * 100)} %)</dt><dd className="tabular">{formatPrice(totals.vat, plan.price.currency)}</dd></div>
+            {totals.discountAmount > 0 && (
+              <div className="flex justify-between text-primary"><dt>Rabatt ({discount!.code})</dt><dd className="tabular">−{formatPrice(totals.discountAmount, plan.price.currency)}</dd></div>
+            )}
+            <div className="flex items-baseline justify-between border-t border-line pt-3 text-ink"><dt className="font-semibold">Gesamt</dt><dd className="tabular text-2xl font-semibold">{formatPrice(totals.gross, plan.price.currency)}</dd></div>
             <p className="text-xs text-ink-muted">inkl. MwSt. · einmalige Zahlung, kein Abo</p>
           </>
         ) : (
@@ -175,9 +218,31 @@ function CheckoutPage() {
                     </span>
                   </label>
 
+                  <div className="rounded-xl border border-line bg-surface p-4">
+                    <span className="text-sm font-medium text-ink">Rabattcode</span>
+                    {discount ? (
+                      <div className="mt-2 flex flex-wrap items-center gap-3">
+                        <span className="rounded-full bg-primary px-3 py-1 font-mono text-sm font-semibold text-primary-foreground">{discount.code}</span>
+                        <span className="text-sm text-ink-muted">
+                          {discount.type === "percent" ? `${discount.value.toLocaleString("de-DE")} % Rabatt` : `${formatPrice(discount.value, plan.price?.currency ?? "EUR")} Rabatt`} angerechnet.
+                        </span>
+                        <button type="button" onClick={() => { setDiscount(null); setCodeMessage(null); }} className="ml-auto text-sm font-medium text-ink-muted hover:text-danger">
+                          Entfernen
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="mt-2 flex gap-2">
+                        <Input value={codeInput} onChange={(e) => setCodeInput(e.target.value.toUpperCase())} maxLength={40} placeholder="z. B. SOMMER10" className="font-mono uppercase" aria-label="Rabattcode eingeben" autoComplete="off"
+                          onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); applyCode(); } }} />
+                        <Button type="button" variant="secondary" loading={codeChecking} onClick={applyCode} className="shrink-0">Einlösen</Button>
+                      </div>
+                    )}
+                    {codeMessage && !discount && <p className="mt-2 text-sm text-danger">{codeMessage}</p>}
+                  </div>
+
                   {error && <ErrorBox message={error} />}
-                  <Button type="submit" loading={busy} className="h-12 w-full text-base" disabled={!plan.price}>
-                    <ShieldCheck className="mr-2 size-5" aria-hidden />Weiter zur Zahlung{plan.price ? ` · ${formatPrice(plan.price.gross, plan.price.currency)}` : ""}
+                  <Button type="submit" loading={busy} className="h-12 w-full text-base" disabled={!totals}>
+                    <ShieldCheck className="mr-2 size-5" aria-hidden />Weiter zur Zahlung{totals ? ` · ${formatPrice(totals.gross, plan.price?.currency ?? "EUR")}` : ""}
                   </Button>
                 </form>
               </>

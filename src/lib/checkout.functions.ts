@@ -6,6 +6,7 @@ import { z } from "zod";
 import type { Database } from "@/integrations/supabase/types";
 import { checkoutRequestSchema, type CheckoutError } from "./checkout-rules";
 import { computePrice, type PricingRule } from "./pricing";
+import { discountAmount, discountRedeemSchema, discountRejection, discountedTotals, isCodeFormatValid, normalizeCode, type DiscountRow } from "./discount-rules";
 
 async function loadPricedPlan(planId: string) {
   const { supabaseAdmin: db } = await import("@/integrations/supabase/client.server");
@@ -51,6 +52,27 @@ export const getCheckoutPlan = createServerFn({ method: "GET" })
 export const checkoutPlanQuery = (planId: string) =>
   queryOptions({ queryKey: ["checkout-plan", planId], queryFn: () => getCheckoutPlan({ data: { planId } }) });
 
+/** Checks a discount code without redeeming it. The actual claim happens atomically in createCheckoutSession. */
+export const validateDiscountCode = createServerFn({ method: "POST" })
+  .inputValidator((i) => discountRedeemSchema.parse(i))
+  .handler(async ({ data }): Promise<{ ok: true; type: "percent" | "fixed"; value: number } | { ok: false; reason: string }> => {
+    const { supabaseAdmin: db } = await import("@/integrations/supabase/client.server");
+    const ip = getRequestHeader("cf-connecting-ip") ?? getRequestHeader("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
+    const { data: allowed } = await db.rpc("rate_limit_hit", { _bucket: `discount-check:${ip}`, _window_seconds: 60, _max: 20 });
+    if (!allowed) return { ok: false, reason: "rate_limited" };
+    const code = normalizeCode(data.code);
+    if (!isCodeFormatValid(code)) return { ok: false, reason: "invalid_format" };
+    const { data: row } = await db
+      .from("discount_codes")
+      .select("type,value,active,valid_until,max_uses,times_used")
+      .eq("code", code)
+      .maybeSingle();
+    if (!row) return { ok: false, reason: "unknown" };
+    const rejection = discountRejection(row as DiscountRow, code);
+    if (rejection) return { ok: false, reason: rejection };
+    return { ok: true, type: row.type as "percent" | "fixed", value: Number(row.value) };
+  });
+
 async function callerIdentity(): Promise<{ userId: string | null; isAdmin: boolean }> {
   const auth = getRequestHeader("authorization") ?? "";
   if (!auth.startsWith("Bearer ")) return { userId: null, isAdmin: false };
@@ -93,6 +115,29 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
     if (!r) return { ok: false, error: "plan_unavailable" };
     if (!r.price.ok) return { ok: false, error: "price_unavailable" };
 
+    // Discount code: claimed atomically (usage is incremented only while slots remain).
+    let discount: { id: string; code: string; type: "percent" | "fixed"; value: number; amount: number } | null = null;
+    if (parsed.data.discountCode) {
+      const code = normalizeCode(parsed.data.discountCode);
+      const { data: claimed } = await db.rpc("claim_discount_code", { _code: code });
+      const row = (claimed as Array<{ id: string; code: string; type: "percent" | "fixed"; value: number }> | null)?.[0];
+      if (!row) {
+        const { data: existing } = await db.from("discount_codes").select("type,value,active,valid_until,max_uses,times_used").eq("code", code).maybeSingle();
+        return { ok: false, error: existing ? "discount_rejected" : "discount_invalid" };
+      }
+      discount = { id: row.id, code: row.code, type: row.type, value: Number(row.value), amount: discountAmount({ type: row.type, value: Number(row.value) }, r.price.gross) };
+    }
+    const totals = discount
+      ? discountedTotals(r.price.gross, discount.amount, r.vatRate)
+      : { gross: r.price.gross, net: r.price.net, vat: r.price.vat };
+    const releaseDiscount = async () => {
+      if (!discount) return;
+      await db.rpc("release_discount_code", { _code: discount.code });
+    };
+    // Stripe does not accept payments below its EUR minimum.
+    if (totals.gross < 0.5) { await releaseDiscount(); return { ok: false, error: "discount_minimum" }; }
+
+
     const { paymentsConfigured, createPayment } = await import("./payments.server");
     const env = parsed.data.environment;
     if (!paymentsConfigured(env)) return { ok: false, error: "payment_unavailable" };
@@ -105,11 +150,16 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
         user_id: caller.userId,
         guest_email: parsed.data.email,
         plan_id: r.plan.id,
-        plan_snapshot: { provider_plan_id: r.plan.provider_plan_id, type: r.plan.type, data_mb: r.plan.data_mb, validity_days: r.plan.validity_days, destination: r.plan.destination!.name_de, throttle_claim: r.plan.throttle_claim },
-        amount: r.price.gross,
-        net: r.price.net,
-        tax: r.price.vat,
+        plan_snapshot: {
+          provider_plan_id: r.plan.provider_plan_id, type: r.plan.type, data_mb: r.plan.data_mb, validity_days: r.plan.validity_days, destination: r.plan.destination!.name_de, throttle_claim: r.plan.throttle_claim,
+          discount: discount ? { code: discount.code, type: discount.type, value: discount.value, amount: discount.amount } : null,
+        },
+        amount: totals.gross,
+        net: totals.net,
+        tax: totals.vat,
         currency: r.price.currency,
+        discount_code: discount?.code ?? null,
+        discount_amount: discount?.amount ?? 0,
         status: "pending",
         withdrawal_consent_at: new Date().toISOString(),
         is_test: !live,
@@ -123,7 +173,7 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
       })
       .select("id")
       .single();
-    if (error || !order) return { ok: false, error: "payment_unavailable" };
+    if (error || !order) { await releaseDiscount(); return { ok: false, error: "payment_unavailable" }; }
 
     const { signGuestToken } = await import("./guest-token");
     const token = await signGuestToken(order.id, process.env["GUEST_TOKEN_SECRET"]!);
@@ -131,7 +181,7 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
     const description = `GlobeSIM eSIM ${dest} · ${r.plan.type === "unlimited" ? "Unlimited" : `${Math.round((r.plan.data_mb ?? 0) / 102.4) / 10} GB`} · ${r.plan.validity_days} Tage`;
     try {
       const pay = await createPayment({
-        env, orderId: order.id, amountCents: Math.round(r.price.gross * 100), currency: r.price.currency, email: parsed.data.email, userId: caller.userId, description,
+        env, orderId: order.id, amountCents: Math.round(totals.gross * 100), currency: r.price.currency, email: parsed.data.email, userId: caller.userId, description,
         // The redirect only shows the order page; it never marks the order paid (only the verified webhook does).
         returnUrl: `${parsed.data.returnOrigin}/order/${order.id}?t=${encodeURIComponent(token)}`,
       });
@@ -140,6 +190,8 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
     } catch (e) {
       const { getStripeErrorMessage } = await import("./stripe.server");
       await db.from("orders").update({ status: "cancelled", last_error: getStripeErrorMessage(e).slice(0, 300) }).eq("id", order.id);
+      // The code slot is only consumed once the payment session exists.
+      await releaseDiscount();
       return { ok: false, error: "payment_unavailable", detail: getStripeErrorMessage(e) };
     }
   });
