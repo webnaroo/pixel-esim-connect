@@ -71,9 +71,6 @@ async function collectFacts(state: WizardState) {
   const c = await buildChecklist();
   const { data: shop } = await a.from("app_settings").select("value").eq("key", "shop_enabled").maybeSingle();
   const { data: ar } = await a.from("app_settings").select("value").eq("key", "auto_refund_enabled").maybeSingle();
-  const { TEMPLATES } = await import("./email-templates/registry");
-  const { WizardFactsMarker } = { WizardFactsMarker: null };
-  void WizardFactsMarker; void TEMPLATES;
   return {
     key: { set: s.apiKeySet, sandbox: s.sandbox, pingOk, pingMessage },
     webhook: { liveSecretSet: s.webhookSecretLiveSet, liveValidEvents: liveValid ?? 0, recent401: r401 ?? 0, sandboxEndpointRemovedConfirmed: Boolean(state.confirmations["sandbox_endpoint_removed"]) },
