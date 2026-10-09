@@ -29,6 +29,12 @@ const STATUS: Record<string, string> = {
   cancelled: "Storniert",
 };
 
+const GOOD_TO_KNOW = [
+  "Der QR-Code funktioniert nur einmal – installiere die eSIM am besten noch zu Hause im WLAN.",
+  "Am Ziel angekommen schaltest du das Datenroaming für die neue eSIM ein.",
+  "Die Installationsdaten findest du jederzeit über deinen Bestelllink – mit Konto auch unter „Mein Konto“.",
+];
+
 /** Clipboard with a fallback for browsers that block the clipboard API. */
 async function copyText(value: string): Promise<boolean> {
   try {
@@ -130,11 +136,7 @@ function OrderPage() {
                 <div className="mt-8 rounded-lg border border-line bg-surface p-5">
                   <p className="font-display text-base font-semibold tracking-[-0.02em] text-ink">Gut zu wissen</p>
                   <ul className="mt-3 space-y-3">
-                    {[
-                      "Der QR-Code funktioniert nur einmal – installiere die eSIM am besten noch zu Hause im WLAN.",
-                      "Am Ziel angekommen schaltest du das Datenroaming für die neue eSIM ein.",
-                      "Die Installationsdaten findest du jederzeit über deinen Bestelllink – mit Konto auch unter „Mein Konto“.",
-                    ].map((n) => (
+                    {GOOD_TO_KNOW.map((n) => (
                       <li key={n} className="flex gap-3 text-sm text-ink-muted">
                         <CheckCircle size={16} weight="regular" className="mt-0.5 shrink-0 text-primary" aria-hidden />
                         <span>{n}</span>
@@ -143,8 +145,18 @@ function OrderPage() {
                   </ul>
                 </div>
 
-                {!user && (
-                  <div className="mt-8 rounded-lg border border-line bg-surface p-5">
+                {user ? (
+                  <div className="mt-6 rounded-lg border border-line bg-surface p-5">
+                    <p className="text-sm font-medium text-ink">Später wiederfinden</p>
+                    <p className="mt-1 text-sm text-ink-muted">
+                      Deine eSIM und die Installationsdaten liegen jederzeit für dich im Konto.
+                    </p>
+                    <Link to="/account" className="mt-3 inline-flex min-h-11 items-center text-sm font-medium text-primary underline-offset-4 hover:underline">
+                      Zum Konto
+                    </Link>
+                  </div>
+                ) : (
+                  <div className="mt-6 rounded-lg border border-line bg-surface p-5">
                     <p className="text-sm font-medium text-ink">Link für später sichern</p>
                     <p className="mt-1 text-sm text-ink-muted">
                       Deine Bestellung ist nur über diesen Link zu erreichen. Kopiere ihn dir oder leg ein Konto an – dann findest du sie jederzeit unter „Mein Konto“.
@@ -155,14 +167,6 @@ function OrderPage() {
                     </button>
                   </div>
                 )}
-
-                <div className="mt-6 rounded-lg border border-line bg-surface p-5">
-                  <p className="text-sm font-medium text-ink">Fragen zur Bestellung?</p>
-                  <p className="mt-1 text-sm text-ink-muted">Wir helfen dir auch bei der Installation weiter.</p>
-                  <Link to="/help" className="mt-3 inline-flex min-h-11 items-center text-sm font-medium text-primary underline-offset-4 hover:underline">
-                    Hilfe &amp; Kontakt
-                  </Link>
-                </div>
               </div>
 
               <aside className="min-w-0 lg:sticky lg:top-24">
@@ -189,6 +193,14 @@ function OrderPage() {
                     )}
                     <LinkButton to="/destinations" variant="secondary" className="w-full">Weitere Reiseziele</LinkButton>
                   </div>
+                </div>
+
+                <div className="mt-6 rounded-lg border border-line bg-surface p-5">
+                  <p className="text-sm font-medium text-ink">Fragen zur Bestellung?</p>
+                  <p className="mt-1 text-sm text-ink-muted">Wir helfen dir auch bei der Installation weiter.</p>
+                  <Link to="/help" className="mt-3 inline-flex min-h-11 items-center text-sm font-medium text-primary underline-offset-4 hover:underline">
+                    Hilfe &amp; Kontakt
+                  </Link>
                 </div>
               </aside>
             </div>
