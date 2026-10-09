@@ -19,7 +19,7 @@ export function backoffSeconds(attempt: number): number {
 export const MAX_IN_PROGRESS_ATTEMPTS = 53;
 
 export function inProgressDelaySeconds(attempt: number): number {
-  return attempt < 30 ? 30 : 120;
+  return attempt <= 30 ? 30 : 120;
 }
 
 export type ClaimedOrder = { id: string; attempts: number; idempotencyKey: string; providerPlanId: string; email: string };
