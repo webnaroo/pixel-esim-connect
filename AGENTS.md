@@ -18,7 +18,7 @@
 - All payment calls go through src/lib/payments.server.ts — one place to wire the payment provider; checkout never accepts a client price (strict schema in checkout-rules.ts).
 - Guest order/installation pages are authorised only by a signed, expiring token (guest-token.ts, GUEST_TOKEN_SECRET); activation data is returned only after token verification.
 - eSIMerge webhooks: valid-signed events stored once (tests ignored); new status only from GET order via esimerge-order.ts rules; bad signatures only counted.
-- An unclear provider outcome on createOrder (timeout/network) sets orders.status needs_review and is never retried automatically — protects against double orders; only HTTP rejections are retried.
+- eSIMerge errors follow src/lib/esimerge-errors.ts (code-based, same idempotency key on retries, unclear → needs_review; never store error.message) — prevents double orders and leaks.
 - eSIMerge mapping is derived only from captured sandbox responses (sandbox.fixtures.ts); unmappable plans are recorded in sync_runs.unmapped, never dropped silently.
 - Comparison visibility rules (source, 90-day age, GlobeSIM conditions) live in src/lib/comparison.ts with tests and are mirrored by RLS on comparison_facts — nothing unsourced or stale can reach the public page.
 - The "ohne Drosselung" claim follows src/lib/throttle.ts (plans.throttle_claim); texts come from app_settings.unlimited_claim, never hardcoded — a catalog throttle hint flips a confirmed plan to conflict on sync.

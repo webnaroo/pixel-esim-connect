@@ -86,6 +86,8 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
     const live = shop?.value === true;
     // While the shop switch is off, only admins may place (test) orders.
     if (!live && !caller.isAdmin) return { ok: false, error: "shop_unavailable" };
+    const { data: paused } = await db.from("app_settings").select("value").eq("key", "sales_paused").maybeSingle();
+    if (paused?.value === true) return { ok: false, error: "shop_unavailable" }; // sales pause applies to everyone
 
     const r = await loadPricedPlan(parsed.data.planId);
     if (!r) return { ok: false, error: "plan_unavailable" };

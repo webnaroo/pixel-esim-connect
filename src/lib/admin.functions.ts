@@ -40,7 +40,11 @@ async function buildChecklist(): Promise<ShopChecklist & { providerMessage: stri
   const { WEBHOOK_READY_STATUSES } = await import("./webhook-labels");
   const { count: whOk } = await supabaseAdmin.from("provider_webhook_events").select("id", { count: "exact", head: true }).eq("signature_valid", true).in("status", [...WEBHOOK_READY_STATUSES]);
   const webhookReady = status.webhookSecretSet && (whOk ?? 0) > 0;
-  return { providerReachable, providerSandbox: status.sandbox, providerMessage, catalogCount: count ?? 0, stripeConfigured, emailVerified, fxValid, webhookReady, legalPublished: (unpublished ?? 0) === 0 };
+  const { data: pause } = await supabaseAdmin.from("app_settings").select("value").eq("key", "sales_pause").maybeSingle();
+  const p = (pause?.value ?? {}) as { active?: boolean; reason?: string };
+  const providerAuthOk = !(p.active && p.reason === "auth");
+  return {
+    providerAuthOk, providerReachable, providerSandbox: status.sandbox, providerMessage, catalogCount: count ?? 0, stripeConfigured, emailVerified, fxValid, webhookReady, legalPublished: (unpublished ?? 0) === 0 };
 }
 
 export const getAdminOverview = createServerFn({ method: "GET" })
@@ -51,7 +55,7 @@ export const getAdminOverview = createServerFn({ method: "GET" })
     const { providerSetupStatus } = await import("./providers/index.server");
     const [checklist, { data: settings }, { data: runs }] = await Promise.all([
       buildChecklist(),
-      supabaseAdmin.from("app_settings").select("key,value").in("key", ["shop_enabled", "catalog_sync_enabled"]),
+      supabaseAdmin.from("app_settings").select("key,value").in("key", ["shop_enabled", "catalog_sync_enabled", "sales_pause"]),
       supabaseAdmin.from("sync_runs").select("*").order("started_at", { ascending: false }).limit(10),
     ]);
     const s = providerSetupStatus();
@@ -61,6 +65,10 @@ export const getAdminOverview = createServerFn({ method: "GET" })
       missing: shopChecklistMissing(checklist),
       shopEnabled: get("shop_enabled"),
       syncEnabled: get("catalog_sync_enabled"),
+      salesPause: (() => {
+        const v = (settings?.find((x) => x.key === "sales_pause")?.value ?? {}) as { active?: boolean; reason?: string; since?: string; code?: string; request_id?: string };
+        return v.active ? { reason: v.reason === "auth" ? "auth" as const : "insufficient_funds" as const, since: v.since ?? null, code: v.code ?? null, requestId: v.request_id ?? null } : null;
+      })(),
       provider: { baseUrlSet: s.baseUrlSet, apiKeySet: s.apiKeySet, webhookSecretSet: s.webhookSecretSet, configMissing: s.configMissing, mappingReady: s.mappingReady, sandbox: s.sandbox },
       runs: (runs ?? []).map((r) => ({ ...r })),
     };
@@ -81,6 +89,20 @@ export const setShopEnabled = createServerFn({ method: "POST" })
     await supabaseAdmin.from("app_settings").upsert({ key: "shop_enabled", value: data.enabled, updated_at: new Date().toISOString() });
     await supabaseAdmin.from("audit_log").insert({ actor_id: context.userId, action: data.enabled ? "shop_enabled" : "shop_disabled", entity: "app_settings", entity_id: "shop_enabled" });
     return { ok: true as const, missing: [] as string[] };
+  });
+
+/** Lifts the sales pause after an admin confirmed the cause is fixed (balance topped up / key replaced). Audited. */
+export const releaseSalesPause = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((i) => z.object({ confirmed: z.literal(true) }).parse(i))
+  .handler(async ({ context }) => {
+    await assertAdmin(context as unknown as Ctx);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: prev } = await supabaseAdmin.from("app_settings").select("value").eq("key", "sales_pause").maybeSingle();
+    const now = new Date().toISOString();
+    await supabaseAdmin.from("app_settings").upsert([{ key: "sales_paused", value: false, updated_at: now }, { key: "sales_pause", value: { active: false }, updated_at: now }]);
+    await supabaseAdmin.from("audit_log").insert({ actor_id: context.userId, action: "sales_released", entity: "app_settings", entity_id: "sales_pause", meta: { previous: prev?.value ?? null } as never });
+    return { ok: true as const };
   });
 
 export const setSyncEnabled = createServerFn({ method: "POST" })
@@ -267,11 +289,11 @@ export const getWebhookEvents = createServerFn({ method: "GET" })
     const { providerSetupStatus } = await import("./providers/index.server");
     const { data } = await supabaseAdmin.from("provider_webhook_events").select("id,event_id,delivery_id,event_type,mode,status,error,order_id,received_at,processed_at").order("received_at", { ascending: false }).limit(200);
     // Provider alerts for the admin: failed / cancelled orders and purchase-price deviations.
-    const { data: alerts } = await supabaseAdmin.from("audit_log").select("id,action,entity_id,meta,created_at").in("action", ["provider_order_failed", "provider_order_cancelled", "cost_mismatch"]).order("created_at", { ascending: false }).limit(50);
+    const { data: alerts } = await supabaseAdmin.from("audit_log").select("id,action,entity_id,meta,created_at").in("action", ["provider_order_failed", "provider_order_cancelled", "cost_mismatch", "provider_error", "plan_unavailable"]).order("created_at", { ascending: false }).limit(50);
     return {
       secretSet: providerSetupStatus().webhookSecretSet,
       events: data ?? [],
-      alerts: (alerts ?? []).map((a) => ({ id: a.id, action: a.action, orderId: a.entity_id, message: String((a.meta as { message?: string } | null)?.message ?? ""), createdAt: a.created_at })),
+      alerts: (alerts ?? []).map((a) => ({ id: a.id, action: a.action, orderId: a.entity_id, message: String((a.meta as { message?: string } | null)?.message ?? ""), code: ((a.meta as { code?: string } | null)?.code ?? null) as string | null, requestId: ((a.meta as { request_id?: string } | null)?.request_id ?? null) as string | null, field: ((a.meta as { field?: string } | null)?.field ?? null) as string | null, createdAt: a.created_at })),
     };
   });
 

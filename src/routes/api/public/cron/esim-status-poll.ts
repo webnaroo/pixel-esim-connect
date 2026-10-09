@@ -45,8 +45,13 @@ export const Route = createFileRoute("/api/public/cron/esim-status-poll")({
               }).eq("order_id", r.order_id);
               refreshed++;
             }
-          } catch {
+          } catch (e) {
             errors++;
+            // not_found on an order read: admin hint only, no status change.
+            const info = (e as { info?: { code: string | null; requestId: string | null; httpStatus: number | null } }).info;
+            if (info && (info.code === "not_found" || info.httpStatus === 404)) {
+              await db.from("audit_log").insert({ action: "provider_error", entity: "order", entity_id: r.order_id, meta: { code: "not_found", request_id: info.requestId, message: "Bestellung bei eSIMerge nicht gefunden – keine Statusänderung" } });
+            }
           }
         }
         const { processPendingWebhookEvents } = await import("@/lib/esimerge-webhook.server");

@@ -155,6 +155,13 @@
       "when": 1791550171866,
       "tag": "0021_esimerge_webhooks",
       "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1791552049059,
+      "tag": "0022_esimerge_sales_pause",
+      "breakpoints": true
     }
   ]
 }
