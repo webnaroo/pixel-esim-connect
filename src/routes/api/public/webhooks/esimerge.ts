@@ -13,7 +13,14 @@ export const Route = createFileRoute("/api/public/webhooks/esimerge")({
           auth: { kind: "esimerge" },
           limit: { windowSeconds: 60, max: 120 },
         });
-        if (!guard.ok) return guard.response;
+        if (!guard.ok) {
+          // Invalid signatures are only counted (api_logs), never stored with their payload.
+          if (guard.response.status === 401) {
+            const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+            await supabaseAdmin.from("api_logs").insert({ provider: "esimerge-webhook", endpoint: "/api/public/webhooks/esimerge", status: 401, error: "invalid_signature" });
+          }
+          return guard.response;
+        }
         const { parseEvent, receiveEvent } = await import("@/lib/esimerge-webhook");
         let raw: unknown;
         try { raw = JSON.parse(guard.rawBody); } catch { return Response.json({ error: "invalid json" }, { status: 400 }); }

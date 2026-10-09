@@ -1,3 +1,4 @@
+import { WEBHOOK_STATUS_LABEL, webhookReasonLabel } from "@/lib/webhook-labels";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -95,7 +96,7 @@ function AdminOrders() {
   );
 }
 
-const WH_STATUS: Record<string, string> = { pending: "Wartet", processed: "Verarbeitet", ignored: "Ignoriert", failed: "Fehlgeschlagen" };
+const WH_STATUS = WEBHOOK_STATUS_LABEL;
 
 function WebhookEvents() {
   const q = useQuery(webhookEventsQuery());
@@ -126,7 +127,7 @@ function WebhookEvents() {
       {rows.length === 0 ? <p className="text-sm text-ink-muted">{q.isLoading ? "Wird geladen …" : "Noch keine Webhook-Ereignisse."}</p> : (
         <div className="overflow-x-auto">
           <table className="w-full min-w-[720px] text-sm">
-            <thead className="text-left text-ink-muted"><tr><th className="p-2">Zeit</th><th className="p-2">Typ</th><th className="p-2">Modus</th><th className="p-2">Status</th><th className="p-2">Fehler</th><th className="p-2">Delivery-ID</th><th className="p-2">Bestellung</th></tr></thead>
+            <thead className="text-left text-ink-muted"><tr><th className="p-2">Zeit</th><th className="p-2">Typ</th><th className="p-2">Modus</th><th className="p-2">Status</th><th className="p-2">Grund</th><th className="p-2">Delivery-ID</th><th className="p-2">Bestellung</th></tr></thead>
             <tbody className="divide-y divide-line">
               {rows.map((e) => (
                 <tr key={e.id}>
@@ -134,7 +135,7 @@ function WebhookEvents() {
                   <td className="p-2 font-mono text-xs">{e.event_type}</td>
                   <td className="p-2">{e.mode === "live" ? "Live" : "Sandbox"}</td>
                   <td className="p-2"><Chip tone={e.status === "processed" ? "active" : e.status === "failed" ? "warning" : "default"}>{WH_STATUS[e.status] ?? e.status}</Chip></td>
-                  <td className="p-2 text-xs text-ink-muted">{e.error ?? ""}</td>
+                  <td className="p-2 text-xs text-ink-muted">{webhookReasonLabel(e.error)}</td>
                   <td className="p-2 font-mono text-xs">{e.delivery_id ?? ""}</td>
                   <td className="p-2 font-mono text-xs">{e.order_id ? e.order_id.slice(0, 8) : ""}</td>
                 </tr>

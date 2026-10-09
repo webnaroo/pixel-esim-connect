@@ -27,6 +27,8 @@ export type ParsedEvent = {
   known: boolean;
   mode: Mode | null; // from payload when present
   refs: { orderId?: string | undefined; esimId?: string | undefined; iccid?: string | undefined };
+  /** Portal test delivery (payload test:true, mode "test" or evt_test_ id) — stored and shown, never changes orders. */
+  test: boolean;
   threshold?: number;
   code?: string | undefined;
   reason?: string | undefined;
@@ -51,6 +53,7 @@ export function parseEvent(raw: unknown, deliveryId: string | null): ParsedEvent
     type,
     known: (KNOWN_EVENTS as readonly string[]).includes(type),
     mode,
+    test: r["test"] === true || d["test"] === true || modeStr === "test" || eventId.startsWith("evt_test_"),
     refs: { orderId: str(d["order_id"]) ?? str(d["esm_order_id"]), esimId: str(d["esim_id"]) ?? str(d["esm_esim_id"]), iccid: str(d["iccid"]) },
     ...(Number.isFinite(th) && th > 0 ? { threshold: th } : {}),
     ...(str(d["code"]) ? { code: str(d["code"]) } : {}),
@@ -78,6 +81,7 @@ export type WebhookDeps = {
 export type Outcome = { status: "processed" | "ignored" | "failed"; orderId?: string; error?: string };
 
 export async function handleEvent(deps: WebhookDeps, ev: ParsedEvent, mode: Mode): Promise<Outcome> {
+  if (ev.test) return { status: "ignored", error: "test_event" };
   if (!ev.known) return { status: "ignored", error: "unknown_event_type" };
   if (ev.type.startsWith("order.topup.")) return { status: "processed", ...(ev.type === "order.topup.failed" ? { error: `Top-up fehlgeschlagen: ${ev.code ?? "?"} ${ev.reason ?? ""}`.trim() } : {}) };
   const order = await deps.findOrder(ev.refs);
