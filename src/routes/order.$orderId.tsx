@@ -169,7 +169,7 @@ function OrderPage() {
                 )}
               </div>
 
-              <aside className="min-w-0 lg:sticky lg:top-24">
+              <aside className="order-first min-w-0 lg:order-none lg:sticky lg:top-24">
                 <h2 className="font-display text-lg font-semibold tracking-[-0.02em] text-ink">Deine Bestellung</h2>
                 <dl className="mt-4 divide-y divide-line rounded-lg border border-line bg-surface">
                   <Row k="Reiseziel" v={order.plan.destination ?? "–"} />
