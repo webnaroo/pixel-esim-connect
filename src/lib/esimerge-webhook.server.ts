@@ -55,7 +55,7 @@ export const dbWebhookDeps: WebhookDeps = {
     const db = await admin();
     const { data } = await db.from("esims").select("provider_order_id").eq("order_id", orderId).single();
     await dbFulfillmentStore.markFulfilled(orderId, data!.provider_order_id!, api.esim as never);
-    const amount = (api as { amountUsd?: number }).amountUsd;
+    const amount = api.amountUsd;
     if (amount != null) { const { recordActualCost } = await import("./fulfillment.server"); await recordActualCost(orderId, amount); }
   },
   async markFailed(orderId, code) {

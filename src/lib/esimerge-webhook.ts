@@ -66,7 +66,7 @@ export function parseEvent(raw: unknown, deliveryId: string | null): ParsedEvent
 export const sanitizePayload = (raw: unknown) => maskSensitive(raw);
 
 export type LocalOrder = { id: string; status: string; isSandbox: boolean; providerOrderId: string | null; providerEsimId: string | null; hasInstallData: boolean; alertsSent: number[] };
-export type ApiOrder = { status: "pending" | "ready"; orderStatus?: EsmOrderStatus | undefined; errorCode?: string | undefined; activatedAt?: string | undefined; providerStatus?: string | undefined; failed?: boolean; esim?: unknown };
+export type ApiOrder = { amountUsd?: number | undefined; status: "pending" | "ready"; orderStatus?: EsmOrderStatus | undefined; errorCode?: string | undefined; activatedAt?: string | undefined; providerStatus?: string | undefined; failed?: boolean; esim?: unknown };
 
 export type WebhookDeps = {
   findOrder(refs: ParsedEvent["refs"]): Promise<LocalOrder | null>;
