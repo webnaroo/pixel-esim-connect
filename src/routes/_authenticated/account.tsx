@@ -13,9 +13,10 @@ import { DELETE_CONFIRM_WORD } from "@/lib/anonymize";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/_authenticated/account")({
-  validateSearch: (search: Record<string, unknown>): { tab?: "esims" | "orders" | "settings" } => ({
-    tab: search.tab === "orders" || search.tab === "settings" || search.tab === "esims" ? search.tab : undefined,
-  }),
+  validateSearch: (search: Record<string, unknown>): { tab?: "esims" | "orders" | "settings" } => {
+    const tab = search["tab"];
+    return tab === "orders" || tab === "settings" || tab === "esims" ? { tab } : {};
+  },
   head: () => ({
     meta: [
       { title: "Mein Konto | GlobeSIM" },

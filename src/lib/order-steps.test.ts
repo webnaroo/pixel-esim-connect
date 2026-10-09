@@ -1,7 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { orderSteps } from "./order-steps";
+import { orderSteps, type StepState } from "./order-steps";
 
-const states = (status: string) => Object.fromEntries(orderSteps(status).map((s) => [s.key, s.state]));
+type Keys = "order" | "payment" | "install";
+
+const states = (status: string): Record<Keys, StepState> =>
+  Object.fromEntries(orderSteps(status).map((s) => [s.key, s.state])) as Record<Keys, StepState>;
 
 describe("orderSteps", () => {
   it("shows the order step as done for every status", () => {
