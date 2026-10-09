@@ -3,12 +3,25 @@ import { errorRule, errorSummary, type EsmErrorInfo, type EsmErrorRule } from ".
 // Pure fulfillment core. I/O is injected so the "never deliver twice" rules are testable.
 import { ProviderRequestError, type EsimDetails, type ProviderOrderResult } from "./providers/types";
 
-/** First attempt plus 3 retries (after 1, 5 and 25 minutes). */
+/** First attempt plus 3 retries (after 1, 5 and 25 minutes) for clear provider rejections. */
 export const MAX_FULFILLMENT_ATTEMPTS = 4;
 
 /** Growing delay after failed attempt n: 1 min, 5 min, 25 min. */
 export function backoffSeconds(attempt: number): number {
   return 60 * 5 ** Math.max(0, attempt - 1);
+}
+
+/** Attempt cap while eSIMerge reports "still in progress": 1 + 8×30 s (≈5 min) + 11×2 min ≈ 27 min, then admin review. */
+export const MAX_IN_PROGRESS_ATTEMPTS = 20;
+
+/**
+ * Fallback poll while eSIMerge is still working (owner rule): first check 60 s after the
+ * first attempt, then every 30 s until 5 minutes have passed, then every 2 minutes.
+ */
+export function inProgressDelaySeconds(attempt: number): number {
+  if (attempt <= 1) return 60;
+  if (attempt <= 9) return 30; // 60 s + 8 × 30 s = 5 min
+  return 120;
 }
 
 export type ClaimedOrder = { id: string; attempts: number; idempotencyKey: string; providerPlanId: string; email: string };
@@ -49,7 +62,7 @@ export function safeError(e: unknown): string {
 }
 
 export async function fulfillOrder(deps: FulfillDeps, orderId: string): Promise<FulfillOutcome> {
-  const claimed = await deps.store.claim(orderId, MAX_FULFILLMENT_ATTEMPTS);
+  const claimed = await deps.store.claim(orderId, MAX_IN_PROGRESS_ATTEMPTS);
   if (!claimed) return "skipped";
   try {
     const res = await deps.createOrder({
@@ -71,8 +84,8 @@ export async function fulfillOrder(deps: FulfillDeps, orderId: string): Promise<
       if (rule.order === "in_progress") {
         // request_in_flight / rate_limited: same idempotency key later, never marked failed.
         const now = (deps.now ?? (() => new Date()))();
-        if (claimed.attempts >= MAX_FULFILLMENT_ATTEMPTS) { await deps.store.markNeedsReview(orderId, summary); return "needs_review"; }
-        await deps.store.scheduleRetry(orderId, new Date(now.getTime() + 5 * 60_000), summary);
+        if (claimed.attempts >= MAX_IN_PROGRESS_ATTEMPTS) { await deps.store.markNeedsReview(orderId, summary); return "needs_review"; }
+        await deps.store.scheduleRetry(orderId, new Date(now.getTime() + inProgressDelaySeconds(claimed.attempts) * 1000), summary);
         return "retry_scheduled";
       }
       if (rule.order === "failed") { await deps.store.markFailed(orderId, summary); return "failed"; }

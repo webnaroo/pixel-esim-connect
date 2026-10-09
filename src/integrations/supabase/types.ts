@@ -1475,6 +1475,7 @@ export type Database = {
         | "cancelled"
         | "payment_mismatch"
         | "needs_review"
+        | "expired"
       plan_type: "data" | "unlimited"
       webhook_source: "stripe" | "provider"
     }
@@ -1616,6 +1617,7 @@ export const Constants = {
         "cancelled",
         "payment_mismatch",
         "needs_review",
+        "expired",
       ],
       plan_type: ["data", "unlimited"],
       webhook_source: ["stripe", "provider"],

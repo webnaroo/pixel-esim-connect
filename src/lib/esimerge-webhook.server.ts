@@ -83,6 +83,19 @@ export const dbWebhookDeps: WebhookDeps = {
     await sendOrderEmail(orderId, "usage_alert", { threshold });
   },
   now: () => new Date(),
+  async nudgeWaitingFulfillments(mode) {
+    const db = await admin();
+    const { data } = await db.from("orders").select("id")
+      .eq("status", "fulfilling").eq("is_sandbox", mode === "sandbox")
+      .gt("created_at", new Date(Date.now() - 6 * 3_600_000).toISOString()).limit(5);
+    const { fulfillOrderById } = await import("./fulfillment.server");
+    for (const o of data ?? []) {
+      // Only orders without a stored eSIMerge id are claimable (claim function checks this).
+      await db.from("orders").update({ next_attempt_at: new Date().toISOString() }).eq("id", o.id).eq("status", "fulfilling");
+      if ((await fulfillOrderById(o.id)) === "fulfilled") return o.id;
+    }
+    return null;
+  },
 };
 
 /** Retries events still pending (e.g. the background run was cut off). Called from the status poll. */

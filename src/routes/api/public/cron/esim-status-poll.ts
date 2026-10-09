@@ -14,6 +14,8 @@ export const Route = createFileRoute("/api/public/cron/esim-status-poll")({
         // Automatic refunds (switch "Automatische Erstattung", default off) — independent of provider config.
         const { runDbAutoRefunds } = await import("@/lib/auto-refund.server");
         const refunds = await runDbAutoRefunds().catch(() => ({ refunded: [], skipped: 0, errors: 1 }));
+        // Unpaid checkouts: "pending" for 24 h → "expired" (kept for the record, never shown to customers).
+        await db.from("orders").update({ status: "expired" }).eq("status", "pending").lt("created_at", new Date(Date.now() - 24 * 3_600_000).toISOString());
         if (!providerSetupStatus().configured) return Response.json({ skipped: "provider_not_configured", refunds });
         const { dbFulfillmentStore } = await import("@/lib/fulfillment.server");
         const { hasInstallData } = await import("@/lib/providers/esimerge/mapping");
