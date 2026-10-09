@@ -42,7 +42,7 @@ export function DestinationPage({ slug }: { slug: string }) {
     if (!d || d.fixturePlans || !d.plans.length) return;
     const p = selPlan;
     if (p) trackOncePerPage("ViewContent", p.id, { content_ids: [p.id], content_type: "product", content_name: d.name, content_category: "eSIM", value: p.price, currency: p.currency });
-    else trackOncePerPage("ViewContent", `dest:${d.slug}`, { content_ids: d.plans.map((x) => x.id).slice(0, 20), content_type: "product_group", content_name: d.name, content_category: "eSIM", value: Math.min(...d.plans.map((x) => x.price)), currency: d.plans[0].currency });
+    else trackOncePerPage("ViewContent", `dest:${d.slug}`, { content_ids: d.plans.map((x) => x.id).slice(0, 20), content_type: "product_group", content_name: d.name, content_category: "eSIM", value: Math.min(...d.plans.map((x) => x.price)), currency: d.plans[0]?.currency ?? "EUR" });
   }, [d, selPlan]);
 
   if (!d) return null;
