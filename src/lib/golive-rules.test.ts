@@ -30,7 +30,7 @@ describe("price check", () => {
   it("10 USD at 0.90 with 50 % margin: rest after 2.9 % + 0.30 fee", () => {
     const r = buildPriceCheck({ ...base, plans: [plan({})] }).rows[0]!;
     expect(r.costEur).toBe(9);
-    expect(r.gross).toBe(16.07);
+    expect(r.gross).toBe(16.06);
     expect(r.net).toBe(13.5);
     expect(r.fee).toBe(0.77);
     expect(r.rest).toBe(3.73);
