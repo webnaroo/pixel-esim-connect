@@ -37,3 +37,4 @@
 - SEO tests and admin audits share one sitemap-driven validator; shared Markdown wraps long words
 - esim_devices: public read (active) via RLS, writes only via admin server fns; rules in src/lib/devices.ts — no invented device data.
 - Ratgeber posts (blog_posts) are public only with status=published (RLS + server fns); src/lib/ratgeber.ts publishBlockers() checks completeness+score only; AI omits unsure claims, no markers (owner decision). All active destinations count as available; prices only via {{LIVE_PREISE:ISO}}.
+- eSIM install UI lives only in src/components/esim-install-panel.tsx (device rules in src/lib/install-device.ts), used by account and /install — both views must stay identical.
