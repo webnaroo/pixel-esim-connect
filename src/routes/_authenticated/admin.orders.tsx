@@ -1,10 +1,10 @@
-import { WEBHOOK_STATUS_LABEL, webhookReasonLabel } from "@/lib/webhook-labels";
+import { WEBHOOK_STATUS_LABEL, webhookNeedsAttention, webhookReasonLabel } from "@/lib/webhook-labels";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 import { adminOrdersQuery, markProviderRefundRequested, refundOrder } from "@/lib/orders.functions";
-import { webhookEventsQuery } from "@/lib/admin.functions";
+import { resolveWebhookEvent, webhookEventsQuery } from "@/lib/admin.functions";
 import { Chip, ErrorBox, EmptyState } from "@/components/brand";
 import { Button, Input } from "@/components/ui-kit";
 import { formatPrice } from "@/lib/format";
@@ -137,7 +137,15 @@ function WebhookEvents() {
   const [st, setSt] = useState("");
   const [mode, setMode] = useState("live"); // sandbox events hidden by default
   const all = q.data?.events ?? [];
-  const failed = all.filter((e) => e.status === "failed" || e.event_type === "order.failed" || e.event_type === "order.topup.failed");
+  const failed = all.filter(webhookNeedsAttention);
+  const qc = useQueryClient();
+  const resolve = useServerFn(resolveWebhookEvent);
+  const markDone = async (id: string) => {
+    const note = prompt("Notiz zum Erledigen:", "Geprüft");
+    if (!note?.trim()) return;
+    try { await resolve({ data: { eventId: id, note } }); await qc.invalidateQueries({ queryKey: ["admin", "webhooks"] }); }
+    catch (err) { alert(err instanceof Error ? err.message : "Fehlgeschlagen"); }
+  };
   const rows = all.filter((e) => (!type || e.event_type === type) && (!st || e.status === st) && (!mode || e.mode === mode));
   const types = [...new Set(all.map((e) => e.event_type))];
   const sel = "h-10 rounded-md border border-line bg-surface px-3 text-sm";
@@ -176,7 +184,7 @@ function WebhookEvents() {
       {rows.length === 0 ? <p className="text-sm text-ink-muted">{q.isLoading ? "Wird geladen …" : "Noch keine Webhook-Ereignisse."}</p> : (
         <div className="overflow-x-auto">
           <table className="w-full min-w-[720px] text-sm">
-            <thead className="text-left text-ink-muted"><tr><th className="p-2">Zeit</th><th className="p-2">Typ</th><th className="p-2">Modus</th><th className="p-2">Status</th><th className="p-2">Grund</th><th className="p-2">Delivery-ID</th><th className="p-2">Bestellung</th></tr></thead>
+            <thead className="text-left text-ink-muted"><tr><th className="p-2">Zeit</th><th className="p-2">Typ</th><th className="p-2">Modus</th><th className="p-2">Status</th><th className="p-2">Grund</th><th className="p-2">Delivery-ID</th><th className="p-2">Bestellung</th><th className="p-2" /></tr></thead>
             <tbody className="divide-y divide-line">
               {rows.map((e) => (
                 <tr key={e.id}>
@@ -187,6 +195,7 @@ function WebhookEvents() {
                   <td className="p-2 text-xs text-ink-muted">{webhookReasonLabel(e.error)}</td>
                   <td className="p-2 font-mono text-xs">{e.delivery_id ?? ""}</td>
                   <td className="p-2 font-mono text-xs">{e.order_id ? e.order_id.slice(0, 8) : ""}</td>
+                  <td className="p-2 text-xs">{e.resolved_at ? <span className="text-ink-muted" title={e.resolved_note ?? ""}>Erledigt {new Date(e.resolved_at).toLocaleString("de-DE")}{e.resolved_note ? ` · ${e.resolved_note}` : ""}</span> : <button type="button" className="whitespace-nowrap rounded-md border border-line-strong px-2 py-1 hover:border-ink-muted" onClick={() => markDone(e.id)}>Als erledigt markieren</button>}</td>
                 </tr>
               ))}
             </tbody>
