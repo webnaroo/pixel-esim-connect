@@ -4,7 +4,7 @@ export const FX_WARN_DAYS = 4;
 export const FX_MAX_DAYS = 7; // older → no rate, no price
 export const MANUAL_MAX_DAYS = 7;
 export const PRICE_CHANGE_MIN = 0.005; // reprice only if gross moves > 0.5 %
-export const DEFAULT_BUFFER_PERCENT = 2;
+export const DEFAULT_BUFFER_PERCENT = 3.5;
 
 export type FxSource = "ecb" | "fallback" | "manual";
 export type FxRow = {
@@ -77,7 +77,7 @@ export function decideNewRate(last: FxRow | undefined, candidate: number): "acce
 
 export function shouldReprice(oldGross: number, newGross: number): boolean {
   if (!(oldGross > 0)) return true;
-  return Math.abs(newGross - oldGross) / oldGross > PRICE_CHANGE_MIN;
+  return Math.round(newGross * 100) !== Math.round(oldGross * 100);
 }
 
 export function validateManual(input: { rate: number; reason: string; expiresAt: string }, now: Date): string | null {

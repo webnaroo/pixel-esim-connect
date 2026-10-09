@@ -8,6 +8,7 @@ export const checkoutRequestSchema = z
     withdrawalConsent: z.literal(true),
     environment: z.enum(["sandbox", "live"]),
     realPaymentConsent: z.boolean().optional(),
+    displayedGross: z.number().positive().optional(), // comparison only; never used as payment amount
     discountCode: z.string().max(60).optional(),
     returnOrigin: z.string().url().max(200).refine((u) => /^https:\/\/|^http:\/\/localhost(:\d+)?$/.test(u), "invalid origin"),
   })
@@ -27,4 +28,4 @@ export function checkoutAccess({ shopLive, isAdmin, paused, environment, realPay
 
 export type CheckoutError =
   | "shop_unavailable" | "plan_unavailable" | "price_unavailable" | "payment_unavailable" | "invalid_request" | "rate_limited"
-  | "discount_invalid" | "discount_rejected" | "discount_minimum" | "real_payment_consent_required";
+  | "price_changed" | "discount_invalid" | "discount_rejected" | "discount_minimum" | "real_payment_consent_required";

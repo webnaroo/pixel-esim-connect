@@ -173,7 +173,10 @@ export const getPricingData = createServerFn({ method: "GET" })
     const val = (k: string) => st?.find((x) => x.key === k)?.value;
     const { parseFeeSettings, parseMinNet } = await import("./pricing");
     const vat = Number(val("vat_rate"));
+    const { providerSetupStatus } = await import("./providers/index.server");
+    const { data: lastCalculation } = await supabaseAdmin.from("audit_log").select("created_at,meta").eq("action", "prices_recalculated").order("created_at", { ascending: false }).limit(1).maybeSingle();
     return {
+      mode: providerSetupStatus().sandbox ? "TEST/VORSCHAU" : "LIVE", lastCalculation,
       rules: (rules ?? []).map((r) => ({ ...r, value: Number(r.value) })), fx: (fx ?? []).map((r) => ({ ...r, rate: Number(r.rate) })),
       fees: parseFeeSettings(val("stripe_fees")), minNet: parseMinNet(val("min_net_result")), vatRate: Number.isFinite(vat) && vat > 0 ? vat : 0.19,
     };
@@ -191,6 +194,7 @@ export const saveMarginSettings = createServerFn({ method: "POST" })
       { key: "min_net_result", value: data.minNet as never, updated_at: now },
     ]);
     await supabaseAdmin.from("audit_log").insert({ actor_id: context.userId, action: "margin_settings_changed", entity: "app_settings", meta: data as never });
+    await (await import("./fx.server")).repricePlans(context.userId);
     return { ok: true };
   });
 

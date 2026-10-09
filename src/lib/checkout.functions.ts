@@ -12,23 +12,15 @@ async function loadPricedPlan(planId: string) {
   const { supabaseAdmin: db } = await import("@/integrations/supabase/client.server");
   const { data: plan } = await db
     .from("plans")
-    .select("id,provider_plan_id,type,data_mb,validity_days,cost_price,cost_currency,is_active,released,throttle_claim,destination:destinations(slug,name_de,flag_code,type)")
+    .select("id,provider_plan_id,type,data_mb,validity_days,cost_price,cost_currency,price_override,is_active,released,throttle_claim,destination:destinations(slug,name_de,flag_code,type)")
     .eq("id", planId)
     .maybeSingle();
   if (!plan || !plan.is_active || !plan.released || !plan.destination) return null;
-  const [{ data: rules }, fxCtx, { data: vatRow }] = await Promise.all([
-    db.from("pricing_rules").select("id,scope,scope_ref,type,value,rounding,priority"),
-    import("./fx.server").then(({ loadFx }) => loadFx(db)),
-    db.from("app_settings").select("value").eq("key", "vat_rate").maybeSingle(),
-  ]);
-  const vatRate = typeof vatRow?.value === "number" ? vatRow.value : 0.19;
-  const fx = fxCtx.lookup;
-  const fxRate = plan.cost_currency.toUpperCase() === "EUR" ? 1 : fx(plan.cost_currency, "EUR");
-  // Recalculated on the server from cost + current rules; the stored list price is not trusted.
-  const price = computePrice(
-    { providerPlanId: plan.provider_plan_id, destinationSlug: plan.destination.slug, planType: plan.type, costPrice: Number(plan.cost_price), costCurrency: plan.cost_currency },
-    (rules ?? []) as PricingRule[], fx, vatRate,
-  );
+  const { loadPricingContext } = await import("./pricing-context.server");
+  const ctx = await loadPricingContext(db);
+  const { price } = ctx.calculate({ providerPlanId: plan.provider_plan_id, destinationSlug: plan.destination.slug, planType: plan.type, costPrice: Number(plan.cost_price), costCurrency: plan.cost_currency, manualPrice: plan.price_override });
+  const vatRate = ctx.vat;
+  const fxRate = plan.cost_currency.toUpperCase() === "EUR" ? 1 : ctx.fx.lookup(plan.cost_currency, "EUR");
   return { plan, price, vatRate, fxRate };
 }
 
@@ -116,6 +108,7 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
     const r = await loadPricedPlan(parsed.data.planId);
     if (!r) return { ok: false, error: "plan_unavailable" };
     if (!r.price.ok) return { ok: false, error: "price_unavailable" };
+    if (parsed.data.displayedGross != null && Math.round(parsed.data.displayedGross * 100) !== Math.round(r.price.gross * 100)) return { ok: false, error: "price_changed" };
 
     // Discount code: claimed atomically (usage is incremented only while slots remain).
     let discount: { id: string; code: string; type: "percent" | "fixed"; value: number; amount: number } | null = null;
