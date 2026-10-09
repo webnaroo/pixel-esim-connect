@@ -55,8 +55,9 @@ export async function createPayment(input: {
   return { clientSecret: session.client_secret, sessionId: session.id };
 }
 
-export async function refundPayment(env: StripeEnv, paymentIntentId: string): Promise<{ refundId: string }> {
+/** Full refund. idempotencyKey is fixed per order (refund-<orderId>), so Stripe never refunds twice. */
+export async function refundPayment(env: StripeEnv, paymentIntentId: string, idempotencyKey: string): Promise<{ refundId: string }> {
   const stripe = await client(env);
-  const r = await stripe.refunds.create({ payment_intent: paymentIntentId });
+  const r = await stripe.refunds.create({ payment_intent: paymentIntentId }, { idempotencyKey });
   return { refundId: r.id };
 }

@@ -162,6 +162,13 @@
       "when": 1791552049059,
       "tag": "0022_esimerge_sales_pause",
       "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1791553394187,
+      "tag": "0023_orders_auto_refund",
+      "breakpoints": true
     }
   ]
 }

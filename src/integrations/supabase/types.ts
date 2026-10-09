@@ -713,6 +713,7 @@ export type Database = {
           created_at: string
           currency: string
           email_status: string
+          failed_at: string | null
           fulfillment_attempts: number
           fx_rate: number | null
           guest_email: string
@@ -726,6 +727,9 @@ export type Database = {
           plan_id: string | null
           plan_snapshot: Json | null
           price_frozen_until: string | null
+          refund_id: string | null
+          refund_started_at: string | null
+          refunded_at: string | null
           status: Database["public"]["Enums"]["order_status"]
           stripe_env: string | null
           stripe_payment_intent_id: string | null
@@ -743,6 +747,7 @@ export type Database = {
           created_at?: string
           currency?: string
           email_status?: string
+          failed_at?: string | null
           fulfillment_attempts?: number
           fx_rate?: number | null
           guest_email: string
@@ -756,6 +761,9 @@ export type Database = {
           plan_id?: string | null
           plan_snapshot?: Json | null
           price_frozen_until?: string | null
+          refund_id?: string | null
+          refund_started_at?: string | null
+          refunded_at?: string | null
           status?: Database["public"]["Enums"]["order_status"]
           stripe_env?: string | null
           stripe_payment_intent_id?: string | null
@@ -773,6 +781,7 @@ export type Database = {
           created_at?: string
           currency?: string
           email_status?: string
+          failed_at?: string | null
           fulfillment_attempts?: number
           fx_rate?: number | null
           guest_email?: string
@@ -786,6 +795,9 @@ export type Database = {
           plan_id?: string | null
           plan_snapshot?: Json | null
           price_frozen_until?: string | null
+          refund_id?: string | null
+          refund_started_at?: string | null
+          refunded_at?: string | null
           status?: Database["public"]["Enums"]["order_status"]
           stripe_env?: string | null
           stripe_payment_intent_id?: string | null
@@ -1329,6 +1341,7 @@ export type Database = {
           created_at: string
           currency: string
           email_status: string
+          failed_at: string | null
           fulfillment_attempts: number
           fx_rate: number | null
           guest_email: string
@@ -1342,6 +1355,9 @@ export type Database = {
           plan_id: string | null
           plan_snapshot: Json | null
           price_frozen_until: string | null
+          refund_id: string | null
+          refund_started_at: string | null
+          refunded_at: string | null
           status: Database["public"]["Enums"]["order_status"]
           stripe_env: string | null
           stripe_payment_intent_id: string | null

@@ -4,7 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 import { toast } from "sonner";
 import { CheckCircle, XCircle, Warning } from "@phosphor-icons/react";
-import { adminOverviewQuery, releaseSalesPause, runSyncNow, setShopEnabled, setSyncEnabled } from "@/lib/admin.functions";
+import { adminOverviewQuery, releaseSalesPause, runSyncNow, setAutoRefundEnabled, setShopEnabled, setSyncEnabled } from "@/lib/admin.functions";
 import { Button } from "@/components/ui-kit";
 import { Chip } from "@/components/brand";
 import { AdminError } from "./admin";
@@ -39,6 +39,7 @@ function Overview() {
   const qc = useQueryClient();
   const toggleShop = useServerFn(setShopEnabled);
   const toggleSync = useServerFn(setSyncEnabled);
+  const toggleAutoRefund = useServerFn(setAutoRefundEnabled);
   const sync = useServerFn(runSyncNow);
   const release = useServerFn(releaseSalesPause);
   const [busy, setBusy] = useState<string | null>(null);
@@ -145,6 +146,18 @@ function Overview() {
           </Button>
         </div>
         {!data.shopEnabled && data.missing.length > 0 && <p className="mt-2 text-sm text-ink-muted">Erst möglich, wenn alle Punkte grün sind.</p>}
+      </section>
+
+      <section className="rounded-lg border border-line bg-surface p-6">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h2 className="text-xl">Automatische Erstattung</h2>
+            <p className="mt-1 max-w-xl text-sm text-ink-muted">Wenn eSIMerge eine Bestellung eindeutig als fehlgeschlagen bestätigt und keine Installationsdaten ausgegeben wurden, wird die Zahlung nach 30 Minuten vollständig erstattet. Nie bei „muss geprüft werden" oder unklarem Ausgang.</p>
+          </div>
+          <Button variant={data.autoRefundEnabled ? "secondary" : "primary"} loading={busy === "refund"} onClick={async () => { setBusy("refund"); await toggleAutoRefund({ data: { enabled: !data.autoRefundEnabled } }); setBusy(null); toast.success(data.autoRefundEnabled ? "Automatische Erstattung aus." : "Automatische Erstattung an."); refresh(); }}>
+            Automatische Erstattung: {data.autoRefundEnabled ? "an" : "aus"}
+          </Button>
+        </div>
       </section>
 
       <section className="rounded-lg border border-line bg-surface p-6">

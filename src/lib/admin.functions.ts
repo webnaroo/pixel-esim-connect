@@ -55,7 +55,7 @@ export const getAdminOverview = createServerFn({ method: "GET" })
     const { providerSetupStatus } = await import("./providers/index.server");
     const [checklist, { data: settings }, { data: runs }] = await Promise.all([
       buildChecklist(),
-      supabaseAdmin.from("app_settings").select("key,value").in("key", ["shop_enabled", "catalog_sync_enabled", "sales_pause"]),
+      supabaseAdmin.from("app_settings").select("key,value").in("key", ["shop_enabled", "catalog_sync_enabled", "sales_pause", "auto_refund_enabled"]),
       supabaseAdmin.from("sync_runs").select("*").order("started_at", { ascending: false }).limit(10),
     ]);
     const s = providerSetupStatus();
@@ -65,6 +65,7 @@ export const getAdminOverview = createServerFn({ method: "GET" })
       missing: shopChecklistMissing(checklist),
       shopEnabled: get("shop_enabled"),
       syncEnabled: get("catalog_sync_enabled"),
+      autoRefundEnabled: get("auto_refund_enabled"),
       salesPause: (() => {
         const v = (settings?.find((x) => x.key === "sales_pause")?.value ?? {}) as { active?: boolean; reason?: string; since?: string; code?: string; request_id?: string };
         return v.active ? { reason: v.reason === "auth" ? "auth" as const : "insufficient_funds" as const, since: v.since ?? null, code: v.code ?? null, requestId: v.request_id ?? null } : null;
@@ -102,6 +103,17 @@ export const releaseSalesPause = createServerFn({ method: "POST" })
     const now = new Date().toISOString();
     await supabaseAdmin.from("app_settings").upsert([{ key: "sales_paused", value: false, updated_at: now }, { key: "sales_pause", value: { active: false }, updated_at: now }]);
     await supabaseAdmin.from("audit_log").insert({ actor_id: context.userId, action: "sales_released", entity: "app_settings", entity_id: "sales_pause", meta: { previous: prev?.value ?? null } as never });
+    return { ok: true as const };
+  });
+
+export const setAutoRefundEnabled = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((i) => z.object({ enabled: z.boolean() }).parse(i))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context as unknown as Ctx);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    await supabaseAdmin.from("app_settings").upsert({ key: "auto_refund_enabled", value: data.enabled, updated_at: new Date().toISOString() });
+    await supabaseAdmin.from("audit_log").insert({ actor_id: context.userId, action: data.enabled ? "auto_refund_enabled" : "auto_refund_disabled", entity: "app_settings", entity_id: "auto_refund_enabled" });
     return { ok: true as const };
   });
 
@@ -289,7 +301,7 @@ export const getWebhookEvents = createServerFn({ method: "GET" })
     const { providerSetupStatus } = await import("./providers/index.server");
     const { data } = await supabaseAdmin.from("provider_webhook_events").select("id,event_id,delivery_id,event_type,mode,status,error,order_id,received_at,processed_at").order("received_at", { ascending: false }).limit(200);
     // Provider alerts for the admin: failed / cancelled orders and purchase-price deviations.
-    const { data: alerts } = await supabaseAdmin.from("audit_log").select("id,action,entity_id,meta,created_at").in("action", ["provider_order_failed", "provider_order_cancelled", "cost_mismatch", "provider_error", "plan_unavailable"]).order("created_at", { ascending: false }).limit(50);
+    const { data: alerts } = await supabaseAdmin.from("audit_log").select("id,action,entity_id,meta,created_at").in("action", ["provider_order_failed", "provider_order_cancelled", "cost_mismatch", "provider_error", "plan_unavailable", "auto_refunded", "auto_refund_failed"]).order("created_at", { ascending: false }).limit(50);
     return {
       secretSet: providerSetupStatus().webhookSecretSet,
       events: data ?? [],
