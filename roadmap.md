@@ -1,6 +1,6 @@
 # Roadmap
-- [ ] Admin checkout with shop disabled: validate payment mode and explicit real-payment confirmation; verify checkout without charging
-- [ ] Revise checkout withdrawal wording for unactivated eSIMs within the withdrawal period, preserving statutory conditions
+- [x] Admin checkout with shop disabled: access rules tested; live-payment consent verified in browser without creating a payment (completed payment remains untested)
+- [x] Revise checkout withdrawal wording for unactivated eSIMs within the 14-day withdrawal period, preserving statutory conditions (legal review remains required)
 - [x] Compatibility-check button inside the FAQ device question (faq page and homepage section)
 - [x] Audit and correct spacing defects across shared layouts and public pages on mobile, tablet and desktop
 - [x] Show popular destination photo tiles on desktop and tablet, preserving mobile and other homepage sections

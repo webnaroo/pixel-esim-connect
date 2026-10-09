@@ -107,7 +107,7 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
     const { data: shop } = await db.from("app_settings").select("value").eq("key", "shop_enabled").maybeSingle();
     const live = shop?.value === true;
     const { data: paused } = await db.from("app_settings").select("value").eq("key", "sales_paused").maybeSingle();
-    const accessError = checkoutAccess({ shopLive: live, isAdmin: caller.isAdmin, paused: paused?.value === true, environment: parsed.data.environment, realPaymentConsent: parsed.data.realPaymentConsent });
+    const accessError = checkoutAccess({ shopLive: live, isAdmin: caller.isAdmin, paused: paused?.value === true, environment: parsed.data.environment, realPaymentConsent: parsed.data.realPaymentConsent ?? false });
     if (accessError) return { ok: false, error: accessError };
     const { paymentsConfigured, createPayment } = await import("./payments.server");
     const env = parsed.data.environment;
