@@ -15,11 +15,12 @@ export type OrderView = {
   discountCode: string | null;
   discountAmount: number;
   plan: { destination?: string; type?: string; data_mb?: number | null; validity_days?: number; throttle_claim?: "unknown" | "none_confirmed" | "conflict" };
-  esim: { status: string; iccid: string | null; lpa: string | null; smdp: string | null; activationCode: string | null; directInstallUrl: string | null } | null;
+  esim: { status: string; iccid: string | null; lpa: string | null; smdp: string | null; activationCode: string | null; directInstallUrl: string | null; iosUrl: string | null; androidUrl: string | null; installUntil: string | null; activatedAt: string | null } | null;
 };
 
 /** Guest access: the signed, expiring token is the authorisation. Activation data only for a valid token. */
-export const getOrderView = createServerFn({ method: "GET" })
+// POST so the token never lands in a URL (server logs, proxies, referrers).
+export const getOrderView = createServerFn({ method: "POST" })
   .inputValidator((i) => z.object({ orderId: z.string().uuid(), token: z.string().min(10).max(200) }).parse(i))
   .handler(async ({ data }): Promise<OrderView | null> => {
     const secret = process.env["GUEST_TOKEN_SECRET"];
@@ -29,7 +30,9 @@ export const getOrderView = createServerFn({ method: "GET" })
     const { supabaseAdmin: db } = await import("@/integrations/supabase/client.server");
     const { data: o } = await db.from("orders").select("id,status,guest_email,amount,currency,created_at,is_test,plan_snapshot,email_status,discount_code,discount_amount").eq("id", data.orderId).maybeSingle();
     if (!o) return null;
-    const { data: e } = await db.from("esims").select("status,iccid,lpa_string,smdp_address,activation_code,direct_install_url").eq("order_id", o.id).maybeSingle();
+    // Link dies with a refund or cancellation (in addition to the 30-day token expiry).
+    if (o.status === "refunded" || o.status === "cancelled") return null;
+    const { data: e } = await db.from("esims").select("status,iccid,lpa_string,smdp_address,activation_code,direct_install_url,ios_install_url,android_install_url,expires_at,activated_at").eq("order_id", o.id).maybeSingle();
     return {
       id: o.id,
       status: o.status,
@@ -43,7 +46,7 @@ export const getOrderView = createServerFn({ method: "GET" })
       discountAmount: Number(o.discount_amount ?? 0),
       plan: (o.plan_snapshot ?? {}) as OrderView["plan"],
       esim: e && o.status === "fulfilled"
-        ? { status: e.status, iccid: e.iccid, lpa: e.lpa_string, smdp: e.smdp_address, activationCode: e.activation_code, directInstallUrl: e.direct_install_url }
+        ? { status: e.status, iccid: e.iccid, lpa: e.lpa_string, smdp: e.smdp_address, activationCode: e.activation_code, directInstallUrl: e.direct_install_url, iosUrl: e.ios_install_url, androidUrl: e.android_install_url, installUntil: e.expires_at, activatedAt: e.activated_at }
         : null,
     };
   });

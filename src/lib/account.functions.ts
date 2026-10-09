@@ -51,6 +51,7 @@ export const getMyInstallData = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { data: own } = await context.supabase.from("orders").select("id,status").eq("id", data.orderId).eq("user_id", context.userId).maybeSingle();
     if (!own || own.status !== "fulfilled") return null;
+    // Same rule as the e-mail link: no install data after refund/cancellation (status check above).
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: e } = await supabaseAdmin
       .from("esims")
