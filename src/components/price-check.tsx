@@ -28,7 +28,6 @@ export function PriceCheck() {
     { key: "deviation", title: "Preisabweichung (Katalog vs. zuletzt bezahlt)", ids: d.lists.deviation.map((x) => x.id), extra: (id) => { const x = d.lists.deviation.find((y) => y.id === id)!; return `Katalog ${usd(x.catalog)} · bezahlt ${usd(x.paid)}`; } },
     { key: "new", title: "Neue Tarife (unsichtbar bis zur Freigabe)", ids: d.lists.newPlans, action: d.lists.newPlans.length ? <Button variant="secondary" onClick={async () => { const r = await release({ data: { planIds: d.lists.newPlans } }); toast.success(`${r.count} Tarife freigegeben.`); qc.invalidateQueries(); }}>Alle freigeben</Button> : null },
     { key: "gone", title: "Seit dem letzten Sync verschwunden", ids: d.lists.gone },
-    { key: "low", title: `Rest unter 1,00 € nach Stripe-Gebühr (${String(d.fees.percent).replace(".", ",")} % + ${eur(d.fees.fixed)})`, ids: d.lists.lowRest, extra: (id) => `Rest ${eur(byId.get(id)?.rest ?? null)}` },
   ];
 
   const sampleRows = d.samples.map((s) => ({ s, r: s.row }));
@@ -74,7 +73,7 @@ export function PriceCheck() {
           <thead className="text-ink-muted"><tr>{["Land", "Tarif", "Einkauf USD", "Kurs inkl. Puffer", "Einkauf EUR", "Netto", "Brutto inkl. 19 %", "Marge €", "Marge %", "Stripe-Gebühr", "Rest"].map((h) => <th key={h} className="py-2 pr-3 font-medium">{h}</th>)}</tr></thead>
           <tbody className="divide-y divide-line">
             {sampleRows.map(({ s, r }, i) => (
-              <tr key={i} className={r?.lowRest ? "text-danger" : ""}>
+              <tr key={i}>
                 <td className="py-2 pr-3 whitespace-nowrap">{COUNTRY[s.iso]} <span className="text-ink-muted">({s.kind === "cheapest" ? "günstigster" : s.kind === "biggest" ? "größte Daten" : "kein Tarif"})</span></td>
                 <td className="pr-3">{r ? label(r.id) : "–"}</td>
                 <td className="pr-3">{usd(r?.costPrice ?? null)}</td>

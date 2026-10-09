@@ -71,9 +71,9 @@ export function GoLiveWizard() {
         {step.n === 3 && (
           <div className="mt-3 space-y-2">
             <Button variant="secondary" loading={busy} onClick={() => run(async () => { const r = await sync(); if (r.status === "rejected") toast.error(r.message ?? "abgelehnt"); else toast.success(`Sync: ${r.status} · ${r.added} neu, ${r.updated} aktualisiert, ${r.deactivated} deaktiviert`); })}>Live-Sync starten</Button>
-            <p className="text-sm">Aktive Tarife: {data.facts.catalog.activePlans} · Länder/Regionen: {data.facts.catalog.countries} · ohne Preis: {data.facts.catalog.unpriced} · ohne Marge: {data.facts.catalog.noMargin} · Rest unter 1,00 €: {data.facts.catalog.lowRest}</p>
+            <p className="text-sm">Aktive Tarife: {data.facts.catalog.activePlans} · Länder/Regionen: {data.facts.catalog.countries} · ohne Preis: {data.facts.catalog.unpriced} · ohne Marge: {data.facts.catalog.noMargin}</p>
             <p className="text-sm text-ink-muted">Stichprobe Türkei, Ägypten, USA, VAE, Saudi-Arabien und Freigabe neuer Tarife: Admin → Preise → Prüfliste.</p>
-            {(data.facts.catalog.noMargin > 0 || data.facts.catalog.lowRest > 0) && <p className="text-sm">Vorschlag: eine Margenregel für die betroffenen Länder oder Tariftypen unter „Preise“ anlegen. Ich ändere nichts ohne dein OK.</p>}
+            {data.facts.catalog.noMargin > 0 && <p className="text-sm">Vorschlag: eine Margenregel für die betroffenen Länder oder Tariftypen unter „Preise“ anlegen. Ich ändere nichts ohne dein OK.</p>}
           </div>
         )}
         {step.n === 8 && (

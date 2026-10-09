@@ -23,7 +23,7 @@ export const Route = createFileRoute("/_authenticated/admin/plans")({
         { key: "sell_price", label: "Brutto", render: (r) => (Number(r["sell_price"]) > 0 ? formatPrice(Number(r["sell_price"]), String(r["currency"])) : "kein Preis") },
         { key: "fee", label: "Stripe", render: (r) => eur(r["fee"]) },
         { key: "result", label: "Ergebnis", render: (r) => r["result"] == null ? "–" : (
-          <span className={r["below_min"] ? "font-semibold text-danger" : "font-semibold"}>{eur(r["result"])} · {Number(r["result_pct"]).toLocaleString("de-DE")} %{r["below_min"] ? <><br /><span className="text-xs">unter Mindestwert</span></> : null}</span>
+          <span className="font-semibold">{eur(r["result"])} · {Number(r["result_pct"]).toLocaleString("de-DE")} %</span>
         ) },
         { key: "is_active", label: "Aktiv" },
         { key: "throttle_claim", label: "Drosselung" },

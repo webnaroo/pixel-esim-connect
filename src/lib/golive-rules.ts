@@ -20,7 +20,6 @@ export function stripeLiveMissing(s: StripeState): string[] {
 }
 
 // ---------- Price check after sync ----------
-export const PRICE_CHECK_MIN_REST = 1.0;
 export const SAMPLE_COUNTRIES = ["TR", "EG", "US", "AE", "SA"] as const;
 
 export type CheckPlan = {
@@ -30,19 +29,19 @@ export type CheckPlan = {
 };
 export type CheckRow = CheckPlan & {
   fxRate: number | null; costEur: number | null; net: number | null; gross: number | null;
-  margin: number | null; marginPercent: number | null; fee: number | null; rest: number | null; lowRest: boolean;
+  margin: number | null; marginPercent: number | null; fee: number | null; rest: number | null;
 };
 
 export function priceRow(p: CheckPlan, rules: PricingRule[], fx: FxLookup, vat: number, fees: FeeSettings): CheckRow {
   const rate = p.costCurrency.toUpperCase() === "EUR" ? 1 : fx(p.costCurrency.toUpperCase(), "EUR");
-  const base = { ...p, fxRate: rate, costEur: null, net: null, gross: null, margin: null, marginPercent: null, fee: null, rest: null, lowRest: false };
+  const base = { ...p, fxRate: rate, costEur: null, net: null, gross: null, margin: null, marginPercent: null, fee: null, rest: null };
   if (!p.costPrice || !p.destinationSlug || rate == null) return base;
   const price = computePrice({ providerPlanId: p.providerPlanId, destinationSlug: p.destinationSlug, planType: p.type, costPrice: p.costPrice, costCurrency: p.costCurrency }, rules, fx, vat);
   const costEur = Math.round(p.costPrice * rate * 100) / 100;
   if (!price.ok) return { ...base, costEur };
-  const m = computeMargin(costEur, price.net, price.gross, fees, PRICE_CHECK_MIN_REST);
+  const m = computeMargin(costEur, price.net, price.gross, fees, 0);
   const margin = Math.round((price.net - costEur) * 100) / 100;
-  return { ...base, costEur, net: price.net, gross: price.gross, margin, marginPercent: costEur > 0 ? Math.round((margin / costEur) * 1000) / 10 : null, fee: m.fee, rest: m.result, lowRest: m.result < PRICE_CHECK_MIN_REST };
+  return { ...base, costEur, net: price.net, gross: price.gross, margin, marginPercent: costEur > 0 ? Math.round((margin / costEur) * 1000) / 10 : null, fee: m.fee, rest: m.result };
 }
 
 export type PriceCheckInput = {
@@ -80,7 +79,6 @@ export function buildPriceCheck(i: PriceCheckInput) {
       deviation: deviation.map((r) => ({ id: r.id, catalog: r.costPrice!, paid: i.lastPaid[r.providerPlanId]! })),
       newPlans: ids(rows.filter((r) => newSet.has(r.id) || !r.released)),
       gone: i.goneIds,
-      lowRest: ids(active.filter((r) => r.lowRest)),
     },
     samples,
   };

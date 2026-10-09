@@ -63,8 +63,8 @@ describe("net result after payment fee", () => {
     // fee 17,99 × 2,9 % = 0,52 + 0,30 = 0,82 → 15,12 − 10 − 0,82 = 4,30 → 43 % of cost
     expect(m).toMatchObject({ fee: 0.82, result: 4.3, resultPercent: 43, belowMin: false });
   });
-  it("flags results below the default minimum of 1,50 €", () => {
-    expect(computeMargin(10, 11.4, 13.57, parseFeeSettings(null), parseMinNet(null)).belowMin).toBe(true);
+  it("flags results below an explicit minimum", () => {
+    expect(computeMargin(10, 11.4, 13.57, parseFeeSettings(null), 1.5).belowMin).toBe(true);
   });
   it("respects a custom minimum", () => {
     expect(computeMargin(10, 15.12, 17.99, { percent: 2.9, fixed: 0.3 }, 5).belowMin).toBe(true);
