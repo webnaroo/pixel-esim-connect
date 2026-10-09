@@ -16,6 +16,7 @@
 - Fulfillment goes only through fulfillOrder() (src/lib/fulfillment.ts) with the DB claim function claim_order_for_fulfillment — the atomic claim plus a fixed provider idempotency key is what prevents double delivery.
 - Webhooks are deduplicated via webhook_events (source, event_id) with processWebhookOnce(); on handler failure the record is removed so the provider's retry can succeed.
 - All payment calls go through src/lib/payments.server.ts; refunds use one Stripe key per order (auto-refund.ts rules, run by the 5-min status poll).
+- Checkout access is checked through checkoutAccess after server-side role verification; closed-shop live admin payments require explicit real-payment consent and is_test follows the payment environment, to prevent accidental charges and misclassified payments.
 - Guest order/installation pages are authorised only by a signed, expiring token (guest-token.ts, GUEST_TOKEN_SECRET); activation data is returned only after token verification.
 - eSIMerge webhooks: valid-signed events stored once (tests ignored); new status only from GET order via esimerge-order.ts rules; bad signatures only counted.
 - eSIMerge errors follow src/lib/esimerge-errors.ts (code-based, same idempotency key on retries, unclear → needs_review; never store error.message) — prevents double orders and leaks.
