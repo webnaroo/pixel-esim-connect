@@ -19,7 +19,7 @@ export async function preparePriceChange(change: PriceChange) {
     for (const p of data ?? []) {
       if (!p.destination) { invalid++; continue; }
       const override = change.kind === "override" && change.id === p.id ? change.override ?? null : p.price_override;
-      const result = ctx.calculate({ providerPlanId: p.provider_plan_id, destinationSlug: p.destination.slug, planType: p.type, costPrice: Number(p.cost_price), costCurrency: p.cost_currency, manualPrice: override }, rules as PricingRule[], policy);
+      const result = ctx.calculate({ providerPlanId: p.provider_plan_id, destinationSlug: p.destination.slug, planType: p.type, costPrice: Number(p.cost_price), costCurrency: p.cost_currency, manualPrice: override }, rules as PricingRule[], policy, typeof change.settings?.["fx_buffer_percent"] === "number" ? change.settings["fx_buffer_percent"] : ctx.fx.buffer);
       if (!result.price.ok) { invalid++; continue; }
       const gross = result.price.gross;
       if (gross !== Number(p.sell_price)) changed++;

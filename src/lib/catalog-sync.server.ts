@@ -85,7 +85,7 @@ export async function runCatalogSync(trigger: "cron" | "manual"): Promise<SyncSu
       }
       countries.add(dest.id);
       const previous = known.get(`${p.providerPlanId}|${dest.id}`);
-      const calculation = pricing.calculate({ providerPlanId: p.providerPlanId, destinationSlug: dest.slug, planType: p.type, costPrice: p.costPrice, costCurrency: p.costCurrency, manualPrice: previous?.price_override });
+      const calculation = pricing.calculate({ providerPlanId: p.providerPlanId, destinationSlug: dest.slug, planType: p.type, costPrice: p.costPrice, costCurrency: p.costCurrency, manualPrice: previous?.price_override ?? null });
       const price = calculation.price;
       if (!price.ok) {
         counts.unpriced++;

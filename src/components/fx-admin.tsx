@@ -6,6 +6,7 @@ import { Warning } from "@phosphor-icons/react";
 import { decideFxReview, fxAdminQuery, refreshFxNow, setFxBuffer, setManualFx } from "@/lib/fx.functions";
 import { FX_WARN_DAYS, FX_MAX_DAYS } from "@/lib/fx";
 import { Button, Input } from "./ui-kit";
+import { usePriceConfirmation } from "./price-change-dialog";
 import { Chip } from "./brand";
 
 const SRC: Record<string, string> = { ecb: "EZB", fallback: "Frankfurter (EZB-Daten)", manual: "Manuell" };
@@ -18,6 +19,7 @@ const d = (s: string | null) => (s ? new Date(s).toLocaleDateString("de-DE") : "
 const n = (v: number, digits = 6) => v.toLocaleString("de-DE", { maximumFractionDigits: digits });
 
 export function FxSection() {
+  const confirmation = usePriceConfirmation();
   const q = useQuery(fxAdminQuery());
   const qc = useQueryClient();
   const refresh = useServerFn(refreshFxNow);
@@ -34,6 +36,7 @@ export function FxSection() {
 
   return (
     <section className="space-y-5 rounded-lg border border-line bg-surface p-6 lg:col-span-2">
+      {confirmation.dialog}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h2 className="text-xl">Wechselkurse nach EUR</h2>
@@ -83,7 +86,7 @@ export function FxSection() {
             })}
           </div>
 
-          <form className="flex flex-wrap items-end gap-3" onSubmit={(ev) => { ev.preventDefault(); const v = Number(String(new FormData(ev.currentTarget).get("buffer")).replace(",", ".")); run(async () => { await buffer({ data: { percent: v } }); toast.success("Aufschlag gespeichert, Preise neu berechnet."); }); }}>
+          <form className="flex flex-wrap items-end gap-3" onSubmit={(ev) => { ev.preventDefault(); const v = Number(String(new FormData(ev.currentTarget).get("buffer")).replace(",", ".")); void confirmation.request({ kind: "settings", settings: { fx_buffer_percent: v } }); }}>
             <label className="text-sm font-medium">Sicherheitsaufschlag (%)<Input name="buffer" className="mt-1 w-32" defaultValue={String(data.buffer).replace(".", ",")} inputMode="decimal" /></label>
             <Button type="submit" variant="secondary" loading={busy}>Speichern</Button>
           </form>

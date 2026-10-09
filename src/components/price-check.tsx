@@ -91,7 +91,7 @@ export function PriceCheck() {
                  <td className="pr-3">{r?.priceInputs && typeof r.priceInputs === "object" ? String((r.priceInputs as { markup?: number }).markup ?? "–") : "–"}</td>
                  <td className="pr-3">{r?.manualPrice != null ? "Preis überschrieben" : r?.priceSource ?? "Noch nicht erfasst"}</td>
                  <td className="pr-3 whitespace-nowrap">{r?.calculatedAt ? new Date(r.calculatedAt).toLocaleString("de-DE") : "–"}</td>
-                 <td className="pr-3">{r && <Button variant="secondary" loading={confirmation.busy} onClick={() => { const v = window.prompt("Manueller Bruttopreis in EUR (leer = Überschreibung entfernen)", r.manualPrice == null ? "" : String(r.manualPrice)); if (v === null) return; const price = v.trim() ? Number(v.replace(",", ".")) : null; if (price !== null && (!Number.isFinite(price) || price <= 0)) return toast.error("Bitte einen gültigen Preis eingeben."); void confirmation.request({ kind: "override", id: r.id, override: price }); }}>Bearbeiten</Button>}</td>
+                 <td className="pr-3">{r && <Button variant="secondary" loading={confirmation.busy} onClick={() => { const v = window.prompt("Manueller Bruttopreis in EUR (leer = Überschreibung entfernen)", r.manualPrice == null ? "" : String(r.manualPrice)); if (v === null) return; const price = v.trim() ? Number(v.replace(",", ".")) : null; if (price !== null && (!Number.isFinite(price) || price <= 0)) { toast.error("Bitte einen gültigen Preis eingeben."); return; } void confirmation.request({ kind: "override", id: r.id, override: price }); }}>Bearbeiten</Button>}</td>
               </tr>
             ))}
           </tbody>

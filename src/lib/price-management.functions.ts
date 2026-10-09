@@ -8,7 +8,7 @@ export const priceChangeSchema = z.discriminatedUnion("kind", [
   z.object({ kind: z.literal("create"), rule }),
   z.object({ kind: z.literal("update"), id: z.string().uuid(), rule }),
   z.object({ kind: z.literal("delete"), id: z.string().uuid() }),
-  z.object({ kind: z.literal("settings"), settings: z.object({ stripe_fees: z.object({ percent: z.number().min(0).max(20), fixed: z.number().min(0).max(10) }), min_net_result: z.number().min(0).max(100) }) }),
+  z.object({ kind: z.literal("settings"), settings: z.object({ stripe_fees: z.object({ percent: z.number().min(0).max(20), fixed: z.number().min(0).max(10) }).optional(), min_net_result: z.number().min(0).max(100).optional(), fx_buffer_percent: z.number().min(0).max(20).optional() }) }),
   z.object({ kind: z.literal("override"), id: z.string().uuid(), override: z.number().positive().max(100000).nullable() }),
 ]);
 export type PriceChangeInput = z.infer<typeof priceChangeSchema>;

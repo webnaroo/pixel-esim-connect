@@ -19,7 +19,7 @@ export const Route = createFileRoute("/sitemap.xml")({
           const ids = new Set(plans.map((p) => p.destination_id));
           const dest = destinations.filter((d) => ids.has(d.id)).map((d) => d.type === "country" ? `/countries/${d.slug}` : `/regions/${d.slug}`);
           const paths = ["/", "/destinations", "/how-it-works", "/faq", "/help", ...(posts.length ? ["/ratgeber"] : []), ...dest, ...legal.map((l) => `/legal/${l.slug}`), ...posts.map((p) => `/ratgeber/${p.slug}`)];
-          return new Response(sitemapXml(paths.map(pageUrl)), { headers: { "Content-Type": "application/xml; charset=utf-8", "Cache-Control": "public, max-age=3600" } });
+          return new Response(sitemapXml(paths.map(pageUrl)), { headers: { "Content-Type": "application/xml; charset=utf-8", "Cache-Control": "public, max-age=30, must-revalidate" } });
         } catch {
           console.error("Sitemap public data read failed");
           return new Response("Sitemap temporarily unavailable", { status: 503, headers: { "Cache-Control": "no-store", "Retry-After": "300" } });
