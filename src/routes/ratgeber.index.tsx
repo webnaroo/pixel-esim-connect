@@ -42,7 +42,7 @@ function RatgeberIndex() {
         ) : (
           <>
             <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-              <input type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Ratgeber durchsuchen" aria-label="Ratgeber durchsuchen" className="h-11 min-w-0 flex-1 rounded-full border border-line bg-surface px-4 text-sm" />
+              <input type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Ratgeber durchsuchen" aria-label="Ratgeber durchsuchen" className="h-11 min-w-0 flex-1 rounded-full border border-line bg-surface px-4 text-base sm:text-sm" />
               {countries.length > 0 && (
                 <select value={country} onChange={(e) => setCountry(e.target.value)} aria-label="Nach Land filtern" className="h-11 rounded-full border border-line bg-surface px-4 text-sm">
                   <option value="">Alle Länder</option>
