@@ -54,6 +54,8 @@ async function buildChecklist(): Promise<ShopChecklist & { providerMessage: stri
     providerAuthOk, providerReachable, providerSandbox: status.sandbox, providerMessage, catalogCount: count ?? 0, stripeConfigured, stripeMissing, stripeMode: stripeMode(stripe), stripeLiveEvents: stripe.liveEventsProcessed, emailVerified, emailTestSent, replyConfirmed, senderDomain: mailSettings.sender_domain, fxValid, webhookReady, legalPublished: (unpublished ?? 0) === 0 };
 }
 
+export { buildChecklist };
+
 export const getAdminOverview = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
@@ -99,12 +101,14 @@ export const adminOverviewQuery = () => queryOptions({ queryKey: ["admin", "over
 
 export const setShopEnabled = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((i) => z.object({ enabled: z.boolean() }).parse(i))
+  .inputValidator((i) => z.object({ enabled: z.boolean(), confirmation: z.string().max(60).optional() }).parse(i))
   .handler(async ({ data, context }) => {
     await assertAdmin(context as unknown as Ctx);
     if (data.enabled) {
       const c = await buildChecklist();
       if (!canEnableShop(c)) return { ok: false as const, missing: shopChecklistMissing(c) };
+      const { canSwitchShopOn } = await import("./golive-wizard");
+      if (!canSwitchShopOn([], data.confirmation)) return { ok: false as const, missing: ["ausdrückliche Bestätigung im Go-Live-Assistenten"] };
     }
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     await supabaseAdmin.from("app_settings").upsert({ key: "shop_enabled", value: data.enabled, updated_at: new Date().toISOString() });
