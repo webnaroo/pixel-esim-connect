@@ -25,7 +25,7 @@ function AdminRefundRequest({ orderId, customer, reason, url }: Props) {
 
 export const template = {
   component: AdminRefundRequest,
-  subject: (d: Record<string, any>) => `Erstattungsanfrage offen: Nr. ${d.orderId ?? ''}`,
+  subject: (d: Record<string, any>) => `Erstattungsanfrage offen: Nr. ${d['orderId'] ?? ''}`,
   displayName: 'Erstattungsanfrage (Admin)',
   previewData: { orderId: 'c7e829b5', customer: 'kunde@example.de', reason: 'Reise abgesagt', url: 'https://globesim.de/admin' },
 } satisfies TemplateEntry
