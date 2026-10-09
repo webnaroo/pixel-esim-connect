@@ -72,9 +72,11 @@ export const listAdminOrders = createServerFn({ method: "GET" })
       .limit(500);
     const ids = (data ?? []).map((o) => o.id);
     const { data: es } = ids.length ? await db.from("esims").select("order_id,provider_order_id").in("order_id", ids) : { data: [] };
+    // Last provider-refund request per order (audit trail, so two admins don't ask twice).
+    const { data: req } = ids.length ? await db.from("audit_log").select("entity_id,created_at").eq("action", "provider_refund_requested").in("entity_id", ids).order("created_at", { ascending: false }) : { data: [] };
     const prov = new Map((es ?? []).map((e) => [e.order_id, e.provider_order_id]));
-    const withProv = (data ?? []).map((o) => ({ ...o, provider_order_id: prov.get(o.id) ?? null }));
-    return withProv;
+    const asked = new Map((req ?? []).map((r) => [r.entity_id, r.created_at]));
+    return (data ?? []).map((o) => ({ ...o, provider_order_id: prov.get(o.id) ?? null, provider_refund_requested_at: asked.get(o.id) ?? null }));
   });
 
 export const adminOrdersQuery = () => queryOptions({ queryKey: ["admin", "orders"], queryFn: () => listAdminOrders() });
@@ -94,5 +96,19 @@ export const refundOrder = createServerFn({ method: "POST" })
     const r = await refundPayment(o.stripe_env === "live" ? "live" : "sandbox", o.stripe_payment_intent_id, refundIdempotencyKey(data.orderId));
     await db.from("orders").update({ status: "refunded", refunded_at: new Date().toISOString(), refund_id: r.refundId, refund_started_at: new Date().toISOString() }).eq("id", data.orderId);
     await db.from("audit_log").insert({ actor_id: context.userId, action: "order_refunded", entity: "order", entity_id: data.orderId, meta: { refund_id: r.refundId } });
+    return { ok: true };
+  });
+
+// eSIMerge has no refund endpoint (docs/INTEGRATION.md): the admin asks in the portal,
+// and this records the request so the follow-up stays visible to every admin.
+export const markProviderRefundRequested = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((i) => z.object({ orderId: z.string().uuid() }).parse(i))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context as unknown as Ctx);
+    const { supabaseAdmin: db } = await import("@/integrations/supabase/client.server");
+    const { data: o } = await db.from("orders").select("id").eq("id", data.orderId).maybeSingle();
+    if (!o) throw new Error("Bestellung nicht gefunden.");
+    await db.from("audit_log").insert({ actor_id: context.userId, action: "provider_refund_requested", entity: "order", entity_id: data.orderId, meta: { channel: "portal" } });
     return { ok: true };
   });

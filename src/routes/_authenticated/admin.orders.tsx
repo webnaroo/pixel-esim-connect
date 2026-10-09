@@ -3,7 +3,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
-import { adminOrdersQuery, refundOrder } from "@/lib/orders.functions";
+import { adminOrdersQuery, markProviderRefundRequested, refundOrder } from "@/lib/orders.functions";
 import { webhookEventsQuery } from "@/lib/admin.functions";
 import { Chip, ErrorBox, EmptyState } from "@/components/brand";
 import { Button, Input } from "@/components/ui-kit";
@@ -21,6 +21,7 @@ function AdminOrders() {
   const q = useQuery(adminOrdersQuery());
   const qc = useQueryClient();
   const refund = useServerFn(refundOrder);
+  const markProvider = useServerFn(markProviderRefundRequested);
   const [msg, setMsg] = useState<string | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [search, setSearch] = useState("");
@@ -41,12 +42,24 @@ function AdminOrders() {
     finally { setBusy(null); }
   };
 
-  const requestProviderRefund = async (o: { id: string; provider_order_id: string | null; created_at: string }) => {
-    const text = `Erstattungsanfrage GlobeSIM\neSIMerge-Bestellnummer: ${o.provider_order_id}\nUnsere Bestellnummer: ${o.id}\nDatum: ${new Date(o.created_at).toLocaleString("de-DE")}`;
+  const requestProviderRefund = async (o: { id: string; provider_order_id: string | null; created_at: string; amount: unknown; currency: unknown; plan_snapshot: unknown }) => {
+    const s = (o.plan_snapshot ?? {}) as { destination?: string; data_mb?: number | null; validity_days?: number | null };
+    const gb = Number(s.data_mb ?? 0) / 1024;
+    const volume = s.data_mb ? (gb >= 1 ? `${+gb.toFixed(2)} GB` : `${s.data_mb} MB`) : "";
+    const text = [
+      "Erstattungsanfrage GlobeSIM",
+      `eSIMerge-Bestellnummer: ${o.provider_order_id}`,
+      `GlobeSIM-Bestellnummer: ${o.id}`,
+      `Tarif: ${[s.destination, volume, s.validity_days ? `${s.validity_days} Tage` : ""].filter(Boolean).join(" · ")}`,
+      `Datum: ${new Date(o.created_at).toLocaleString("de-DE")}`,
+      `Betrag: ${formatPrice(Number(o.amount), String(o.currency ?? "EUR"))}`,
+    ].join("\n");
     try { await navigator.clipboard.writeText(text); } catch { /* ignore */ }
-    window.open("https://portal.esimerge.com", "_blank", "noopener,noreferrer");
-    setMsg(null);
-    alert("Bestelldaten kopiert. Im eSIMerge-Portal beim Support einfügen und Erstattung beantragen.");
+    window.open("https://portal.esimerge.com/partner/orders", "_blank", "noopener,noreferrer");
+    try {
+      await markProvider({ data: { orderId: o.id } });
+      await qc.invalidateQueries({ queryKey: ["admin", "orders"] });
+    } catch (e) { setMsg(e instanceof Error ? e.message : "Anfrage konnte nicht notiert werden."); }
   };
 
   return (
@@ -90,6 +103,7 @@ function AdminOrders() {
                     {o.is_test && <span className="ml-2 text-xs text-ink-muted">Test</span>}
                     {o.email_status === "pending_domain" && <div className="mt-1 text-xs text-ink-muted">E-Mail ausstehend</div>}
                     {o.last_error && <div className="mt-1 text-xs text-ink-muted">{o.last_error}</div>}
+                    {o.provider_refund_requested_at && <div className="mt-1 text-xs text-ink-muted">Bei eSIMerge beantragt {new Date(o.provider_refund_requested_at).toLocaleString("de-DE")}</div>}
                   </td>
                   <td className="p-3">{o.fulfillment_attempts}</td>
                   <td className="p-3 text-right">
@@ -99,7 +113,7 @@ function AdminOrders() {
                         title={o.status === "refunded" ? "Bereits erstattet" : o.status === "pending" || o.status === "expired" ? "Nicht bezahlt" : undefined}
                         onClick={() => doRefund(o.id, o.status === "fulfilled")}>Erstatten</Button>
                       <Button variant="secondary" className="h-10!" disabled={!o.provider_order_id}
-                        title={o.provider_order_id ? "Öffnet das eSIMerge-Portal, Bestelldaten werden kopiert" : "Keine eSIMerge-Bestellung vorhanden"}
+                        title={o.provider_order_id ? "Öffnet die Bestellliste im eSIMerge-Portal; der Anfragetext wird kopiert und hier notiert" : "Keine eSIMerge-Bestellung vorhanden"}
                         onClick={() => requestProviderRefund(o)}>Bei eSIMerge beantragen</Button>
                     </div>
                   </td>
