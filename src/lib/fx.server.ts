@@ -89,10 +89,10 @@ export async function repricePlans(actorId: string | null = null) {
     db.from("plans").select("last_synced_at").eq("provider", "esimerge").order("last_synced_at", { ascending: false, nullsFirst: false }).limit(1).maybeSingle(),
   ]);
   const vat = typeof vatRow?.value === "number" ? vatRow.value : 0.19;
-  const current = latest?.last_synced_at ?? null; // plans missing from the last sync stay as they are
+  const current = latest?.last_synced_at ?? null; // only plans from the last sync may be (re)activated
   let changed = 0, activated = 0, hidden = 0;
   for (const p of plans ?? []) {
-    if (!p.destination || p.last_synced_at !== current) continue;
+    if (!p.destination) continue;
     const price = computePrice({ providerPlanId: p.provider_plan_id, destinationSlug: (p.destination as { slug: string }).slug, planType: p.type, costPrice: Number(p.cost_price), costCurrency: p.cost_currency }, (rules ?? []) as PricingRule[], fx.lookup, vat);
     const old = Number(p.sell_price);
     if (!price.ok) {
@@ -104,11 +104,12 @@ export async function repricePlans(actorId: string | null = null) {
       continue;
     }
     if (shouldReprice(old, price.gross)) {
-      await db.from("plans").update({ sell_price: price.gross, is_active: true }).eq("id", p.id);
+      const activate = p.last_synced_at === current; // plans missing from the latest sync keep their visibility
+      await db.from("plans").update({ sell_price: price.gross, ...(activate ? { is_active: true } : {}) }).eq("id", p.id);
       await db.from("audit_log").insert({ actor_id: actorId, action: "price_changed", entity: "plans", entity_id: p.id, meta: { old, new: price.gross } as never });
       changed++;
-      if (!p.is_active) activated++;
-    } else if (!p.is_active && old > 0) {
+      if (activate && !p.is_active) activated++;
+    } else if (!p.is_active && old > 0 && p.last_synced_at === current) {
       await db.from("plans").update({ is_active: true }).eq("id", p.id);
       activated++;
     }
