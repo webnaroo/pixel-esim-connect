@@ -231,37 +231,11 @@ function CheckoutPage() {
                         </button>
                       </div>
                     ) : (
-                      <form
-                        className="mt-2 flex gap-2"
-                        onSubmit={async (e) => {
-                          e.preventDefault();
-                          setCodeMessage(null);
-                          if (!codeInput.trim()) return;
-                          setCodeChecking(true);
-                          try {
-                            const r = await checkCode({ data: { code: codeInput } });
-                            if (r.ok) {
-                              setDiscount({ code: codeInput.trim().toUpperCase(), type: r.type, value: r.value });
-                              setCodeMessage("Rabattcode angerechnet.");
-                              qc.invalidateQueries();
-                            } else {
-                              setCodeMessage(
-                                r.reason === "rate_limited" ? "Zu viele Versuche. Bitte warte eine Minute."
-                                : r.reason === "invalid_format" ? "So sieht kein Rabattcode aus. Bitte prüfe die Schreibweise."
-                                : r.reason === "unknown" ? "Diesen Rabattcode gibt es nicht. Bitte prüfe die Schreibweise."
-                                : "Dieser Rabattcode ist nicht mehr gültig – abgelaufen, ausgeschaltet oder Nutzungslimit erreicht.",
-                              );
-                            }
-                          } catch {
-                            setCodeMessage("Der Code konnte gerade nicht geprüft werden. Bitte versuche es erneut.");
-                          } finally {
-                            setCodeChecking(false);
-                          }
-                        }}
-                      >
-                        <Input value={codeInput} onChange={(e) => setCodeInput(e.target.value.toUpperCase())} maxLength={40} placeholder="z. B. SOMMER10" className="font-mono uppercase" aria-label="Rabattcode eingeben" autoComplete="off" />
-                        <Button type="submit" variant="secondary" loading={codeChecking} className="shrink-0">Einlösen</Button>
-                      </form>
+                      <div className="mt-2 flex gap-2">
+                        <Input value={codeInput} onChange={(e) => setCodeInput(e.target.value.toUpperCase())} maxLength={40} placeholder="z. B. SOMMER10" className="font-mono uppercase" aria-label="Rabattcode eingeben" autoComplete="off"
+                          onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); applyCode(); } }} />
+                        <Button type="button" variant="secondary" loading={codeChecking} onClick={applyCode} className="shrink-0">Einlösen</Button>
+                      </div>
                     )}
                     {codeMessage && !discount && <p className="mt-2 text-sm text-danger">{codeMessage}</p>}
                   </div>
