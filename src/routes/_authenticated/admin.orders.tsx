@@ -76,7 +76,7 @@ function AdminOrders() {
                 <tr key={o.id}>
                   <td className="p-3 whitespace-nowrap">{new Date(o.created_at).toLocaleString("de-DE")}</td>
                   <td className="p-3">{o.guest_email}</td>
-                  <td className="p-3 tabular">{formatPrice(Number(o.amount), o.currency)}</td>
+                  <td className="p-3 tabular">{formatPrice(Number(o.amount), o.currency)}{Number(o.discount_amount) > 0 && <span className="block text-xs text-ink-muted">{o.discount_code} −{formatPrice(Number(o.discount_amount), o.currency)}</span>}</td>
                   <td className="p-3">
                     <Chip tone={o.status === "fulfilled" ? "active" : ["fulfillment_failed", "payment_mismatch", "needs_review"].includes(o.status) ? "warning" : "default"}>{o.status}</Chip>
                     {o.is_test && <span className="ml-2 text-xs text-ink-muted">Test</span>}

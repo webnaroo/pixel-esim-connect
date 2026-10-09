@@ -2,7 +2,7 @@ import { Body, Button, Container, Head, Heading, Html, Preview, Text } from '@re
 import type { TemplateEntry } from './registry'
 
 // Never contains activation codes, LPA or QR — only the signed installation link.
-function OrderReady({ orderId, plan, installUrl }: { orderId?: string; plan?: string; installUrl?: string }) {
+function OrderReady({ orderId, plan, installUrl, total, discount }: { orderId?: string; plan?: string; installUrl?: string; total?: string; discount?: string }) {
   return (
     <Html lang="de">
       <Head />
@@ -13,6 +13,8 @@ function OrderReady({ orderId, plan, installUrl }: { orderId?: string; plan?: st
           <Heading>Deine eSIM ist bereit</Heading>
           <Text>Vielen Dank für deine Bestellung. Deine eSIM wurde erstellt und kann installiert werden.</Text>
           {plan ? <Text>Tarif: {plan}</Text> : null}
+          {discount ? <Text>Rabatt {discount}</Text> : null}
+          {total ? <Text>Bezahlt: {total} (inkl. MwSt.)</Text> : null}
           {orderId ? <Text>Bestellnummer: {orderId}</Text> : null}
           {installUrl ? (
             <Button href={installUrl} style={{ backgroundColor: '#0B3C49', color: '#ffffff', padding: '14px 22px', borderRadius: '10px', fontWeight: 700 }}>
@@ -30,5 +32,5 @@ export const template = {
   component: OrderReady,
   subject: 'GlobeSIM – Deine eSIM ist bereit',
   displayName: 'Bestellbestätigung mit Installationslink',
-  previewData: { orderId: 'Vorschau', plan: 'Türkei · 5 GB · 30 Tage', installUrl: 'https://globesim.de/install/vorschau?t=signiert' },
+  previewData: { orderId: 'Vorschau', plan: 'Türkei · 5 GB · 30 Tage', installUrl: 'https://globesim.de/install/vorschau?t=signiert', total: '8,99 €', discount: 'SOMMER10: −1,00 €' },
 } satisfies TemplateEntry
