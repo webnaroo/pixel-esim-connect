@@ -5,12 +5,14 @@
 export type GuardOptions = {
   name: string; // bucket prefix, e.g. "stripe-webhook"
   secretEnv?: string; // env var holding the secret; missing => 503, never bypassed
+  /** Several candidate secrets (e.g. sandbox + live); the first that verifies wins and is returned as `matched`. */
+  secretEnvs?: { env: string; tag: string }[];
   secretDb?: string; // or: name in public.internal_secrets (server-only table), used by scheduled jobs
   auth: { kind: "hmac-sha256"; header: string; prefix?: string } | { kind: "bearer" } | { kind: "stripe"; toleranceSeconds?: number } | { kind: "esimerge" };
   limit?: { windowSeconds: number; max: number };
 };
 
-export type GuardResult = { ok: true; rawBody: string } | { ok: false; response: Response };
+export type GuardResult = { ok: true; rawBody: string; matched?: string } | { ok: false; response: Response };
 
 const enc = new TextEncoder();
 
@@ -69,6 +71,14 @@ export async function guardPublicRoute(request: Request, opts: GuardOptions): Pr
   if (opts.secretDb) {
     const { data } = await supabaseAdmin.from("internal_secrets").select("value").eq("name", opts.secretDb).maybeSingle();
     secret = data?.value;
+  }
+  if (opts.secretEnvs) {
+    const candidates = opts.secretEnvs.map((c) => ({ tag: c.tag, secret: process.env[c.env] })).filter((c): c is { tag: string; secret: string } => Boolean(c.secret));
+    if (!candidates.length) return deny(503, "not configured");
+    const rawBody = await request.text();
+    if (rawBody.length > 1_000_000) return deny(413, "payload too large");
+    for (const c of candidates) if (await verifyAuth(opts.auth, c.secret, request.headers, rawBody)) return { ok: true, rawBody, matched: c.tag };
+    return deny(401, "invalid signature");
   }
   if (!secret) return deny(503, "not configured");
   const rawBody = await request.text();

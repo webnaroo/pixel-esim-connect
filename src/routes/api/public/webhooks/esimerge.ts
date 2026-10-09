@@ -9,7 +9,8 @@ export const Route = createFileRoute("/api/public/webhooks/esimerge")({
       POST: async ({ request }) => {
         const guard = await guardPublicRoute(request, {
           name: "esimerge-webhook",
-          secretEnv: "ESIMERGE_WEBHOOK_SECRET",
+          // Sandbox and live endpoints have their own secrets; the secret that verifies decides the mode.
+          secretEnvs: [{ env: "ESIMERGE_WEBHOOK_SECRET", tag: "sandbox" }, { env: "ESIMERGE_WEBHOOK_SECRET_LIVE", tag: "live" }],
           auth: { kind: "esimerge" },
           limit: { windowSeconds: 60, max: 120 },
         });
@@ -27,8 +28,9 @@ export const Route = createFileRoute("/api/public/webhooks/esimerge")({
         const deliveryId = request.headers.get("x-esimerge-delivery");
         const ev = parseEvent(raw, deliveryId);
         if (!ev) return Response.json({ error: "invalid event" }, { status: 400 });
-        const { providerSetupStatus } = await import("@/lib/providers/index.server");
-        const mode = ev.mode ?? (providerSetupStatus().sandbox ? "sandbox" : "live");
+        const { webhookModeFromSecret } = await import("@/lib/golive-rules");
+        const { mode, conflict } = webhookModeFromSecret(guard.matched === "live" ? "live" : "sandbox", ev.mode);
+        if (conflict) ev.modeConflict = true;
         const { dbEventStore, dbWebhookDeps } = await import("@/lib/esimerge-webhook.server");
         const pending: Promise<void>[] = [];
         const result = await receiveEvent(dbEventStore, dbWebhookDeps, ev, raw, deliveryId, mode, (p) => pending.push(p.catch(() => {})));

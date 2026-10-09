@@ -30,6 +30,8 @@ export type ParsedEvent = {
   refs: { orderId?: string | undefined; esimId?: string | undefined; iccid?: string | undefined; customerReference?: string | undefined };
   /** Portal test delivery (payload test:true, mode "test" or evt_test_ id) — stored and shown, never changes orders. */
   test: boolean;
+  /** Payload mode contradicts the secret that verified the signature — stored, never processed. */
+  modeConflict?: boolean;
   threshold?: number;
   code?: string | undefined;
   reason?: string | undefined;
@@ -85,6 +87,7 @@ export type Outcome = { status: "processed" | "ignored" | "failed"; orderId?: st
 
 export async function handleEvent(deps: WebhookDeps, ev: ParsedEvent, mode: Mode): Promise<Outcome> {
   if (ev.test) return { status: "ignored", error: "test_event" };
+  if (ev.modeConflict) return { status: "ignored", error: "mode_conflict" };
   if (!ev.known) return { status: "ignored", error: "unknown_event_type" };
   if (ev.type.startsWith("order.topup.")) return { status: "processed", ...(ev.type === "order.topup.failed" ? { error: `Top-up fehlgeschlagen: ${ev.code ?? "?"} ${ev.reason ?? ""}`.trim() } : {}) };
   const order = await deps.findOrder(ev.refs);

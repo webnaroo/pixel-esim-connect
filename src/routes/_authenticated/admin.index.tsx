@@ -70,7 +70,7 @@ function Overview() {
     setBusy("sync");
     const r = await sync();
     setBusy(null);
-    if (r.status === "ok") toast.success(`Sync fertig: ${r.added} neu, ${r.updated} aktualisiert, ${r.deactivated} deaktiviert.`);
+    if (r.status === "ok") toast.success(`Sync fertig: ${r.added} neu, ${r.updated} aktualisiert, ${r.deactivated} deaktiviert. Prüfliste unter „Preise“.`);
     else toast.warning(r.message ?? STATUS_LABEL[r.status] ?? r.status);
     refresh();
   }
@@ -129,8 +129,11 @@ function Overview() {
           <Row ok={!c.providerSandbox} label="eSIMerge-Zugang" detail={data.provider.apiKeySet ? (c.providerSandbox ? "Sandbox (keine echten eSIMs)" : "Live") : "nicht gesetzt"} />
           <Row ok={c.providerAuthOk !== false} label="eSIMerge-Zugang gültig" detail={c.providerAuthOk === false ? "Schlüssel ungültig/gesperrt – Verkauf pausiert" : "OK"} />
           <Row ok={c.catalogCount > 0} label="Katalog größer 0" detail={`${c.catalogCount} aktive Tarife`} />
-          <Row ok={c.stripeConfigured} label="Stripe konfiguriert" detail={c.stripeConfigured ? "Schlüssel gesetzt" : "Stripe-Schlüssel nicht gesetzt"} />
-          <Row ok={!!c.emailVerified} label="E-Mail-Absender-Domain" detail={c.emailVerified ? "Verifiziert" : "Nicht verifiziert: keine Mails an Kunden"} />
+          <Row ok={c.stripeConfigured} label={`Stripe: ${c.stripeMode === "live" ? "Live" : "Test"}`} detail={c.stripeConfigured ? `Live aktiv, Geheimnis gesetzt, ${c.stripeLiveEvents} Live-Events` : `Offen: ${(c.stripeMissing ?? []).join(", ")}`} />
+          <Row ok={!!c.emailVerified} label={`E-Mail-Domain ${c.senderDomain || "notify.globesim.de"} verifiziert`} detail={c.emailVerified ? "ja" : "nein – keine Mails an Kunden"} />
+          <Row ok={!!c.emailTestSent} label="Test-E-Mail gesendet" detail={c.emailTestSent ? "erfolgreich" : "Unter Go-Live senden"} />
+          <Row ok={!!c.replyConfirmed} label="Antwortadresse support@globesim.de erreichbar (von dir bestätigt)" detail={c.replyConfirmed ? "bestätigt" : "Unter Go-Live bestätigen"} />
+          <Row ok={!!c.webhookReady} label={`eSIMerge-Webhook (${c.providerSandbox ? "Sandbox" : "Live"})`} detail={c.webhookReady ? "Geheimnis gesetzt, gültiges Event empfangen" : "Geheimnis oder gültiges Event fehlt"} />
           <Row ok={!!c.fxValid} label="Wechselkurs aktuell" detail={c.fxValid ? "Gültiger Kurs USD→EUR" : "Kein gültiger Kurs: Tarife ohne Preis (Admin › Preise)"} />
           <Row ok={!!c.legalPublished} label="Rechtsseiten freigegeben" detail={c.legalPublished ? "Alle freigegeben" : "Noch Platzhalter (Admin › Inhalte)"} />
         </ul>
@@ -165,7 +168,12 @@ function Overview() {
         <ul className="mt-2 divide-y divide-line">
           <Row ok={data.provider.baseUrlSet} label="ESIMERGE_BASE_URL" detail={data.provider.baseUrlSet ? "gesetzt" : "nicht gesetzt"} />
           <Row ok={data.provider.apiKeySet} label="ESIMERGE_API_KEY" detail={data.provider.apiKeySet ? "gesetzt" : "nicht gesetzt"} />
-          <Row ok label="Webhooks" detail="eSIMerge sendet keine Webhooks – Status wird alle 5 Minuten abgefragt" />
+          <Row ok={data.provider.apiKeySet} label="Erkannter Modus des API-Schlüssels" detail={!data.provider.apiKeySet ? "kein Schlüssel" : data.provider.sandbox ? "Sandbox (esm_sk_test_…)" : "Live"} />
+          <Row ok={c.catalogCount > 0} label="Katalogstand" detail={`${c.catalogCount} aktive Tarife · letzter Sync ${data.provider.lastSync?.finished_at ? new Date(data.provider.lastSync.finished_at).toLocaleString("de-DE") : "nie"}`} />
+          {(["sandbox", "live"] as const).map((m) => {
+            const w = data.provider.webhook[m];
+            return <Row key={m} ok={w.secretSet && w.count > 0} label={`Webhook ${m === "sandbox" ? "Sandbox" : "Live"}`} detail={`${w.secretSet ? "Geheimnis gesetzt" : "Geheimnis fehlt"} · ${w.count} gültige Events${w.last ? ` · zuletzt ${new Date(w.last.received_at).toLocaleString("de-DE")} (${w.last.event_type})` : ""}`} />;
+          })}
           <Row ok={data.provider.configMissing.length === 0} label="Endpunkte & Auth" detail={data.provider.configMissing.length ? `Offen: ${data.provider.configMissing.join(", ")}` : "vollständig"} />
           <Row ok={data.provider.mappingReady} label="Feld-Mapping" detail={data.provider.mappingReady ? "fertig (anhand echter Sandbox-Antworten)" : "wartet auf API-Doku"} />
         </ul>
@@ -178,7 +186,7 @@ function Overview() {
             <Button variant="secondary" loading={busy === "auto"} onClick={async () => { setBusy("auto"); await toggleSync({ data: { enabled: !data.syncEnabled } }); setBusy(null); refresh(); }}>
               Automatisch: {data.syncEnabled ? "an" : "aus"}
             </Button>
-            <Button loading={busy === "sync"} onClick={onSync}>Jetzt synchronisieren</Button>
+            <Button loading={busy === "sync"} onClick={onSync}>Katalog jetzt synchronisieren</Button>
           </div>
         </div>
         {data.runs.length === 0 ? (

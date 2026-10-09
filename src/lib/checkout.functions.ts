@@ -11,10 +11,10 @@ async function loadPricedPlan(planId: string) {
   const { supabaseAdmin: db } = await import("@/integrations/supabase/client.server");
   const { data: plan } = await db
     .from("plans")
-    .select("id,provider_plan_id,type,data_mb,validity_days,cost_price,cost_currency,is_active,throttle_claim,destination:destinations(slug,name_de,flag_code,type)")
+    .select("id,provider_plan_id,type,data_mb,validity_days,cost_price,cost_currency,is_active,released,throttle_claim,destination:destinations(slug,name_de,flag_code,type)")
     .eq("id", planId)
     .maybeSingle();
-  if (!plan || !plan.is_active || !plan.destination) return null;
+  if (!plan || !plan.is_active || !plan.released || !plan.destination) return null;
   const [{ data: rules }, fxCtx, { data: vatRow }] = await Promise.all([
     db.from("pricing_rules").select("id,scope,scope_ref,type,value,rounding,priority"),
     import("./fx.server").then(({ loadFx }) => loadFx(db)),

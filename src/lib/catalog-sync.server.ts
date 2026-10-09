@@ -71,6 +71,7 @@ export async function runCatalogSync(trigger: "cron" | "manual"): Promise<SyncSu
     const missingFx = new Set<string>();
     const typeCount = { data: 0, unlimited: 0 };
     const countries = new Set<string>();
+    const newIds: string[] = [];
 
     for (const p of fetched) {
       const dest =
@@ -113,10 +114,10 @@ export async function runCatalogSync(trigger: "cron" | "manual"): Promise<SyncSu
         raw: maskSensitive(p.raw ?? null) as never,
         last_synced_at: startedAt,
       };
-      const { error } = await db.from("plans").upsert(row, { onConflict: "provider,provider_plan_id,destination_id" });
+      const { data: up, error } = await db.from("plans").upsert(row, { onConflict: "provider,provider_plan_id,destination_id" }).select("id").single();
       if (error) throw new Error(`Upsert fehlgeschlagen: ${error.message}`);
       if (known.has(`${p.providerPlanId}|${dest.id}`)) counts.updated++;
-      else counts.added++;
+      else { counts.added++; if (up?.id) newIds.push(up.id); } // new plans stay hidden (released=false) until the admin releases them
     }
 
     // Provider hint vs. "ohne Drosselung" confirmation: never silently keep the claim.
@@ -135,7 +136,7 @@ export async function runCatalogSync(trigger: "cron" | "manual"): Promise<SyncSu
       unmapped.length ? `${unmapped.length} Tarife nicht zuordenbar.` : null,
     ].filter(Boolean);
     const note = notes.length ? notes.join(" ") : null;
-    if (runId) await db.from("sync_runs").update({ unmapped: unmapped as never, stats: { plans: fetched.length, ...typeCount, missingFx: [...missingFx] } as never }).eq("id", runId);
+    if (runId) await db.from("sync_runs").update({ unmapped: unmapped as never, stats: { plans: fetched.length, ...typeCount, missingFx: [...missingFx], newIds, goneIds: (gone ?? []).map((g) => g.id) } as never }).eq("id", runId);
     await finish(note ? "ok_with_warnings" : "ok", { ...summary, countries: countries.size, error: note });
     return { runId, status: note ? "ok_with_warnings" : "ok", ...(note ? { message: note } : {}), ...summary };
   } catch (e) {

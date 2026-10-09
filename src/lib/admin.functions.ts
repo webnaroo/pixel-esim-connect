@@ -11,7 +11,7 @@ async function assertAdmin(ctx: Ctx) {
   if (!data) throw new Error("Kein Zugriff: Admin-Rolle erforderlich.");
 }
 
-async function buildChecklist(): Promise<ShopChecklist & { providerMessage: string }> {
+async function buildChecklist(): Promise<ShopChecklist & { providerMessage: string; stripeMode: "live" | "test"; stripeLiveEvents: number; senderDomain: string }> {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   const { getProvider, providerSetupStatus } = await import("./providers/index.server");
   const status = providerSetupStatus();
@@ -27,24 +27,31 @@ async function buildChecklist(): Promise<ShopChecklist & { providerMessage: stri
     }
   }
   const { count } = await supabaseAdmin.from("plans").select("id", { count: "exact", head: true }).eq("is_active", true);
-  const stripeConfigured = Boolean(process.env["STRIPE_LIVE_API_KEY"] && process.env["PAYMENTS_LIVE_WEBHOOK_SECRET"]) // live payments, not the test environment;
+  const { stripeLiveMissing, stripeMode } = await import("./golive-rules");
+  const { count: liveEvents } = await supabaseAdmin.from("webhook_events").select("id", { count: "exact", head: true }).eq("source", "stripe").like("event_id", "live:%").not("processed_at", "is", null);
+  const stripe = { liveKey: Boolean(process.env["STRIPE_LIVE_API_KEY"]), liveSecret: Boolean(process.env["PAYMENTS_LIVE_WEBHOOK_SECRET"]), liveEventsProcessed: liveEvents ?? 0 };
+  const stripeMissing = stripeLiveMissing(stripe);
+  const stripeConfigured = stripeMissing.length === 0;
   const [{ data: mail }, { count: unpublished }] = await Promise.all([
     supabaseAdmin.from("app_settings").select("value").eq("key", "email_settings").maybeSingle(),
     supabaseAdmin.from("legal_pages").select("slug", { count: "exact", head: true }).eq("published", false),
   ]);
   const { canSendCustomerEmail, parseEmailSettings } = await import("./email-rules");
-  const emailVerified = canSendCustomerEmail(parseEmailSettings(mail?.value));
+  const mailSettings = parseEmailSettings(mail?.value);
+  const emailVerified = canSendCustomerEmail(mailSettings);
+  const emailTestSent = mailSettings.test_result?.ok === true;
+  const replyConfirmed = Boolean(mailSettings.reply_confirmed_at);
   const { loadFx } = await import("./fx.server");
   const fx = await loadFx(supabaseAdmin);
   const fxValid = fx.effective("USD") !== null;
   const { WEBHOOK_READY_STATUSES } = await import("./webhook-labels");
-  const { count: whOk } = await supabaseAdmin.from("provider_webhook_events").select("id", { count: "exact", head: true }).eq("signature_valid", true).in("status", [...WEBHOOK_READY_STATUSES]);
+  const { count: whOk } = await supabaseAdmin.from("provider_webhook_events").select("id", { count: "exact", head: true }).eq("signature_valid", true).eq("mode", status.sandbox ? "sandbox" : "live").in("status", [...WEBHOOK_READY_STATUSES]);
   const webhookReady = status.webhookSecretSet && (whOk ?? 0) > 0;
   const { data: pause } = await supabaseAdmin.from("app_settings").select("value").eq("key", "sales_pause").maybeSingle();
   const p = (pause?.value ?? {}) as { active?: boolean; reason?: string };
   const providerAuthOk = !(p.active && p.reason === "auth");
   return {
-    providerAuthOk, providerReachable, providerSandbox: status.sandbox, providerMessage, catalogCount: count ?? 0, stripeConfigured, emailVerified, fxValid, webhookReady, legalPublished: (unpublished ?? 0) === 0 };
+    providerAuthOk, providerReachable, providerSandbox: status.sandbox, providerMessage, catalogCount: count ?? 0, stripeConfigured, stripeMissing, stripeMode: stripeMode(stripe), stripeLiveEvents: stripe.liveEventsProcessed, emailVerified, emailTestSent, replyConfirmed, senderDomain: mailSettings.sender_domain, fxValid, webhookReady, legalPublished: (unpublished ?? 0) === 0 };
 }
 
 export const getAdminOverview = createServerFn({ method: "GET" })
@@ -59,6 +66,17 @@ export const getAdminOverview = createServerFn({ method: "GET" })
       supabaseAdmin.from("sync_runs").select("*").order("started_at", { ascending: false }).limit(10),
     ]);
     const s = providerSetupStatus();
+    const whStat = async (mode: "sandbox" | "live") => {
+      const [{ count }, { data: last }] = await Promise.all([
+        supabaseAdmin.from("provider_webhook_events").select("id", { count: "exact", head: true }).eq("mode", mode).eq("signature_valid", true),
+        supabaseAdmin.from("provider_webhook_events").select("received_at,status,event_type").eq("mode", mode).eq("signature_valid", true).order("received_at", { ascending: false }).limit(1).maybeSingle(),
+      ]);
+      return { count: count ?? 0, last: last ?? null };
+    };
+    const [whSandbox, whLive, { data: lastSync }] = await Promise.all([
+      whStat("sandbox"), whStat("live"),
+      supabaseAdmin.from("sync_runs").select("finished_at,status").not("finished_at", "is", null).order("started_at", { ascending: false }).limit(1).maybeSingle(),
+    ]);
     const get = (k: string) => settings?.find((x) => x.key === k)?.value === true;
     return {
       checklist,
@@ -70,7 +88,9 @@ export const getAdminOverview = createServerFn({ method: "GET" })
         const v = (settings?.find((x) => x.key === "sales_pause")?.value ?? {}) as { active?: boolean; reason?: string; since?: string; code?: string; request_id?: string };
         return v.active ? { reason: v.reason === "auth" ? "auth" as const : "insufficient_funds" as const, since: v.since ?? null, code: v.code ?? null, requestId: v.request_id ?? null } : null;
       })(),
-      provider: { baseUrlSet: s.baseUrlSet, apiKeySet: s.apiKeySet, webhookSecretSet: s.webhookSecretSet, configMissing: s.configMissing, mappingReady: s.mappingReady, sandbox: s.sandbox },
+      provider: { baseUrlSet: s.baseUrlSet, apiKeySet: s.apiKeySet, webhookSecretSet: s.webhookSecretSet, configMissing: s.configMissing, mappingReady: s.mappingReady, sandbox: s.sandbox,
+        webhook: { sandbox: { secretSet: s.webhookSecretSandboxSet, ...whSandbox }, live: { secretSet: s.webhookSecretLiveSet, ...whLive } },
+        lastSync: lastSync ?? null },
       runs: (runs ?? []).map((r) => ({ ...r })),
     };
   });

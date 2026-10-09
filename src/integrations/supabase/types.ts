@@ -712,6 +712,9 @@ export type Database = {
           cost_currency: string | null
           created_at: string
           currency: string
+          dispute_due_by: string | null
+          dispute_id: string | null
+          dispute_status: string | null
           email_status: string
           failed_at: string | null
           fulfillment_attempts: number
@@ -746,6 +749,9 @@ export type Database = {
           cost_currency?: string | null
           created_at?: string
           currency?: string
+          dispute_due_by?: string | null
+          dispute_id?: string | null
+          dispute_status?: string | null
           email_status?: string
           failed_at?: string | null
           fulfillment_attempts?: number
@@ -780,6 +786,9 @@ export type Database = {
           cost_currency?: string | null
           created_at?: string
           currency?: string
+          dispute_due_by?: string | null
+          dispute_id?: string | null
+          dispute_status?: string | null
           email_status?: string
           failed_at?: string | null
           fulfillment_attempts?: number
@@ -843,6 +852,7 @@ export type Database = {
           provider: string
           provider_plan_id: string
           raw: Json | null
+          released: boolean
           sell_price: number
           throttle_claim: string
           throttle_confirmation: Json | null
@@ -870,6 +880,7 @@ export type Database = {
           provider?: string
           provider_plan_id: string
           raw?: Json | null
+          released?: boolean
           sell_price: number
           throttle_claim?: string
           throttle_confirmation?: Json | null
@@ -897,6 +908,7 @@ export type Database = {
           provider?: string
           provider_plan_id?: string
           raw?: Json | null
+          released?: boolean
           sell_price?: number
           throttle_claim?: string
           throttle_confirmation?: Json | null
@@ -1340,6 +1352,9 @@ export type Database = {
           cost_currency: string | null
           created_at: string
           currency: string
+          dispute_due_by: string | null
+          dispute_id: string | null
+          dispute_status: string | null
           email_status: string
           failed_at: string | null
           fulfillment_attempts: number

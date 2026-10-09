@@ -17,7 +17,7 @@ export type EsimergeConfig = {
     usage: boolean; topUp: boolean; cancel: boolean; webhooks: boolean;
     directInstallLink: boolean; unlimitedPlans: boolean; idempotencyKey: boolean;
   };
-  webhook: { signatureHeader: string | null; algorithm: "hmac-sha256" | null; secretEnv: string; eventIdField: string | null };
+  webhook: { signatureHeader: string | null; algorithm: "hmac-sha256" | null; secretEnv: string; secretEnvLive: string; eventIdField: string | null };
   currency: { cost: string | null };
   limits: { rateLimitPerMinute: number | null; timeoutMs: number };
 };
@@ -51,7 +51,7 @@ export const esimergeConfig: EsimergeConfig = {
     // same order (header "idempotent-replayed: true"). Our DB claim lock stays in place as well.
     idempotencyKey: true,
   },
-  webhook: { signatureHeader: "X-eSimerge-Signature", algorithm: "hmac-sha256", secretEnv: "ESIMERGE_WEBHOOK_SECRET", eventIdField: "id" }, // owner docs: "t=<unix>,v1=<hex>", see src/lib/esimerge-webhook.ts
+  webhook: { signatureHeader: "X-eSimerge-Signature", algorithm: "hmac-sha256", secretEnv: "ESIMERGE_WEBHOOK_SECRET", secretEnvLive: "ESIMERGE_WEBHOOK_SECRET_LIVE", eventIdField: "id" }, // owner docs: "t=<unix>,v1=<hex>", see src/lib/esimerge-webhook.ts
   currency: { cost: "USD" }, // catalog: currency "USD", cost field price_usd
   limits: { rateLimitPerMinute: null, timeoutMs: 8000 },
 };
