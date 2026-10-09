@@ -218,7 +218,7 @@ function CheckoutPage() {
                     <input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} className="mt-1 size-5 shrink-0 accent-[var(--color-primary)]" required />
                     <span className="text-sm text-ink">
                       <span className="mb-1 block text-xs font-semibold uppercase tracking-wide text-ink">Widerrufsrecht</span>
-                      Ich stimme ausdrücklich zu, dass GlobeSIM vor Ablauf der Widerrufsfrist mit der Bereitstellung der eSIM beginnt. Für eine nicht aktivierte eSIM gewährt GlobeSIM mir weiterhin ein Widerrufsrecht innerhalb von 14 Tagen nach Vertragsschluss. Nach der Aktivierung kann das gesetzliche Widerrufsrecht nur erlöschen, wenn die gesetzlichen Voraussetzungen erfüllt sind; die Aktivierung allein genügt nicht.
+                      Ich stimme ausdrücklich zu, dass GlobeSIM vor Ablauf der Widerrufsfrist mit der Bereitstellung der eSIM beginnt. Ist die eSIM unaktiviert, gilt die 14-Tage-Frist. Nach der Aktivierung kann das gesetzliche Widerrufsrecht nur erlöschen, wenn die gesetzlichen Voraussetzungen erfüllt sind; die Aktivierung allein genügt nicht.
                     </span>
                   </label>
 
