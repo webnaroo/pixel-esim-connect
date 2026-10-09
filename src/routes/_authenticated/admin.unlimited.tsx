@@ -47,14 +47,22 @@ function UnlimitedReview() {
     if (!date) { toast.error("Datum ist Pflicht."); return; }
     setBusy(true);
     try {
-      const r = await confirm({ data: { planIds: ids, source, date, acceptHint } });
+      const r = { confirmed: 0, conflict: 0 };
+      for (let i = 0; i < ids.length; i += 500) {
+        const part = await confirm({ data: { planIds: ids.slice(i, i + 500), source, date, acceptHint } });
+        r.confirmed += part.confirmed; r.conflict += part.conflict;
+      }
       toast.success(`${r.confirmed} bestätigt${r.conflict ? `, ${r.conflict} mit Widerspruch` : ""}.`);
       setPicked(new Set()); setAcceptHint(false); refresh();
     } catch (e) { toast.error((e as Error).message); } finally { setBusy(false); }
   }
   async function onRevoke() {
     if (!ids.length) { toast.error("Bitte Tarife auswählen."); return; }
-    await revoke({ data: { planIds: ids } }); toast.success("Bestätigung zurückgenommen."); setPicked(new Set()); refresh();
+    setBusy(true);
+    try {
+      for (let i = 0; i < ids.length; i += 500) await revoke({ data: { planIds: ids.slice(i, i + 500) } });
+      toast.success("Bestätigung zurückgenommen."); setPicked(new Set()); refresh();
+    } catch (e) { toast.error((e as Error).message); } finally { setBusy(false); }
   }
 
   return (
