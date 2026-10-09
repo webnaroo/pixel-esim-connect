@@ -95,3 +95,22 @@ export const deleteMyAccount = createServerFn({ method: "POST" })
     await db.from("audit_log").insert({ action: "account_deleted", entity: "account", meta: { orders_anonymized: (orders ?? []).length } });
     return { ok: true as const };
   });
+
+/** Customer asks for a refund: creates one open support ticket per order (no automatic payout). */
+export const requestMyRefund = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((i) => z.object({ orderId: z.string().uuid(), reason: z.string().trim().max(1000).optional() }).parse(i))
+  .handler(async ({ data, context }) => {
+    const { data: o } = await context.supabase.from("orders").select("id,status,guest_email").eq("id", data.orderId).eq("user_id", context.userId).maybeSingle();
+    if (!o) return { ok: false as const, error: "Bestellung nicht gefunden." };
+    if (["pending", "expired", "refunded", "cancelled"].includes(o.status)) return { ok: false as const, error: "Für diese Bestellung ist keine Erstattung möglich." };
+    const { supabaseAdmin: db } = await import("@/integrations/supabase/client.server");
+    const subject = `Erstattung beantragt: Nr. ${o.id.slice(0, 8)}`;
+    const { data: open } = await db.from("support_tickets").select("id").eq("order_id", o.id).eq("subject", subject).neq("status", "closed").limit(1);
+    if (open?.length) return { ok: true as const, already: true };
+    const { data: p } = await db.from("profiles").select("email").eq("id", context.userId).maybeSingle();
+    const { error } = await db.from("support_tickets").insert({ user_id: context.userId, email: p?.email ?? o.guest_email, subject, order_id: o.id, message: data.reason || "Kunde beantragt eine Erstattung über „Mein Konto“." });
+    if (error) return { ok: false as const, error: "Antrag konnte nicht gesendet werden." };
+    await db.from("audit_log").insert({ actor_id: context.userId, action: "customer_refund_requested", entity: "order", entity_id: o.id });
+    return { ok: true as const, already: false };
+  });

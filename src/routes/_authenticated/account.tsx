@@ -7,7 +7,7 @@ import { SiteLayout, signOut } from "@/components/layout";
 import { Chip, EmptyState, ErrorBox } from "@/components/brand";
 import { Button, Input, SegmentedControl } from "@/components/ui-kit";
 import { UnlimitedLabel, UnlimitedNote } from "@/components/unlimited-claim";
-import { deleteMyAccount, getMyInstallData, myAccountQuery, updateMyProfile } from "@/lib/account.functions";
+import { deleteMyAccount, getMyInstallData, requestMyRefund, myAccountQuery, updateMyProfile } from "@/lib/account.functions";
 import { getEsimUsage } from "@/lib/usage.functions";
 import { formatPrice } from "@/lib/format";
 import { DELETE_CONFIRM_WORD } from "@/lib/anonymize";
@@ -120,7 +120,34 @@ function EsimCard({ e }: { e: Data["esims"][number] }) {
           <EsimInstallPanel data={{ ...install, lpa: install.lpa!, validityDays: e.plan.validity_days ?? null, activatedAt: e.activatedAt, installUntil: e.expiresAt }} />
         )}
       </div>
+      <div className="mt-4 border-t border-line pt-3"><RefundRequest orderId={e.orderId} /></div>
     </li>
+  );
+}
+
+function RefundRequest({ orderId }: { orderId: string }) {
+  const fn = useServerFn(requestMyRefund);
+  const [open, setOpen] = useState(false);
+  const [reason, setReason] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState<string | null>(null);
+  if (msg) return <p className="text-sm text-ink-muted">{msg}</p>;
+  if (!open) return <button type="button" className="text-sm text-primary underline-offset-2 hover:underline" onClick={() => setOpen(true)}>Erstattung beantragen</button>;
+  return (
+    <div className="w-full space-y-2">
+      <Input value={reason} onChange={(ev) => setReason(ev.target.value)} placeholder="Grund (optional)" maxLength={1000} aria-label="Grund für die Erstattung" />
+      <div className="flex gap-2">
+        <Button disabled={busy} onClick={async () => {
+          setBusy(true);
+          try {
+            const r = await fn({ data: { orderId, reason: reason || undefined } });
+            setMsg(r.ok ? (r.already ? "Dein Antrag liegt uns schon vor. Wir melden uns per E-Mail." : "Antrag gesendet. Wir prüfen ihn und melden uns per E-Mail.") : r.error);
+          } catch { setMsg("Antrag konnte nicht gesendet werden. Bitte versuche es erneut."); }
+          setBusy(false);
+        }}>{busy ? "Sendet…" : "Antrag senden"}</Button>
+        <Button variant="secondary" onClick={() => setOpen(false)}>Abbrechen</Button>
+      </div>
+    </div>
   );
 }
 
@@ -138,6 +165,7 @@ function Orders({ data }: { data: Data }) {
             <span className="tabular text-sm">{formatPrice(o.amount, o.currency)}</span>
             <Chip>{STATUS_DE[o.status] ?? o.status}</Chip>
           </div>
+          {!["refunded", "cancelled"].includes(o.status) && <div className="w-full"><RefundRequest orderId={o.id} /></div>}
         </li>
       ))}
     </ul>
