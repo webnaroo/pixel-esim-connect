@@ -101,8 +101,9 @@ export async function runCatalogSync(trigger: "cron" | "manual"): Promise<SyncSu
         p.coverage.kind === "country" ? byIso.get((p.coverage.countries[0] ?? "").toUpperCase())
         : p.coverage.kind === "region" ? byRegion.get((p.coverage.regionCode ?? "").toUpperCase())
         : globalDest;
-      if (!dest && p.coverage.kind === "country" && (p.destinationKind === "territory" || p.destinationKind === "alt")) {
-        dest = (await ensureSpecialDest(p.coverage.countries[0] ?? "", p.destinationKind, p.destinationName)) ?? undefined;
+      if (!dest && (p.destinationKind === "territory" || p.destinationKind === "alt")) {
+        const code = p.coverage.kind === "country" ? p.coverage.countries[0] ?? "" : p.coverage.kind === "region" ? p.coverage.regionCode ?? "" : "";
+        if (code) dest = (await ensureSpecialDest(code, p.destinationKind, p.destinationName)) ?? undefined;
       }
       if (!dest) {
         unmapped.push({ providerPlanId: p.providerPlanId, reason: p.coverage.kind === "country" ? `Kein Reiseziel für Land ${p.coverage.countries[0]}` : p.coverage.kind === "region" ? `Keine Region für Code ${p.coverage.regionCode}` : "Kein globales Reiseziel" });

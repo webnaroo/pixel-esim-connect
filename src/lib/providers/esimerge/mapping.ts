@@ -68,6 +68,9 @@ export function mapCatalogItem(raw: unknown): CatalogItemResult {
     coverage = { kind: "country", countries: [iso] };
   } else if (p.scope === "region") {
     if (!p.region_code) return { ok: false, providerPlanId: p.id, reason: "Regionskennung fehlt" };
+    const rc = p.region_code.toUpperCase();
+    if (TERRITORY_CODES.has(rc)) destinationKind = "territory";
+    else if (ALT_PRODUCT_CODES.has(rc)) destinationKind = "alt";
     // No country list is provided for regions: shown on the region page only.
     coverage = { kind: "region", countries: [], regionCode: p.region_code.toUpperCase() };
   } else if (p.scope === "global") {
