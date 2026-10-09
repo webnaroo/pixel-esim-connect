@@ -59,6 +59,10 @@ function planTitle(p: Data["orders"][number]["plan"]) {
   return [p.destination, p.type === "unlimited" ? null : p.data_mb ? `${p.data_mb >= 1024 ? `${Math.round(p.data_mb / 102.4) / 10} GB` : `${p.data_mb} MB`}` : null, p.validity_days ? `${p.validity_days} Tage` : null].filter(Boolean).join(" · ");
 }
 
+function formatDate(iso: string) {
+  return new Date(iso).toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "numeric", timeZone: "Europe/Berlin" });
+}
+
 function daysLeft(iso: string | null) {
   if (!iso) return null;
   const d = Math.ceil((new Date(iso).getTime() - Date.now()) / 86_400_000);
@@ -98,7 +102,11 @@ function EsimCard({ e }: { e: Data["esims"][number] }) {
         <Chip tone={e.status === "ready" || e.status === "active" ? "active" : "default"}>{e.status === "ready" ? "Bereit" : e.status === "active" ? "Aktiv" : e.status === "expired" ? "Abgelaufen" : e.status}</Chip>
       </div>
       {e.usageThreshold ? <p className="mt-3 text-sm text-ink">{e.usageThreshold >= 100 ? "Dein Datenvolumen ist aufgebraucht." : `${e.usageThreshold} % deines Datenvolumens sind verbraucht.`}</p> : null}
-      {left !== null && <p className="mt-3 text-sm text-ink">{left > 0 ? `Noch ${left} Tag${left === 1 ? "" : "e"} gültig` : "Abgelaufen"}</p>}
+      <dl className="mt-3 space-y-1 text-sm">
+        {e.plan.validity_days ? <div className="flex gap-2"><dt className="text-ink-muted">Tarif-Laufzeit:</dt><dd className="text-ink">{e.plan.validity_days} Tag{e.plan.validity_days === 1 ? "" : "e"}{e.activatedAt ? `, aktiviert am ${formatDate(e.activatedAt)}` : ", startet mit der Aktivierung"}</dd></div> : null}
+        {/* expires_at from eSIMerge is the profile's lifetime (install window), NOT the plan validity. */}
+        {left !== null && !e.activatedAt && <div className="text-ink-muted">{left > 0 ? `Profil bis ${formatDate(e.expiresAt!)} installierbar` : "Installationsfenster abgelaufen"}</div>}
+      </dl>
       {pct !== null && usage && (
         <div className="mt-3">
           <div className="h-2 rounded-full bg-muted" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100} aria-label="Datenverbrauch">

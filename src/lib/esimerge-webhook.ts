@@ -81,6 +81,8 @@ export type WebhookDeps = {
   setEsim(orderId: string, patch: { status?: string; activated_at?: string; usage_threshold?: number; usage_alerts_sent?: number[] }): Promise<void>;
   sendUsageMail(orderId: string, threshold: number): Promise<void>;
   now(): Date;
+  /** Immediately retries orders still waiting for eSIMerge (this mode only); returns an order id that got fulfilled. */
+  nudgeWaitingFulfillments?(mode: Mode): Promise<string | null>;
 };
 
 export type Outcome = { status: "processed" | "ignored" | "failed"; orderId?: string; error?: string };
@@ -91,7 +93,15 @@ export async function handleEvent(deps: WebhookDeps, ev: ParsedEvent, mode: Mode
   if (!ev.known) return { status: "ignored", error: "unknown_event_type" };
   if (ev.type.startsWith("order.topup.")) return { status: "processed", ...(ev.type === "order.topup.failed" ? { error: `Top-up fehlgeschlagen: ${ev.code ?? "?"} ${ev.reason ?? ""}`.trim() } : {}) };
   const order = await deps.findOrder(ev.refs);
-  if (!order) return { status: "ignored", error: "order_not_found" };
+  if (!order) {
+    // order.issued can arrive before we stored the eSIMerge id (first createOrder timed out / "in progress").
+    // Then re-run waiting fulfillments right away: same idempotency key, so eSIMerge returns the existing order.
+    if (ev.type === "order.issued" && deps.nudgeWaitingFulfillments) {
+      const id = await deps.nudgeWaitingFulfillments(mode);
+      if (id) return { status: "processed", orderId: id, error: "matched_via_retry" };
+    }
+    return { status: "ignored", error: "order_not_found" };
+  }
   if (order.isSandbox !== (mode === "sandbox")) return { status: "ignored", orderId: order.id, error: "mode_mismatch" };
   if (!order.providerOrderId) return { status: "ignored", orderId: order.id, error: "no_provider_order" };
   const api = await deps.getOrder(order.providerOrderId);

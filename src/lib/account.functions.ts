@@ -12,7 +12,8 @@ export const getMyAccount = createServerFn({ method: "GET" })
     const sb = context.supabase;
     const [{ data: profile }, { data: orders }, { data: esims }] = await Promise.all([
       sb.from("profiles").select("email,name,locale").eq("id", context.userId).maybeSingle(),
-      sb.from("orders").select("id,status,amount,currency,created_at,plan_snapshot,email_status,is_test").eq("user_id", context.userId).order("created_at", { ascending: false }),
+      // Unpaid checkouts (pending/expired) are never shown to customers.
+      sb.from("orders").select("id,status,amount,currency,created_at,plan_snapshot,email_status,is_test").eq("user_id", context.userId).not("status", "in", "(pending,expired)").order("created_at", { ascending: false }),
       sb.from("esims").select("order_id,status,iccid,expires_at,provider_esim_id,usage_cache,usage_checked_at,created_at,activated_at,usage_threshold").eq("user_id", context.userId).order("created_at", { ascending: false }),
     ]);
     const byOrder = new Map((orders ?? []).map((o) => [o.id, o]));
