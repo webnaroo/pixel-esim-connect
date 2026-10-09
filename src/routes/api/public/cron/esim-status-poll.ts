@@ -27,15 +27,21 @@ export const Route = createFileRoute("/api/public/cron/esim-status-poll")({
           try {
             const res = await provider.getOrder!(r.provider_order_id!);
             const orderStatus = (r.orders as unknown as { status: string }).status;
-            if (orderStatus === "fulfilling" && !r.lpa_string && hasInstallData(res.esim)) {
-              await dbFulfillmentStore.markFulfilled(r.order_id, res.providerOrderId, res.esim);
+            const { dbWebhookDeps } = await import("@/lib/esimerge-webhook.server");
+            if (res.orderStatus === "failed" && orderStatus !== "fulfilled" && orderStatus !== "fulfillment_failed") {
+              await dbWebhookDeps.markFailed(r.order_id, res.errorCode);
+            } else if (res.orderStatus === "cancelled" && orderStatus !== "cancelled") {
+              await dbWebhookDeps.markCancelled(r.order_id);
+            } else if (orderStatus === "fulfilling" && !r.lpa_string && hasInstallData(res.esim)) {
+              await dbFulfillmentStore.markFulfilled(r.order_id, res.providerOrderId, res.esim, res.amountUsd);
               ready++;
             } else if (res.esim) {
               await db.from("esims").update({
                 provider_status: res.esim.providerStatus ?? null,
                 install_status: res.esim.installStatus ?? "waiting",
                 expires_at: res.esim.expiresAt ?? null,
-                ...(res.esim.providerStatus?.toLowerCase() === "expired" ? { status: "expired" } : {}),
+                ...(res.orderStatus === "expired" || res.esim.providerStatus?.toLowerCase() === "expired" ? { status: "expired" } : {}),
+                ...(res.orderStatus === "active" ? { status: "active", ...(res.activatedAt ? { activated_at: res.activatedAt } : {}) } : {}),
               }).eq("order_id", r.order_id);
               refreshed++;
             }

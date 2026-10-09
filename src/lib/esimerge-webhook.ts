@@ -3,6 +3,7 @@
 // Payload is never trusted alone: every status change is confirmed by an eSIMerge API read first.
 import { hmacSha256Hex, timingSafeEqual } from "./public-route-guard.server";
 import { maskSensitive } from "./mask";
+import type { EsmOrderStatus } from "./esimerge-order";
 
 export const SIGNATURE_TOLERANCE_SEC = 300;
 export const KNOWN_EVENTS = ["order.issued", "order.failed", "esim.activated", "esim.expired", "esim.usage.threshold", "order.topup.completed", "order.topup.failed"] as const;
@@ -26,7 +27,7 @@ export type ParsedEvent = {
   type: string;
   known: boolean;
   mode: Mode | null; // from payload when present
-  refs: { orderId?: string | undefined; esimId?: string | undefined; iccid?: string | undefined };
+  refs: { orderId?: string | undefined; esimId?: string | undefined; iccid?: string | undefined; customerReference?: string | undefined };
   /** Portal test delivery (payload test:true, mode "test" or evt_test_ id) — stored and shown, never changes orders. */
   test: boolean;
   threshold?: number;
@@ -54,7 +55,7 @@ export function parseEvent(raw: unknown, deliveryId: string | null): ParsedEvent
     known: (KNOWN_EVENTS as readonly string[]).includes(type),
     mode,
     test: r["test"] === true || d["test"] === true || modeStr === "test" || eventId.startsWith("evt_test_"),
-    refs: { orderId: str(d["order_id"]) ?? str(d["esm_order_id"]), esimId: str(d["esim_id"]) ?? str(d["esm_esim_id"]), iccid: str(d["iccid"]) },
+    refs: { orderId: str(d["order_id"]) ?? str(d["esm_order_id"]), esimId: str(d["esim_id"]) ?? str(d["esm_esim_id"]), iccid: str(d["iccid"]), customerReference: str(d["customer_reference"]) },
     ...(Number.isFinite(th) && th > 0 ? { threshold: th } : {}),
     ...(str(d["code"]) ? { code: str(d["code"]) } : {}),
     ...(str(d["reason"]) ?? str(d["message"]) ? { reason: str(d["reason"]) ?? str(d["message"]) } : {}),
@@ -65,14 +66,16 @@ export function parseEvent(raw: unknown, deliveryId: string | null): ParsedEvent
 export const sanitizePayload = (raw: unknown) => maskSensitive(raw);
 
 export type LocalOrder = { id: string; status: string; isSandbox: boolean; providerOrderId: string | null; providerEsimId: string | null; hasInstallData: boolean; alertsSent: number[] };
-export type ApiOrder = { status: "pending" | "ready"; providerStatus?: string | undefined; failed?: boolean; esim?: unknown };
+export type ApiOrder = { status: "pending" | "ready"; orderStatus?: EsmOrderStatus | undefined; errorCode?: string | undefined; activatedAt?: string | undefined; providerStatus?: string | undefined; failed?: boolean; esim?: unknown };
 
 export type WebhookDeps = {
   findOrder(refs: ParsedEvent["refs"]): Promise<LocalOrder | null>;
   getOrder(providerOrderId: string): Promise<ApiOrder>;
   getUsagePercent(providerEsimId: string): Promise<number | null>;
   markIssued(orderId: string, apiOrder: ApiOrder): Promise<void>;
-  markFailed(orderId: string, code: string | undefined, reason: string | undefined): Promise<void>;
+  /** code comes from the API read (error.code), never from the webhook payload. */
+  markFailed(orderId: string, code: string | undefined): Promise<void>;
+  markCancelled(orderId: string): Promise<void>;
   setEsim(orderId: string, patch: { status?: string; activated_at?: string; usage_threshold?: number; usage_alerts_sent?: number[] }): Promise<void>;
   sendUsageMail(orderId: string, threshold: number): Promise<void>;
   now(): Date;
@@ -91,23 +94,30 @@ export async function handleEvent(deps: WebhookDeps, ev: ParsedEvent, mode: Mode
   const api = await deps.getOrder(order.providerOrderId);
   const ps = (api.providerStatus ?? "").toLowerCase();
   const notConfirmed = { status: "ignored" as const, orderId: order.id, error: "not_confirmed_by_api" };
+  // The new status comes only from the API read, never from the payload.
+  const st: EsmOrderStatus = api.orderStatus ?? (api.failed ? "failed" : api.status === "ready" ? "issued" : "pending");
+  if (st === "cancelled") {
+    if (order.status === "cancelled") return { status: "ignored", orderId: order.id, error: "already_cancelled" };
+    await deps.markCancelled(order.id);
+    return { status: "processed", orderId: order.id, error: "cancelled_by_provider" };
+  }
 
   switch (ev.type as EventType) {
     case "order.issued":
-      if (api.status !== "ready") return notConfirmed;
+      if (!(st === "issued" || st === "active") || api.status !== "ready") return notConfirmed;
       if (order.status !== "fulfilled" || !order.hasInstallData) await deps.markIssued(order.id, api);
       return { status: "processed", orderId: order.id };
     case "order.failed":
       if (order.status === "fulfilled") return { status: "ignored", orderId: order.id, error: "already_fulfilled" };
-      if (!(api.failed || ps === "failed")) return notConfirmed;
-      await deps.markFailed(order.id, ev.code, ev.reason);
+      if (st !== "failed") return notConfirmed;
+      await deps.markFailed(order.id, api.errorCode);
       return { status: "processed", orderId: order.id };
     case "esim.activated":
-      if (!["active", "activated", "enabled", "in_use"].includes(ps)) return notConfirmed;
-      await deps.setEsim(order.id, { status: "active", activated_at: deps.now().toISOString() });
+      if (st !== "active" && !["active", "activated", "enabled", "in_use"].includes(ps)) return notConfirmed;
+      await deps.setEsim(order.id, { status: "active", activated_at: api.activatedAt ?? deps.now().toISOString() });
       return { status: "processed", orderId: order.id };
     case "esim.expired":
-      if (ps !== "expired") return notConfirmed;
+      if (st !== "expired" && ps !== "expired") return notConfirmed;
       await deps.setEsim(order.id, { status: "expired" });
       return { status: "processed", orderId: order.id };
     case "esim.usage.threshold": {
