@@ -17,6 +17,7 @@ import type { CheckoutError } from "@/lib/checkout-rules";
 import { formatData, formatDays, formatPrice, USE_FIXTURES } from "@/lib/format";
 import { FIXTURE_ORDER_ID } from "@/lib/fixtures/order";
 import { isEmail } from "@/components/auth-shell";
+import { trackOncePerPage } from "@/lib/meta-pixel";
 
 export const Route = createFileRoute("/checkout/$planId")({
   loader: ({ context, params }) => context.queryClient.ensureQueryData(checkoutPlanQuery(params.planId)),
@@ -160,7 +161,11 @@ function CheckoutPage() {
         if (r.error === "real_payment_consent_required") setNeedsRealPaymentConsent(true);
         if (r.error.startsWith("discount_")) { setDiscount(null); setCodeMessage(null); }
       }
-      else setClientSecret(r.clientSecret);
+      else {
+        setClientSecret(r.clientSecret);
+        // InitiateCheckout only once the server accepted the order and opened the payment step.
+        if (totals && plan.price) trackOncePerPage("InitiateCheckout", planId, { content_ids: [planId], content_type: "product", num_items: 1, value: totals.gross, currency: plan.price.currency });
+      }
     } catch {
       setError("Etwas ist schiefgelaufen. Bitte versuche es erneut.");
     } finally {

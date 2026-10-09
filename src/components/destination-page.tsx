@@ -8,7 +8,8 @@ import { FixtureBadge } from "./brand";
 import { CompatCheck } from "./compat-check";
 import { NoThrottleClaim, UnlimitedLabel } from "./unlimited-claim";
 import { showsNoThrottle } from "@/lib/throttle";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { trackOncePerPage } from "@/lib/meta-pixel";
 import { Link } from "@tanstack/react-router";
 import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
 import { CaretRight, Funnel } from "@phosphor-icons/react";
@@ -35,6 +36,14 @@ export function DestinationPage({ slug }: { slug: string }) {
   const dataPlans = useMemo(() => (d?.plans ?? []).filter((p) => p.type === "data").sort((a, b) => (a.dataMb ?? 0) - (b.dataMb ?? 0) || a.validityDays - b.validityDays), [d]);
   const unlimitedPlans = useMemo(() => (d?.plans ?? []).filter((p) => p.type === "unlimited").sort((a, b) => a.validityDays - b.validityDays), [d]);
   const [tab, setTab] = useState<"data" | "unlimited">(dataPlans.length ? "data" : "unlimited");
+
+  const selPlan = d?.plans.find((p) => p.id === selected) ?? null;
+  useEffect(() => {
+    if (!d || d.fixturePlans || !d.plans.length) return;
+    const p = selPlan;
+    if (p) trackOncePerPage("ViewContent", p.id, { content_ids: [p.id], content_type: "product", content_name: d.name, content_category: "eSIM", value: p.price, currency: p.currency });
+    else trackOncePerPage("ViewContent", `dest:${d.slug}`, { content_ids: d.plans.map((x) => x.id).slice(0, 20), content_type: "product_group", content_name: d.name, content_category: "eSIM", value: Math.min(...d.plans.map((x) => x.price)), currency: d.plans[0].currency });
+  }, [d, selPlan]);
 
   if (!d) return null;
 
@@ -226,7 +235,7 @@ function BuyBar({ plan, canBuy, paused, inline, destination, adminTest }: { plan
       <div className="text-right">
         {canBuy ? (
           <div className="flex items-center justify-end gap-2">
-            <Button variant="secondary" disabled={inCart} onClick={() => { cart.add({ planId: plan.id, destination, label, price: plan.price, currency: plan.currency }); toast.success("Zum Warenkorb hinzugefügt."); }}>
+            <Button variant="secondary" disabled={inCart} onClick={() => { cart.add({ planId: plan.id, destination, label, price: plan.price, currency: plan.currency }); trackOncePerPage("AddToCart", plan.id, { content_ids: [plan.id], content_type: "product", content_name: destination, value: plan.price, currency: plan.currency }); toast.success("Zum Warenkorb hinzugefügt."); }}>
               {inCart ? "Im Warenkorb" : "In den Warenkorb"}
             </Button>
             <LinkButton to="/checkout/$planId" params={{ planId: plan.id }}>Weiter</LinkButton>

@@ -1,7 +1,8 @@
 import { UnlimitedLabel, UnlimitedNote } from "@/components/unlimited-claim";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { z } from "zod";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { isPurchaseTrackable, trackPurchaseOnce } from "@/lib/meta-pixel";
 import { CheckCircle, CopySimple } from "@phosphor-icons/react";
 import { SiteLayout } from "@/components/layout";
 import { EmptyState, FixtureBadge, Chip } from "@/components/brand";
@@ -65,6 +66,12 @@ function OrderPage() {
   const { order, loading, fixture } = useOrderAccess(orderId, t);
   const { user } = useAuth();
   const [linkCopied, setLinkCopied] = useState(false);
+
+  // Purchase only after the server confirms payment (status set by the verified Stripe webhook), never for test payments.
+  useEffect(() => {
+    if (!order || fixture || !isPurchaseTrackable(order)) return;
+    trackPurchaseOnce(order.id, order.amount, order.currency);
+  }, [order, fixture]);
 
   const copyLink = async () => {
     if (await copyText(window.location.href)) {

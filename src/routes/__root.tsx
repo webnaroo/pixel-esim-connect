@@ -21,6 +21,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Toaster } from "@/components/ui/sonner";
 import { SearchBox } from "@/components/search-box";
 import { legalIndexQuery } from "@/lib/content.functions";
+import { ConsentBanner } from "@/components/consent-banner";
+import { trackPageView } from "@/lib/meta-pixel";
 
 function NotFoundComponent() {
   return (
@@ -97,9 +99,6 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         type: "application/ld+json",
         children: JSON.stringify({ "@context": "https://schema.org", "@type": "Organization", "@id": "https://globesim.de/#organization", name: "GlobeSIM", url: "https://globesim.de/" }),
       },
-      {
-        children: `!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window, document,'script','https://connect.facebook.net/en_US/fbevents.js');fbq('init', '1794858788373135');fbq('track', 'PageView');`,
-      },
     ],
   }),
   shellComponent: RootShell,
@@ -116,9 +115,6 @@ function RootShell({ children }: { children: ReactNode }) {
       </head>
       <body>
         {children}
-        <noscript>
-          <img height="1" width="1" style={{ display: "none" }} src="https://www.facebook.com/tr?id=1794858788373135&ev=PageView&noscript=1" alt="" />
-        </noscript>
         <Scripts />
       </body>
     </html>
@@ -138,10 +134,17 @@ function RootComponent() {
     return () => data.subscription.unsubscribe();
   }, [router, queryClient]);
 
+  // Meta PageView: initial load + every client-side navigation, only with marketing consent.
+  useEffect(() => {
+    trackPageView();
+    return router.subscribe("onResolved", () => trackPageView());
+  }, [router]);
+
   return (
     <QueryClientProvider client={queryClient}>
       <Outlet />
       <Toaster />
+      <ConsentBanner />
     </QueryClientProvider>
   );
 }
