@@ -88,7 +88,7 @@ export class ProviderNotConfiguredError extends Error {
 
 export class ProviderRequestError extends Error {
   readonly code = "E-PROVIDER-REQUEST";
-  constructor(message: string, public readonly status?: number, public readonly endpoint?: string) {
+  constructor(message: string, public readonly status?: number, public readonly endpoint?: string, public readonly info?: import("../esimerge-errors").EsmErrorInfo) {
     super(message);
     this.name = "ProviderRequestError";
   }

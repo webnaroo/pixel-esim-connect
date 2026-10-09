@@ -2,7 +2,7 @@
 // a simple circuit breaker and request logging. No provider details here.
 
 import { esimergeConfig, type EndpointDef } from "./config";
-import { sanitize } from "./mapping";
+import { parseEsmError, errorSummary, retryDelays, ESM_CALLS_PER_MINUTE } from "../../esimerge-errors";
 import { ProviderNotConfiguredError, ProviderRequestError, ProviderUnavailableError } from "../types";
 
 const breaker = { failures: 0, openUntil: 0 };
@@ -67,40 +67,68 @@ export async function providerRequest(name: string, def: EndpointDef | null, opt
   if (opts.body !== undefined) headers["Content-Type"] = "application/json";
   if (opts.idempotencyKey && opts.idempotencyHeader) headers[opts.idempotencyHeader] = opts.idempotencyKey;
 
-  // Retries only for idempotent GETs. Never blindly retry createOrder/topUp.
-  const maxAttempts = def.method === "GET" ? 3 : 1;
+  // Retries (owner docs): 429/500/502/503/504 after 1, 2, 4, 8 s; request_in_flight after 2, 4, 8 s.
+  // Headers (incl. Idempotency-Key) are built once, so every retry of a POST reuses the SAME key.
+  // Network errors/timeouts are retried the same way; if still unclear, the raw error propagates (→ needs_review).
   let lastErr: unknown;
-  for (let attempt = 0; attempt < maxAttempts; attempt++) {
-    if (attempt > 0) await new Promise((r) => setTimeout(r, 300 * 2 ** (attempt - 1)));
+  for (let attempt = 0; ; attempt++) {
+    await throttle();
     const started = Date.now();
+    let res: Response;
     try {
-      const res = await fetch(url, {
+      res = await fetch(url, {
         method: def.method,
         headers,
         body: opts.body !== undefined ? JSON.stringify(opts.body) : null,
         signal: AbortSignal.timeout(esimergeConfig.limits.timeoutMs),
       });
-      const latencyMs = Date.now() - started;
-      const text = await res.text();
-      let body: unknown = text;
-      try { body = text ? JSON.parse(text) : null; } catch { /* non-JSON */ }
-      await logCall(name, res.status, latencyMs, res.ok ? undefined : JSON.stringify(sanitize(body)));
-      if (res.status >= 500 || res.status === 429) {
-        lastErr = new ProviderRequestError(`HTTP ${res.status}`, res.status, name);
-        continue;
-      }
-      breaker.failures = 0;
-      if (!res.ok) throw new ProviderRequestError(`HTTP ${res.status}`, res.status, name);
-      return { status: res.status, body, latencyMs };
     } catch (e) {
-      if (e instanceof ProviderRequestError && e.status && e.status < 500 && e.status !== 429) throw e;
       lastErr = e;
-      await logCall(name, null, Date.now() - started, e instanceof Error ? e.message : "network error");
+      await logCall(name, null, Date.now() - started, e instanceof Error && e.name === "TimeoutError" ? "timeout" : "network error");
+      if (attempt < TRANSIENT_DELAYS.length) { await sleepFn(TRANSIENT_DELAYS[attempt]!); continue; }
+      break;
     }
+    const latencyMs = Date.now() - started;
+    const text = await res.text();
+    let body: unknown = text;
+    try { body = text ? JSON.parse(text) : null; } catch { /* non-JSON */ }
+    if (res.ok) {
+      await logCall(name, res.status, latencyMs);
+      breaker.failures = 0;
+      return { status: res.status, body, latencyMs };
+    }
+    const info = parseEsmError(res.status, body);
+    // Only code, field and request_id are logged — never error.message or the body.
+    await logCall(name, res.status, latencyMs, errorSummary(info));
+    const err = new ProviderRequestError(`HTTP ${res.status}${info.code ? ` ${info.code}` : ""}`, res.status, name, info);
+    const delays = retryDelays(info.code, res.status);
+    if (attempt < delays.length) { lastErr = err; await sleepFn(delays[attempt]!); continue; }
+    if (res.status >= 500) { breaker.failures++; if (breaker.failures >= BREAKER_THRESHOLD) breaker.openUntil = Date.now() + BREAKER_COOLDOWN_MS; }
+    else breaker.failures = 0;
+    throw err;
   }
   breaker.failures++;
   if (breaker.failures >= BREAKER_THRESHOLD) breaker.openUntil = Date.now() + BREAKER_COOLDOWN_MS;
   throw lastErr instanceof Error ? lastErr : new ProviderRequestError("Request failed", undefined, name);
+}
+
+const TRANSIENT_DELAYS = [1000, 2000, 4000, 8000];
+let sleepFn = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
+let throttleEnabled = true;
+/** Tests only: instant sleeps, no DB throttle. */
+export function __setProviderTestMode(sleep: (ms: number) => Promise<void>) { sleepFn = sleep; throttleEnabled = false; breaker.failures = 0; breaker.openUntil = 0; }
+
+/** Shared queue across workers: at most ESM_CALLS_PER_MINUTE calls per minute (eSIMerge allows 60/key). Waits for the next minute when full. */
+async function throttle() {
+  if (!throttleEnabled) return;
+  try {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    for (let i = 0; i < 3; i++) {
+      const { data: ok, error } = await supabaseAdmin.rpc("rate_limit_hit", { _bucket: "esimerge-api", _window_seconds: 60, _max: ESM_CALLS_PER_MINUTE });
+      if (error || ok) return;
+      await sleepFn(60_000 - (Date.now() % 60_000) + 50);
+    }
+  } catch { /* throttle must never block a request */ }
 }
 
 /** Constant-time HMAC-SHA256 verification (hex or base64 signature). */
