@@ -22,18 +22,19 @@
 - eSIMerge errors follow src/lib/esimerge-errors.ts (code-based, same idempotency key on retries, unclear → needs_review; never store error.message) — prevents double orders and leaks.
 - eSIMerge refunds: portal-only, no API endpoint (probed); admin copies the request text, audit_log provider_refund_requested — never invent a refund call.
 - eSIMerge mapping is derived only from captured sandbox responses (sandbox.fixtures.ts); unmappable plans are recorded in sync_runs.unmapped, never dropped silently.
-- Comparison visibility rules (source, 90-day age, GlobeSIM conditions) live in src/lib/comparison.ts with tests and are mirrored by RLS on comparison_facts — nothing unsourced or stale can reach the public page.
+- Comparison visibility rules (source, 90-day age, GlobeSIM conditions) live in src/lib/comparison.ts with tests and are mirrored by RLS on comparison_facts — nothing unsourced or stale reaches the public page.
 - The "ohne Drosselung" claim follows src/lib/throttle.ts (plans.throttle_claim); texts come from app_settings.unlimited_claim, never hardcoded — a catalog throttle hint flips a confirmed plan to conflict on sync.
-- Legal pages live in legal_pages and render only when published (RLS); company data comes from app_settings.company_info via placeholders in src/lib/legal.ts — never hardcode or invent legal/company data.
-- Root loader preloads legalIndexQuery; footer reads it via useSuspenseQuery — legal links match in SSR and hydration.
+- Legal pages live in legal_pages and render only when published (RLS); company data comes from app_settings.company_info via placeholders in src/lib/legal.ts — never hardcode or invent these.
+- Root loader preloads legalIndexQuery; footer reads it via useSuspenseQuery — legal links match SSR/hydration.
 - FAQ texts may state prices, coverage or throttling only through DB placeholders (src/lib/faq-rules.ts, checked on save; unfillable entries are hidden) — keeps public claims tied to real data.
 - Customer emails go only through src/lib/email.server.ts and only with a verified sender domain (email-rules.ts); otherwise orders get email_status pending_domain — no mail from an unverified domain.
-- Account deletion anonymises orders (kept for tax) and clears eSIM install data before deleting the login — GDPR-safe bookkeeping.
-- Admin list views (admin-lists.functions.ts) never select activation code, LPA or QR columns — installation data is visible only to the owner via getMyInstallData.
+- Account deletion anonymises orders (kept for tax) and clears eSIM install data before deleting the login — GDPR-safe.
+- Admin list views (admin-lists.functions.ts) never select activation code, LPA or QR columns — installation data only for the owner via getMyInstallData.
 - FX uses only ECB XML or ECB-based Frankfurter fallback; all prices use loadFx().lookup and tested fx.ts rules — no rate, no price.
-- plans is closed to client roles; public pages read public.public_plans (released columns, active+priced only); admin code reads plans only via supabaseAdmin after has_role — keeps cost prices and raw provider data server-only.
+- plans is closed to client roles; public pages read public.public_plans (released columns, active+priced only); admin reads plans only via supabaseAdmin after has_role — cost prices and raw provider data stay server-only.
 - esim_devices: public read (active), admin-only writes; rules in devices.ts — no invented device data.
 - Ratgeber posts (blog_posts) are public only with status=published (RLS + server fns); src/lib/ratgeber.ts publishBlockers() checks completeness+score only; AI omits unsure claims, no markers (owner decision). All active destinations count as available; prices only via {{LIVE_PREISE:ISO}}.
-- eSIM install UI only in esim-install-panel.tsx (rules: install-device.ts), shared by account and /install — keeps both identical.
-- SEO: shared helpers, leaf-only canonicals; sitemap uses public origin, paginated reads, 503 on errors; tests and admin audits share one sitemap validator; SEO AI runs only via an admin-verified route with history.
-- Meta Pixel only via src/lib/meta-pixel.ts after consent; Purchase only for server-paid non-test orders, once per order — lawful, no duplicate purchases.
+- eSIM install UI only in esim-install-panel.tsx (rules: install-device.ts), shared by account and /install.
+- SEO: shared helpers, leaf-only canonicals; sitemap uses public origin, paginated reads, 503 on errors; tests and admin audits share one validator; SEO AI runs only via an admin-verified route with history.
+- Meta Pixel only via src/lib/meta-pixel.ts after consent; Purchase only for server-paid non-test orders, once per order — no duplicate purchases.
+- Subdirectories have their own AGENTS.md — read it before changing files there.
