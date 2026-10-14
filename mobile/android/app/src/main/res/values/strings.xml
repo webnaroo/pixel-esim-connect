@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">GlobeSIM</string>
+    <string name="title_activity_main">GlobeSIM</string>
+    <string name="package_name">de.globesim.app</string>
+    <string name="custom_url_scheme">de.globesim.app</string>
+</resources>

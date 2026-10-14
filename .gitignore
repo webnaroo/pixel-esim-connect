@@ -30,3 +30,10 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# App package (not part of the web build)
+mobile/node_modules/
+mobile/android/build/
+mobile/android/app/build/
+mobile/ios/App/build/
+mobile/ios/Pods/
