@@ -29,3 +29,4 @@
 - [x] Rabattcodes: Admin-Verwaltung, Kassen-Eingabe, Claim/Release, Tests (Veröffentlichung ausstehend)
 - [ ] Go-Live-Schritte außerhalb von Lovable (Secrets, eSIMerge-Portal, Stripe-Dashboard) durch Umut
 - [x] Seite nach der Zahlung (Bestellseite) voller machen: Fortschrittsschritte, Buttons „Zu meinen Bestellungen"/„Konto anlegen", Link sichern, Hilfe-Block
+- [x] Store-App-Paket (mobile/): Capacitor-Hülle mit Icon, Startbild, Offline-Seite und Zurück-Knopf; Bau-Anleitung und Store-Texte in Files (echter Build/Upload läuft auf Mac bzw. Android Studio mit den Konten von Umut)
