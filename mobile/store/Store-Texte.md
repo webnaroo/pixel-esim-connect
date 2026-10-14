@@ -103,7 +103,7 @@ GlobeSIM: eSIM für Reisen
 **Kurzbeschreibung** (max. 80 Zeichen)
 
 ```
-eSIM für Reisen: mobile Daten in über 280 Ländern, ohne SIM-Tausch, sofort aufs Handy.
+Mobile Daten für über 280 Länder – eSIM ohne SIM-Tausch, sofort aufs Handy.
 ```
 
 **Ausführliche Beschreibung** (max. 4000 Zeichen)
