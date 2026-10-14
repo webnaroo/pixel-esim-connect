@@ -1,0 +1,26 @@
+{
+  "name": "globesim-app",
+  "private": true,
+  "version": "1.0.0",
+  "description": "GlobeSIM als echte App für iPhone (App Store) und Android (Google Play). Kapselt die bestehende Webseite globesim.de – die Webseite selbst bleibt unverändert.",
+  "scripts": {
+    "assets": "npx @capacitor/assets generate --ios --android --icon-only",
+    "assets:splash": "npx @capacitor/assets generate --ios --android --splash-only",
+    "sync": "npx cap sync",
+    "android:open": "npx cap open android",
+    "android:build": "npx cap sync android && cd android && ./gradlew bundleRelease",
+    "ios:open": "npx cap open ios"
+  },
+  "dependencies": {
+    "@capacitor/android": "^6.2.0",
+    "@capacitor/app": "^6.0.0",
+    "@capacitor/core": "^6.2.0",
+    "@capacitor/ios": "^6.2.0",
+    "@capacitor/splash-screen": "^6.0.3",
+    "@capacitor/status-bar": "^6.0.2"
+  },
+  "devDependencies": {
+    "@capacitor/assets": "^3.0.5",
+    "@capacitor/cli": "^6.2.0"
+  }
+}

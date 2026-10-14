@@ -1,0 +1,38 @@
+{
+  "appId": "de.globesim.app",
+  "appName": "GlobeSIM",
+  "webDir": "www",
+  "backgroundColor": "#F6F3EE",
+  "server": {
+    "url": "https://globesim.de",
+    "cleartext": false,
+    "allowNavigation": ["globesim.de", "*.globesim.de", "notify.globesim.de"],
+    "appendOrigin": false,
+    "showSpinner": false
+  },
+  "android": {
+    "allowMixedContent": false,
+    "backgroundColor": "#F6F3EE"
+  },
+  "ios": {
+    "contentInset": "automatic",
+    "allowsLinkPreview": false,
+    "scheme": "GlobeSIM"
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 900,
+      "launchAutoHide": true,
+      "backgroundColor": "#0B3C49",
+      "androidScaleType": "CENTER_CROP",
+      "showSpinner": false,
+      "splashFullScreen": true,
+      "splashImmersive": true
+    },
+    "StatusBar": {
+      "overlaysWebView": false,
+      "style": "DARK",
+      "backgroundColor": "#0B3C49"
+    }
+  }
+}
