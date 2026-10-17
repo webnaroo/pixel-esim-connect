@@ -21,7 +21,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { Toaster } from "@/components/ui/sonner";
 import { SearchBox } from "@/components/search-box";
 import { legalIndexQuery } from "@/lib/content.functions";
-import { ConsentBanner } from "@/components/consent-banner";
 import { trackPageView } from "@/lib/meta-pixel";
 
 function NotFoundComponent() {
@@ -116,6 +115,18 @@ function RootShell({ children }: { children: ReactNode }) {
       <body>
         {children}
         <Scripts />
+        {/* Meta Pixel gate: the prive.eu tool runs this only after "Facebook" consent. */}
+        <script type="text/plain" data-cookiecategory="Facebook" dangerouslySetInnerHTML={{ __html: "window.__gsMetaConsent=true;window.dispatchEvent(new Event('globesim:meta-consent'));" }} />
+        <script
+          src="https://app.prive.eu/consent"
+          data-cc-tools="Google,Google Analytics,Google Tag Manager,Facebook,Instabug,Instagram Content"
+          data-cc-privacy="https://globesim.de/legal/datenschutz"
+          data-cc-imprint="https://globesim.de/legal/impressum"
+          data-cc-color=""
+          data-cc-theme="system"
+          data-cc-language="browser"
+          data-cc-non-eu-consent="false"
+        />
       </body>
     </html>
   );
@@ -136,15 +147,17 @@ function RootComponent() {
 
   // Meta PageView: initial load + every client-side navigation, only with marketing consent.
   useEffect(() => {
+    const onConsent = () => trackPageView();
+    window.addEventListener("globesim:meta-consent", onConsent);
     trackPageView();
-    return router.subscribe("onResolved", () => trackPageView());
+    const unsub = router.subscribe("onResolved", () => trackPageView());
+    return () => { unsub(); window.removeEventListener("globesim:meta-consent", onConsent); };
   }, [router]);
 
   return (
     <QueryClientProvider client={queryClient}>
       <Outlet />
       <Toaster />
-      <ConsentBanner />
     </QueryClientProvider>
   );
 }
