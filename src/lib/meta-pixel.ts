@@ -41,9 +41,13 @@ export function saveConsent(marketing: boolean) {
 
 export function onConsentChange(fn: () => void) { listeners.add(fn); return () => { listeners.delete(fn); }; }
 
-export function openConsentSettings() { window.dispatchEvent(new Event("globesim:consent-open")); }
+export function openConsentSettings() {
+  document.querySelector<HTMLElement>("[data-cc='c-settings']")?.click();
+}
 
-const allowed = () => readConsent()?.marketing === true;
+declare global { interface Window { __gsMetaConsent?: boolean } }
+/** Consent comes from the prive.eu consent tool: it unblocks the masked "Facebook" script in __root, which sets this flag. */
+const allowed = () => typeof window !== "undefined" && window.__gsMetaConsent === true;
 
 /** Meta's official base snippet, run only after consent. */
 export function loadPixel() {

@@ -9,7 +9,6 @@ import { useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { legalIndexQuery } from "@/lib/content.functions";
 import { ShoppingCart } from "@phosphor-icons/react";
 import { useCart } from "@/lib/cart";
-import { openConsentSettings } from "@/lib/meta-pixel";
 
 function CartLink() {
   const items = useCart();
@@ -151,7 +150,7 @@ export function Footer() {
       <div className="container-page flex flex-wrap items-center gap-x-2 border-t border-line py-6 text-xs text-ink-muted">
         <span>© {new Date().getFullYear()} GlobeSIM · Alle Preise inkl. MwSt.</span>
         <span aria-hidden>·</span>
-        <button type="button" onClick={openConsentSettings} className="underline-offset-4 hover:text-ink hover:underline">Cookie-Einstellungen</button>
+        <a href="#" data-cc="c-settings" onClick={(e) => e.preventDefault()} className="underline-offset-4 hover:text-ink hover:underline">Cookie-Einstellungen</a>
         <Link to="/admin" aria-label="Admin-Login" title="Admin-Login" className="inline-flex size-9 shrink-0 items-center justify-center rounded-md text-ink-muted hover:bg-muted hover:text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary">
           <LockSimple size={16} aria-hidden />
         </Link>
