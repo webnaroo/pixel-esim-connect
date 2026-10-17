@@ -204,6 +204,13 @@
       "when": 1791580068388,
       "tag": "0028_price_calculation_metadata_and_atomic_apply",
       "breakpoints": true
+    },
+    {
+      "idx": 29,
+      "version": "7",
+      "when": 1792251087633,
+      "tag": "0029_zahlungsarten_page",
+      "breakpoints": true
     }
   ]
 }

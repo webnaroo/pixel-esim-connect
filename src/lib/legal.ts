@@ -1,5 +1,5 @@
 // Pure rules for legal pages. No I/O. Company data is never invented: empty fields render as a visible gap.
-export const LEGAL_SLUGS = ["impressum", "datenschutz", "agb", "widerruf", "rueckerstattung"] as const;
+export const LEGAL_SLUGS = ["impressum", "datenschutz", "agb", "widerruf", "rueckerstattung", "zahlungsarten"] as const;
 export type LegalSlug = (typeof LEGAL_SLUGS)[number];
 
 export const COMPANY_FIELDS = [
