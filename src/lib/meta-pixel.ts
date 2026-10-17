@@ -97,7 +97,7 @@ export function loadPixel() {
 }
 
 /* ===== TikTok Pixel — loads ONLY after marketing consent ===== */
-export const TIKTOK_PIXEL_ID = "DB9QA3JC77UC7FTGLL5G";
+export const TIKTOK_PIXEL_ID = "DB9R1GJC77U2CDFHKMGG";
 declare global {
   interface Window {
     ttq?: any;
