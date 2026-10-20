@@ -6,11 +6,15 @@ Der alte Lovable-Shop bleibt bis zum Schluss unberührt und dient als Rückfalls
 **Grundregel:** Schritte nie überspringen und nie zwei große Dinge gleichzeitig ändern. Nach jedem Block kurz testen.
 
 ## Phase 0: Vorbereitung (jederzeit, ohne Risiko)
-- [ ] **DNS-Einträge sichern.** Bei One.com die komplette DNS-Liste der Domain `globesim.de` als Screenshot/Text speichern (A, AAAA, CNAME, MX, TXT, DKIM, DMARC, SPF, die Resend-Einträge, die Einträge für `notify`). Ohne diese Liste ist ein Rückfall schwer.
-- [ ] **Alte Nameserver notieren** (One.com → Domain → Nameserver). Sie werden für den Rückfall gebraucht.
-- [ ] **TTL senken:** Bei One.com die TTL der Einträge für `@` und `www` auf 300 Sekunden stellen, mindestens 24 Stunden vor dem Umzug.
-- [ ] **E-Mail klären:** Wo liegt das Postfach `info@globesim.de` / `support@globesim.de` (One.com-Mail)? Die MX-Einträge dafür müssen beim Wechsel unverändert bleiben.
-- [ ] Cloudflare-Account bereit, Domain noch **nicht** hinzugefügt.
+Stand 21.10.2026: Die Zone `globesim.de` liegt schon bei Cloudflare (Free, Active). DNS-Einträge (Auszug, Stand heute):
+- `A globesim.de` und `A www` → `185.158.133.1`, Proxied. **Das ist der Lovable-Server, den der Umzug ersetzt.**
+- `MX` ×4 → `mx1..mx4.mailpod16-cph3.g1i.one.com` (Prio 10), `TXT` SPF `include:_custspf.one.com`, `CNAME ed1/rsa1._domainkey` (One.com-Mail). **Nicht anfassen.**
+- `CNAME rsend`, `CNAME send`, `TXT resend._domainkey` (Resend). **Nicht anfassen.**
+- `TXT _dmarc` = `v=DMARC1; p=reject`. Unverändert lassen.
+- `NS notify` → `ns3/ns4.lovable.cloud`, `TXT _lovable`, `_lovable.www`, `_lovable-email`: Lovable-Reste, erst nach dem Umzug löschen.
+
+- [ ] Screenshot der aktuellen DNS-Liste (Cloudflare → DNS → Records) als Rückfall-Dokument aufheben.
+- [ ] Prüfen, dass `https://globesim.de` aktuell den Lovable-Shop zeigt.
 
 ## Phase 1: Live-Zugänge auf dem Worker vorbereiten (der Shop bleibt geschlossen)
 Worker → Settings → **Variables and secrets** (Runtime, Typ Secret). Die Test-Werte bleiben, bis die Live-Tests laufen.
@@ -32,19 +36,14 @@ Der Dump stammt vom 20.10.2026 (ca. 18:40 UTC). Seitdem darf es im **alten** Pro
 - [ ] Der Sandbox-Test-Tarif (`esm_plan_tr_5gb_15d`) bleibt `is_active = false`.
 
 ## Phase 3: Umzugstag
-Ruhige Zeit wählen (z. B. früh morgens), 1 bis 2 Stunden einplanen.
+Ruhige Zeit wählen, 1 bis 2 Stunden einplanen. Weil die Domain schon bei Cloudflare liegt, wirken alle Änderungen **sofort** (kein Nameserver-Wechsel, keine Wartezeit), und der Rückfall dauert Sekunden.
 
 1. [ ] **Alten Shop schließen:** Im alten Lovable-Projekt Admin → Go-Live → *Shop deaktivieren*. Offene Bestellungen vorher abwarten (Status prüfen).
-2. [ ] **Domain zu Cloudflare:** Cloudflare → *Add a domain* → `globesim.de` → Free-Plan. Cloudflare liest die vorhandenen DNS-Einträge ein.
-3. [ ] **Einträge vergleichen** mit der Liste aus Phase 0. Besonders prüfen:
-   - alle **MX**-Einträge und **TXT** (SPF, DKIM, DMARC) unverändert,
-   - die **Resend**-Einträge (`resend._domainkey`, `send`-MX/TXT),
-   - Mail-Einträge auf **DNS only** (graue Wolke), nicht proxied.
-4. [ ] Die alten **A/AAAA/CNAME-Einträge für `@` und `www`**, die auf Lovable zeigen, entfernen. Cloudflare legt sie beim Zuordnen des Workers selbst an.
-5. [ ] **Worker zuordnen:** Worker → Settings → *Domains & Routes* → *Add → Custom domain* → `globesim.de` und `www.globesim.de`.
-6. [ ] **Nameserver wechseln:** Bei One.com die zwei Cloudflare-Nameserver eintragen. Warten, bis Cloudflare die Domain als *Active* zeigt (Minuten bis Stunden).
-7. [ ] Seite `https://globesim.de` öffnen: Es muss die **neue** Seite kommen (Logo und Bilder, Anmeldung). Ein Test mit `www` ebenso.
-8. [ ] **Mail prüfen:** Eine Mail an `info@globesim.de` senden und eine Test-E-Mail im Admin auslösen.
+2. [ ] **Rückfall vorbereiten:** Die zwei A-Einträge notieren (`@` und `www` → `185.158.133.1`, Proxied).
+3. [ ] **Die zwei A-Einträge löschen:** Cloudflare → DNS → Records → `A globesim.de` und `A www.globesim.de` löschen. Alle anderen Einträge (MX, TXT, CNAME) bleiben.
+4. [ ] **Worker zuordnen:** Worker → Settings → *Domains & Routes* → *Add → Custom domain* → `globesim.de`, danach `www.globesim.de`. Cloudflare legt die nötigen DNS-Einträge selbst an.
+5. [ ] `https://globesim.de` öffnen (am besten im privaten Fenster): Es muss die **neue** Seite kommen. `www` ebenso.
+6. [ ] **Mail prüfen:** Eine Mail an `info@globesim.de` senden und eine Test-E-Mail im Admin auslösen.
 
 ## Phase 4: Auf die echte Domain umstellen
 - [ ] **Supabase → Authentication → URL Configuration:** Site URL `https://globesim.de`, Redirect URLs `https://globesim.de/**` und `https://www.globesim.de/**`. Die Worker-Adresse kann dort bleiben.
@@ -68,8 +67,9 @@ Ruhige Zeit wählen (z. B. früh morgens), 1 bis 2 Stunden einplanen.
 
 ## Rückfall (wenn etwas Gravierendes schiefgeht)
 1. Neuen Shop sofort deaktivieren (Admin → Go-Live).
-2. Bei One.com die **alten Nameserver** wieder eintragen (aus Phase 0) bzw. die gesicherten DNS-Einträge wiederherstellen.
-3. Alten Lovable-Shop wieder aktivieren.
+2. Cloudflare → Worker → Domains & Routes: die Custom Domains `globesim.de` und `www.globesim.de` entfernen.
+3. Cloudflare → DNS → Records: `A globesim.de` und `A www` → `185.158.133.1`, **Proxied**, neu anlegen (Screenshot aus Phase 0).
+4. Alten Lovable-Shop wieder aktivieren.
 Die Datenbanken sind getrennt: Bestellungen, die zwischenzeitlich im neuen Projekt entstanden sind, müssen manuell geprüft werden.
 
 ## Nach dem Umzug (nach ein bis zwei Wochen ohne Probleme)
@@ -77,4 +77,4 @@ Die Datenbanken sind getrennt: Bestellungen, die zwischenzeitlich im neuen Proje
 - [ ] Lovable Cloud erst entfernen, wenn alles stabil läuft. Export-Dateien als Backup behalten.
 - [ ] Supabase-Backups prüfen/aktivieren (Project Settings → Database → Backups).
 - [ ] Datenbank-Passwort aus dem Chat durch ein neues ersetzen, `rk_live`-Schlüssel gegebenenfalls erneuern.
-- [ ] Alte Delegation `notify.globesim.de` bei One.com entfernen, falls nichts mehr darüber läuft.
+- [ ] Lovable-Reste in der DNS-Zone löschen: `NS notify` (ns3/ns4.lovable.cloud), `TXT _lovable`, `_lovable.www`, `_lovable-email`.
