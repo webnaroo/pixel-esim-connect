@@ -16,7 +16,6 @@ import bricolage600 from "@fontsource/bricolage-grotesque/600.css?url";
 import instrument400 from "@fontsource/instrument-sans/400.css?url";
 import instrument500 from "@fontsource/instrument-sans/500.css?url";
 import instrument600 from "@fontsource/instrument-sans/600.css?url";
-import { reportLovableError } from "../lib/lovable-error-reporting";
 import { supabase } from "@/integrations/supabase/client";
 import { Toaster } from "@/components/ui/sonner";
 import { SearchBox } from "@/components/search-box";
@@ -44,9 +43,6 @@ function NotFoundComponent() {
 function ErrorComponent({ error, reset }: ErrorComponentProps) {
   console.error(error);
   const router = useRouter();
-  useEffect(() => {
-    reportLovableError(error, { boundary: "tanstack_root_error_component" });
-  }, [error]);
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-paper px-5">

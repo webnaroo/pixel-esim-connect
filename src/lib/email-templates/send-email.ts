@@ -1,18 +1,24 @@
 import * as React from 'react'
 import { render } from '@react-email/render'
-import { EmailAPIError, sendLovableEmail } from '@lovable.dev/email-js'
+import { sendResendEmail } from '../resend.server'
 import { TEMPLATES } from './registry'
 
-// Server-only: reads LOVABLE_API_KEY. Never import from client components.
+// Server-only: sends through Resend (RESEND_API_KEY). Never import from client components.
 
-// Configuration baked in at scaffold time
 const SITE_NAME = "GlobeSIM"
-// SENDER_DOMAIN is the verified sender subdomain FQDN (e.g., "notify.example.com").
-// It MUST match the subdomain delegated to Lovable's nameservers. NEVER use the root domain.
-const SENDER_DOMAIN = "notify.globesim.de"
-// FROM_DOMAIN is the domain shown in the From: header (e.g., "example.com").
-// Can be the root domain when display_from_root is enabled — this is cosmetic only.
-const FROM_DOMAIN = "notify.globesim.de"
+
+/**
+ * Domain of the From address: explicit option, else the shop's sender domain (app_settings.email_settings,
+ * the one verified in Resend), else EMAIL_FROM_DOMAIN. Customer mail is gated on that setting in email.server.ts.
+ */
+export async function resolveSenderDomain(explicit?: string): Promise<string> {
+  if (explicit) return explicit
+  const { loadEmailSettings } = await import('../email.server')
+  const fromSettings = (await loadEmailSettings()).sender_domain
+  const domain = fromSettings || process.env['EMAIL_FROM_DOMAIN'] || ''
+  if (!domain) throw Object.assign(new Error('No sender domain configured'), { code: 'sender_domain_missing' })
+  return domain
+}
 
 export type SendTemplateEmailResult =
   | { sent: true }
@@ -25,25 +31,21 @@ export interface SendTemplateEmailOptions {
   replyTo?: string
   /** Local part of the From address (e.g. "bestellung"); defaults to noreply. */
   fromLocal?: string
+  /** Overrides the sender domain (see resolveSenderDomain). */
+  fromDomain?: string
 }
 
 /**
- * Renders a registered template and sends it through Lovable's managed email
- * API. Suppression, retries, and rate limits are enforced by Lovable
- * server-side. A suppressed recipient is an expected outcome
- * ({ sent: false }); any other failure throws — EmailAPIError exposes
- * .code and .status for branching.
+ * Renders a registered template and sends it through Resend. Retries with the
+ * same idempotencyKey never deliver twice. Failures throw an EmailSendError
+ * (.code and .status for branching); the shape of a suppressed recipient is kept
+ * for callers, Resend reports suppressions asynchronously.
  */
 export async function sendTemplateEmail(
   templateName: string,
   to: string,
   options: SendTemplateEmailOptions = {}
 ): Promise<SendTemplateEmailResult> {
-  const apiKey = process.env['LOVABLE_API_KEY']
-  if (!apiKey) {
-    throw new Error('LOVABLE_API_KEY is not configured')
-  }
-
   const template = TEMPLATES[templateName]
   if (!template) {
     throw new Error(
@@ -67,28 +69,15 @@ export async function sendTemplateEmail(
       ? template.subject(templateData)
       : template.subject
 
-  try {
-    await sendLovableEmail(
-      {
-        to: recipient,
-        from: { name: SITE_NAME, address: `${options.fromLocal || 'noreply'}@${FROM_DOMAIN}` },
-        sender_domain: SENDER_DOMAIN,
-        subject,
-        html,
-        text,
-        purpose: 'transactional',
-        label: templateName,
-        idempotency_key: options.idempotencyKey || crypto.randomUUID(),
-        ...(options.replyTo ? { reply_to: options.replyTo } : {}),
-      },
-      { apiKey, sendUrl: process.env['LOVABLE_SEND_URL'] }
-    )
-  } catch (error) {
-    if (error instanceof EmailAPIError && error.code === 'recipient_suppressed') {
-      return { sent: false, reason: 'recipient_suppressed' }
-    }
-    throw error
-  }
+  await sendResendEmail({
+    from: { name: SITE_NAME, address: `${options.fromLocal || 'noreply'}@${await resolveSenderDomain(options.fromDomain)}` },
+    to: recipient,
+    subject,
+    html,
+    text,
+    idempotencyKey: options.idempotencyKey || crypto.randomUUID(),
+    ...(options.replyTo ? { replyTo: options.replyTo } : {}),
+  })
 
   return { sent: true }
 }

@@ -50,15 +50,13 @@ import { Route as AuthenticatedAdminPricingRouteImport } from './routes/_authent
 import { Route as AuthenticatedAdminSeoRouteImport } from './routes/_authenticated/admin.seo'
 import { Route as AuthenticatedAdminUnlimitedRouteImport } from './routes/_authenticated/admin.unlimited'
 import { Route as BildRatgeberFileRouteImport } from './routes/bild.ratgeber.$file'
+import { Route as ApiPublicAuthEmailHookRouteImport } from './routes/api/public/auth/email-hook'
 import { Route as ApiPublicCronCatalogSyncRouteImport } from './routes/api/public/cron/catalog-sync'
 import { Route as ApiPublicCronEsimStatusPollRouteImport } from './routes/api/public/cron/esim-status-poll'
 import { Route as ApiPublicCronFulfillmentRetryRouteImport } from './routes/api/public/cron/fulfillment-retry'
 import { Route as ApiPublicCronFxRefreshRouteImport } from './routes/api/public/cron/fx-refresh'
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
 import { Route as ApiPublicWebhooksEsimergeRouteImport } from './routes/api/public/webhooks/esimerge'
-import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
-import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
-import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -274,6 +272,11 @@ const BildRatgeberFileRoute = BildRatgeberFileRouteImport.update({
   path: '/bild/ratgeber/$file',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicAuthEmailHookRoute = ApiPublicAuthEmailHookRouteImport.update({
+  id: '/api/public/auth/email-hook',
+  path: '/api/public/auth/email-hook',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicCronCatalogSyncRoute =
   ApiPublicCronCatalogSyncRouteImport.update({
     id: '/api/public/cron/catalog-sync',
@@ -307,22 +310,6 @@ const ApiPublicWebhooksEsimergeRoute =
   ApiPublicWebhooksEsimergeRouteImport.update({
     id: '/api/public/webhooks/esimerge',
     path: '/api/public/webhooks/esimerge',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const LovableEmailAuthPreviewRoute = LovableEmailAuthPreviewRouteImport.update({
-  id: '/lovable/email/auth/preview',
-  path: '/lovable/email/auth/preview',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const LovableEmailAuthWebhookRoute = LovableEmailAuthWebhookRouteImport.update({
-  id: '/lovable/email/auth/webhook',
-  path: '/lovable/email/auth/webhook',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const LovableEmailTransactionalPreviewRoute =
-  LovableEmailTransactionalPreviewRouteImport.update({
-    id: '/lovable/email/transactional/preview',
-    path: '/lovable/email/transactional/preview',
     getParentRoute: () => rootRouteImport,
   } as any)
 
@@ -367,15 +354,13 @@ export interface FileRoutesByFullPath {
   '/admin/unlimited': typeof AuthenticatedAdminUnlimitedRoute
   '/bild/ratgeber/$file': typeof BildRatgeberFileRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
+  '/api/public/auth/email-hook': typeof ApiPublicAuthEmailHookRoute
   '/api/public/cron/catalog-sync': typeof ApiPublicCronCatalogSyncRoute
   '/api/public/cron/esim-status-poll': typeof ApiPublicCronEsimStatusPollRoute
   '/api/public/cron/fulfillment-retry': typeof ApiPublicCronFulfillmentRetryRoute
   '/api/public/cron/fx-refresh': typeof ApiPublicCronFxRefreshRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/api/public/webhooks/esimerge': typeof ApiPublicWebhooksEsimergeRoute
-  '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
-  '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
-  '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -417,15 +402,13 @@ export interface FileRoutesByTo {
   '/admin/unlimited': typeof AuthenticatedAdminUnlimitedRoute
   '/bild/ratgeber/$file': typeof BildRatgeberFileRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
+  '/api/public/auth/email-hook': typeof ApiPublicAuthEmailHookRoute
   '/api/public/cron/catalog-sync': typeof ApiPublicCronCatalogSyncRoute
   '/api/public/cron/esim-status-poll': typeof ApiPublicCronEsimStatusPollRoute
   '/api/public/cron/fulfillment-retry': typeof ApiPublicCronFulfillmentRetryRoute
   '/api/public/cron/fx-refresh': typeof ApiPublicCronFxRefreshRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/api/public/webhooks/esimerge': typeof ApiPublicWebhooksEsimergeRoute
-  '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
-  '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
-  '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -470,15 +453,13 @@ export interface FileRoutesById {
   '/_authenticated/admin/unlimited': typeof AuthenticatedAdminUnlimitedRoute
   '/bild/ratgeber/$file': typeof BildRatgeberFileRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
+  '/api/public/auth/email-hook': typeof ApiPublicAuthEmailHookRoute
   '/api/public/cron/catalog-sync': typeof ApiPublicCronCatalogSyncRoute
   '/api/public/cron/esim-status-poll': typeof ApiPublicCronEsimStatusPollRoute
   '/api/public/cron/fulfillment-retry': typeof ApiPublicCronFulfillmentRetryRoute
   '/api/public/cron/fx-refresh': typeof ApiPublicCronFxRefreshRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/api/public/webhooks/esimerge': typeof ApiPublicWebhooksEsimergeRoute
-  '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
-  '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
-  '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -523,15 +504,13 @@ export interface FileRouteTypes {
     | '/admin/unlimited'
     | '/bild/ratgeber/$file'
     | '/admin/'
+    | '/api/public/auth/email-hook'
     | '/api/public/cron/catalog-sync'
     | '/api/public/cron/esim-status-poll'
     | '/api/public/cron/fulfillment-retry'
     | '/api/public/cron/fx-refresh'
     | '/api/public/payments/webhook'
     | '/api/public/webhooks/esimerge'
-    | '/lovable/email/auth/preview'
-    | '/lovable/email/auth/webhook'
-    | '/lovable/email/transactional/preview'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -573,15 +552,13 @@ export interface FileRouteTypes {
     | '/admin/unlimited'
     | '/bild/ratgeber/$file'
     | '/admin'
+    | '/api/public/auth/email-hook'
     | '/api/public/cron/catalog-sync'
     | '/api/public/cron/esim-status-poll'
     | '/api/public/cron/fulfillment-retry'
     | '/api/public/cron/fx-refresh'
     | '/api/public/payments/webhook'
     | '/api/public/webhooks/esimerge'
-    | '/lovable/email/auth/preview'
-    | '/lovable/email/auth/webhook'
-    | '/lovable/email/transactional/preview'
   id:
     | '__root__'
     | '/'
@@ -625,15 +602,13 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/unlimited'
     | '/bild/ratgeber/$file'
     | '/_authenticated/admin/'
+    | '/api/public/auth/email-hook'
     | '/api/public/cron/catalog-sync'
     | '/api/public/cron/esim-status-poll'
     | '/api/public/cron/fulfillment-retry'
     | '/api/public/cron/fx-refresh'
     | '/api/public/payments/webhook'
     | '/api/public/webhooks/esimerge'
-    | '/lovable/email/auth/preview'
-    | '/lovable/email/auth/webhook'
-    | '/lovable/email/transactional/preview'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -661,15 +636,13 @@ export interface RootRouteChildren {
   BlogIndexRoute: typeof BlogIndexRoute
   RatgeberIndexRoute: typeof RatgeberIndexRoute
   BildRatgeberFileRoute: typeof BildRatgeberFileRoute
+  ApiPublicAuthEmailHookRoute: typeof ApiPublicAuthEmailHookRoute
   ApiPublicCronCatalogSyncRoute: typeof ApiPublicCronCatalogSyncRoute
   ApiPublicCronEsimStatusPollRoute: typeof ApiPublicCronEsimStatusPollRoute
   ApiPublicCronFulfillmentRetryRoute: typeof ApiPublicCronFulfillmentRetryRoute
   ApiPublicCronFxRefreshRoute: typeof ApiPublicCronFxRefreshRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
   ApiPublicWebhooksEsimergeRoute: typeof ApiPublicWebhooksEsimergeRoute
-  LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
-  LovableEmailAuthWebhookRoute: typeof LovableEmailAuthWebhookRoute
-  LovableEmailTransactionalPreviewRoute: typeof LovableEmailTransactionalPreviewRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -961,6 +934,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof BildRatgeberFileRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/auth/email-hook': {
+      id: '/api/public/auth/email-hook'
+      path: '/api/public/auth/email-hook'
+      fullPath: '/api/public/auth/email-hook'
+      preLoaderRoute: typeof ApiPublicAuthEmailHookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/cron/catalog-sync': {
       id: '/api/public/cron/catalog-sync'
       path: '/api/public/cron/catalog-sync'
@@ -1001,27 +981,6 @@ declare module '@tanstack/react-router' {
       path: '/api/public/webhooks/esimerge'
       fullPath: '/api/public/webhooks/esimerge'
       preLoaderRoute: typeof ApiPublicWebhooksEsimergeRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/lovable/email/auth/preview': {
-      id: '/lovable/email/auth/preview'
-      path: '/lovable/email/auth/preview'
-      fullPath: '/lovable/email/auth/preview'
-      preLoaderRoute: typeof LovableEmailAuthPreviewRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/lovable/email/auth/webhook': {
-      id: '/lovable/email/auth/webhook'
-      path: '/lovable/email/auth/webhook'
-      fullPath: '/lovable/email/auth/webhook'
-      preLoaderRoute: typeof LovableEmailAuthWebhookRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/lovable/email/transactional/preview': {
-      id: '/lovable/email/transactional/preview'
-      path: '/lovable/email/transactional/preview'
-      fullPath: '/lovable/email/transactional/preview'
-      preLoaderRoute: typeof LovableEmailTransactionalPreviewRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
@@ -1104,15 +1063,13 @@ const rootRouteChildren: RootRouteChildren = {
   BlogIndexRoute: BlogIndexRoute,
   RatgeberIndexRoute: RatgeberIndexRoute,
   BildRatgeberFileRoute: BildRatgeberFileRoute,
+  ApiPublicAuthEmailHookRoute: ApiPublicAuthEmailHookRoute,
   ApiPublicCronCatalogSyncRoute: ApiPublicCronCatalogSyncRoute,
   ApiPublicCronEsimStatusPollRoute: ApiPublicCronEsimStatusPollRoute,
   ApiPublicCronFulfillmentRetryRoute: ApiPublicCronFulfillmentRetryRoute,
   ApiPublicCronFxRefreshRoute: ApiPublicCronFxRefreshRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
   ApiPublicWebhooksEsimergeRoute: ApiPublicWebhooksEsimergeRoute,
-  LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,
-  LovableEmailAuthWebhookRoute: LovableEmailAuthWebhookRoute,
-  LovableEmailTransactionalPreviewRoute: LovableEmailTransactionalPreviewRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

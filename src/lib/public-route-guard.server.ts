@@ -8,7 +8,7 @@ export type GuardOptions = {
   /** Several candidate secrets (e.g. sandbox + live); the first that verifies wins and is returned as `matched`. */
   secretEnvs?: { env: string; tag: string }[];
   secretDb?: string; // or: name in public.internal_secrets (server-only table), used by scheduled jobs
-  auth: { kind: "hmac-sha256"; header: string; prefix?: string } | { kind: "bearer" } | { kind: "stripe"; toleranceSeconds?: number } | { kind: "esimerge" };
+  auth: { kind: "hmac-sha256"; header: string; prefix?: string } | { kind: "bearer" } | { kind: "stripe"; toleranceSeconds?: number } | { kind: "esimerge" } | { kind: "standard-webhooks"; toleranceSeconds?: number };
   limit?: { windowSeconds: number; max: number };
 };
 
@@ -35,6 +35,7 @@ export async function verifyAuth(opts: GuardOptions["auth"], secret: string, hea
     return h.startsWith("Bearer ") && timingSafeEqual(h.slice(7), secret);
   }
   if (opts.kind === "stripe") return verifyStripeSignature(headers.get("stripe-signature") ?? "", rawBody, secret, Math.floor(Date.now() / 1000), opts.toleranceSeconds);
+  if (opts.kind === "standard-webhooks") return verifyStandardWebhook(headers, rawBody, secret, Math.floor(Date.now() / 1000), opts.toleranceSeconds);
   if (opts.kind === "esimerge") {
     const { verifyEsimergeSignature } = await import("./esimerge-webhook");
     return verifyEsimergeSignature(headers.get("x-esimerge-signature"), rawBody, secret, Math.floor(Date.now() / 1000));
@@ -55,6 +56,29 @@ export async function verifyStripeSignature(header: string, rawBody: string, sec
   if (!Number.isInteger(t) || !sigs.length || Math.abs(nowSec - t) > toleranceSeconds) return false;
   const expected = await hmacSha256Hex(secret, `${t}.${rawBody}`);
   return sigs.some((s) => timingSafeEqual(s, expected));
+}
+
+const b64ToBytes = (b64: string) => Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
+
+/**
+ * Standard Webhooks scheme (used by Supabase auth hooks): headers webhook-id, webhook-timestamp and
+ * webhook-signature ("v1,<base64 hmac of `${id}.${timestamp}.${body}`>", several signatures space-separated).
+ * The secret is base64, shown as "v1,whsec_<base64>" in the Supabase dashboard.
+ */
+export async function verifyStandardWebhook(headers: Headers, rawBody: string, secret: string, nowSec: number, toleranceSeconds = 300): Promise<boolean> {
+  const id = headers.get("webhook-id") ?? "";
+  const ts = Number(headers.get("webhook-timestamp"));
+  const sigHeader = headers.get("webhook-signature") ?? "";
+  if (!id || !sigHeader || !Number.isInteger(ts) || Math.abs(nowSec - ts) > toleranceSeconds) return false;
+  let keyBytes: Uint8Array;
+  try { keyBytes = b64ToBytes(secret.replace(/^v1,/, "").replace(/^whsec_/, "")); } catch { return false; }
+  const key = await crypto.subtle.importKey("raw", keyBytes as BufferSource, { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
+  const mac = new Uint8Array(await crypto.subtle.sign("HMAC", key, enc.encode(`${id}.${ts}.${rawBody}`)));
+  const expected = btoa(String.fromCharCode(...mac));
+  return sigHeader.split(" ").some((part) => {
+    const [version, sig] = part.split(",");
+    return version === "v1" && sig !== undefined && timingSafeEqual(sig, expected);
+  });
 }
 
 const deny = (status: number, msg: string) => ({ ok: false as const, response: Response.json({ error: msg }, { status }) });
