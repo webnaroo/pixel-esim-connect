@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { Button, Input } from "@/components/ui-kit";
 import { supabase } from "@/integrations/supabase/client";
 import { AuthShell, authHead, isEmail } from "@/components/auth-shell";
+import { clearRecovery, hashIsRecovery, recoveryPending } from "@/lib/recovery-flag";
 
 export const Route = createFileRoute("/reset-password")({
   head: () => authHead("Passwort zurücksetzen", "Setze das Passwort für dein GlobeSIM-Konto zurück."),
@@ -17,9 +18,14 @@ function ResetPassword() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (window.location.hash.includes("type=recovery")) setRecovery(true);
+    if (hashIsRecovery(window.location.hash)) setRecovery(true);
+    else if (recoveryPending()) {
+      // The hash was already consumed by the Supabase client: show the form only while its recovery session exists.
+      void supabase.auth.getSession().then(({ data: s }) => { if (s.session) setRecovery(true); else clearRecovery(); });
+    }
     const { data } = supabase.auth.onAuthStateChange((event) => {
       if (event === "PASSWORD_RECOVERY") setRecovery(true);
+      if (event === "SIGNED_OUT") clearRecovery();
     });
     return () => data.subscription.unsubscribe();
   }, []);
@@ -44,6 +50,7 @@ function ResetPassword() {
     const { error } = await supabase.auth.updateUser({ password: pw });
     setBusy(false);
     if (error) return void toast.error("Der Link ist abgelaufen. Bitte fordere einen neuen an.");
+    clearRecovery();
     toast.success("Passwort geändert.");
     navigate({ to: "/" });
   }
