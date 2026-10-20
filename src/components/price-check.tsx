@@ -29,7 +29,7 @@ export function PriceCheck() {
     { key: "noMargin", title: "Tarife ohne Marge (keine Regel greift)", ids: d.lists.noMargin },
     { key: "unmapped", title: "Tarife ohne Land/Region-Zuordnung", ids: d.lists.unmapped.map((u) => u.providerPlanId ?? "ohne ID"), extra: (id) => d.lists.unmapped.find((u) => (u.providerPlanId ?? "ohne ID") === id)?.reason ?? "" },
     { key: "deviation", title: "Preisabweichung (Katalog vs. zuletzt bezahlt)", ids: d.lists.deviation.map((x) => x.id), extra: (id) => { const x = d.lists.deviation.find((y) => y.id === id); return x ? `Katalog ${usd(x.catalog)} · bezahlt ${usd(x.paid)}` : ""; } },
-    { key: "new", title: "Neue Tarife (unsichtbar bis zur Freigabe)", ids: d.lists.newPlans, action: d.lists.newPlans.length ? <Button variant="secondary" onClick={async () => { const r = await release({ data: { planIds: d.lists.newPlans } }); toast.success(`${r.count} Tarife freigegeben.`); qc.invalidateQueries(); }}>Alle freigeben</Button> : null },
+    { key: "new", title: "Neue Tarife (unsichtbar bis zur Freigabe)", ids: d.lists.newPlans, action: d.lists.newPlans.length ? <Button variant="secondary" onClick={async () => { try { const r = await release({ data: { planIds: d.lists.newPlans } }); toast.success(`${r.count} Tarife freigegeben.`); qc.invalidateQueries(); } catch { toast.error("Tarife konnten nicht freigegeben werden."); } }}>Alle freigeben</Button> : null },
     { key: "gone", title: "Seit dem letzten Sync verschwunden", ids: d.lists.gone },
   ];
 

@@ -134,11 +134,15 @@ export const priceCheckQuery = () => queryOptions({ queryKey: ["admin", "price-c
 
 export const releasePlans = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((i) => z.object({ planIds: z.array(z.string().uuid()).min(1).max(1000) }).parse(i))
+  .inputValidator((i) => z.object({ planIds: z.array(z.string().uuid()).min(1).max(5000) }).parse(i))
   .handler(async ({ data, context }) => {
     await assertAdmin(context as unknown as Ctx);
     const db = await admin();
-    await db.from("plans").update({ released: true }).in("id", data.planIds);
+    // Chunked: a long `in (...)` list would exceed the URL limit of the REST API.
+    for (let i = 0; i < data.planIds.length; i += 200) {
+      const { error } = await db.from("plans").update({ released: true }).in("id", data.planIds.slice(i, i + 200));
+      if (error) throw new Error("Tarife konnten nicht freigegeben werden.");
+    }
     await db.from("audit_log").insert({ actor_id: context.userId, action: "plans_released", entity: "plans", meta: { count: data.planIds.length, ids: data.planIds } as never });
     return { ok: true, count: data.planIds.length };
   });
