@@ -66,3 +66,17 @@ In Resend die Absender-Domain verifizieren (DNS-Einträge SPF/DKIM). Im Admin (G
 3. Anmeldung testen: E-Mail/Passwort, Google, Passwort zurücksetzen.
 4. `VITE_PAYMENTS_CLIENT_TOKEN` auf `pk_live_...`, neu bauen, Live-Webhook prüfen.
 5. Domain umstellen, Shop öffnen. Lovable erst danach abschalten und die Lovable-Redirect-URIs im Google-Client entfernen.
+
+## 7. Betriebshinweise (im Betrieb gefunden)
+- **Cloudflare Workers Paid ist nötig.** Die kostenlose Stufe erlaubt nur 10 ms CPU pro Anfrage; Go-Live-Seite, Katalog-Sync und Preisberechnung brechen dort mit „Worker exceeded CPU time limit" ab. Der Build setzt `limits.cpu_ms = 300000` (vite.config.ts → wrangler.json).
+- **Secrets und Variablen:** Alles, was der laufende Worker liest, gehört in *Settings → Variables and Secrets* (Runtime, Typ Secret). Nur die `VITE_*`-Werte stehen im Build-Bereich. Eine geänderte Build-Variable wirkt erst nach *Retry build* (Secret-Deploys bauen nicht neu).
+- **Supabase-Zeitlimit:** Das Speichern aller Preise (`apply_price_calculation`, ~14.000 Zeilen) braucht länger als das Standard-Limit. Einmalig im SQL Editor:
+  ```sql
+  alter role service_role set statement_timeout = '120s';
+  notify pgrst, 'reload config';
+  ```
+  (`anon` 3 s und `authenticated` 8 s bleiben.)
+- **Passwort-Reset:** Der Recovery-Link wird vor der Supabase-Client-Initialisierung gemerkt (`src/lib/recovery-flag.ts`), sonst fehlt das Formular „Neues Passwort".
+- **Sandbox/Live:** `VITE_PAYMENTS_CLIENT_TOKEN` (`pk_test_`/`pk_live_`) bestimmt beim Build den Modus. Der eSIMerge-Sandbox-Katalog hat nur 8 Tarife; mit Sandbox-Token lassen sich nur diese bestellen.
+- **Aufräumen nach Tests:** Testbestellungen (`is_sandbox`/`is_test`) lassen sich mit `delete from public.orders where is_sandbox or is_test` entfernen (`esims` folgt per CASCADE). Live-Bestellungen nie pauschal löschen.
+- **Backups:** Supabase-Backups und -Plan prüfen (Project Settings → Database → Backups). Kostenlose Projekte werden nach Inaktivität pausiert und haben keine täglichen Backups.
