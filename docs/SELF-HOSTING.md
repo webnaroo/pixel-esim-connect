@@ -5,6 +5,7 @@ Stand der Umstellung: Code läuft ohne Lovable-Dienste. Alles Geheime liegt in C
 ## 1. Cloudflare (Workers, Build aus GitHub)
 - Build-Befehl: `bun install --frozen-lockfile && bun run build`
 - Deploy-Befehl: `npx wrangler deploy` (der Build schreibt `.wrangler/deploy/config.json` und `.output/server/wrangler.json`, `nodejs_compat` ist gesetzt)
+- Der Worker heißt `webnaroo-pixel-esim-connect` (aus dem Repo-Namen abgeleitet). In Cloudflare denselben Namen für das Projekt wählen, sonst meldet der Build einen Namenskonflikt. Alternative zum Deploy-Befehl: `npx nitro deploy --prebuilt`.
 - Domain `globesim.de` auf den Worker legen. Cron-Trigger in Cloudflare werden **nicht** gebraucht, die Jobs laufen in Supabase (`docs/self-hosting-cron.sql`).
 
 ### Variablen
