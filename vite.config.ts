@@ -13,6 +13,8 @@ Object.assign(process.env, loadEnv(process.env['NODE_ENV'] ?? "development", pro
 const projectDir = path.dirname(fileURLToPath(import.meta.url));
 
 export default defineConfig({
+  // Catalog sync (13k+ plans) needs more than the default 30 s CPU budget of the Workers Paid plan.
+  nitro: { cloudflare: { wrangler: { limits: { cpu_ms: 300000 }, observability: { enabled: true, logs: { enabled: true, invocation_logs: true, persist: true } } } } },
   vite: {
     resolve: {
       alias: {
