@@ -5,6 +5,7 @@ Stand der Umstellung: Code läuft ohne Lovable-Dienste. Alles Geheime liegt in C
 ## 1. Cloudflare (Workers, Build aus GitHub)
 - Build-Befehl: `bun install --frozen-lockfile && bun run build`
 - Deploy-Befehl: `npx wrangler deploy` (der Build schreibt `.wrangler/deploy/config.json` und `.output/server/wrangler.json`, `nodejs_compat` ist gesetzt)
+- **Production branch** des Workers (Settings → Builds → Branch control) muss der Branch mit dem neuen Code sein, bis er in `main` gemerged ist. Im Build-Log steht der gebaute Branch.
 - Der Worker heißt `webnaroo-pixel-esim-connect` (aus dem Repo-Namen abgeleitet). In Cloudflare denselben Namen für das Projekt wählen, sonst meldet der Build einen Namenskonflikt. Alternative zum Deploy-Befehl: `npx nitro deploy --prebuilt`.
 - Domain `globesim.de` auf den Worker legen. Cron-Trigger in Cloudflare werden **nicht** gebraucht, die Jobs laufen in Supabase (`docs/self-hosting-cron.sql`).
 
@@ -33,6 +34,8 @@ Als **Secrets** (Laufzeit):
 | `GEMINI_API_KEY` | aistudio.google.com → Get API key (optional, nur für Ratgeber-KI und SEO-Analyse) |
 | `GEMINI_MODEL` | optional, Standard `gemini-2.5-flash` |
 | `EMAIL_FROM_DOMAIN` | optional, Absender-Domain, falls in den Shop-Einstellungen keine hinterlegt ist |
+
+**Achtung Stripe:** In `VITE_PAYMENTS_CLIENT_TOKEN` gehört ausschließlich der *Publishable key* (`pk_...`). `VITE_`-Variablen landen im Browser-Code, ein `sk_`/`rk_`-Schlüssel dort wäre öffentlich. Geheimschlüssel kommen nur als Worker-Secret (`STRIPE_*_API_KEY`).
 
 `ADMIN_INITIAL_PASSWORD` und `LOVABLE_*` werden nicht mehr gebraucht. Die Cron-Routen prüfen ein Token aus `public.internal_secrets`, nicht aus der Umgebung.
 
