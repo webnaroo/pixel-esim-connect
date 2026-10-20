@@ -46,6 +46,7 @@ export async function applyPreparedPrices(prepared: Awaited<ReturnType<typeof pr
   if (prepared.counts.invalid) throw new Error(`${prepared.counts.invalid} Tarife können nicht berechnet werden. Es wurde nichts geändert.`);
   const { supabaseAdmin: db } = await import("@/integrations/supabase/client.server");
   const { error } = await db.rpc("apply_price_calculation", { _rows: prepared.rows as never, _rules_before: prepared.rulesBefore as never, _settings_before: prepared.settingsBefore as never, _change: prepared.change as never, _actor: actor as never });
+  if (error) console.error("price_apply_failed", error.code ?? "no_code", error.message.slice(0, 160), { rows: prepared.rows.length });
   if (error) throw new Error(error.message.includes("price_preview_stale") ? "Die Daten haben sich geändert. Bitte Vorschau erneut prüfen." : "Preisänderung konnte nicht vollständig gespeichert werden. Es wurde nichts geändert.");
   return { changed: prepared.counts.changed, activated: 0, hidden: 0, calculated: prepared.counts.calculated };
 }
