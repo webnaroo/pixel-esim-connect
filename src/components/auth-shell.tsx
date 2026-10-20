@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import { toast } from "sonner";
 import { SiteLayout } from "@/components/layout";
 import { Button } from "@/components/ui-kit";
-import { lovable } from "@/integrations/lovable/index";
+import { supabase } from "@/integrations/supabase/client";
 
 export function authHead(title: string, description: string) {
   return {
@@ -32,8 +32,8 @@ export function AuthShell({ title, intro, children }: { title: string; intro?: s
 
 export function GoogleButton() {
   async function google() {
-    const r = await lovable.auth.signInWithOAuth("google", { redirect_uri: window.location.origin });
-    if (r.error) toast.error("Google-Anmeldung fehlgeschlagen.");
+    const { error } = await supabase.auth.signInWithOAuth({ provider: "google", options: { redirectTo: window.location.origin } });
+    if (error) toast.error("Google-Anmeldung fehlgeschlagen.");
   }
   return (
     <Button variant="secondary" className="w-full" onClick={google}>

@@ -8,7 +8,7 @@ const eventSchema = z.object({
   data: z.object({ object: z.record(z.string(), z.unknown()) }),
 });
 
-// Lovable built-in payments webhook (?env=sandbox|live). Signature verified by the guard before anything else.
+// Stripe payments webhook (?env=sandbox|live). Signature verified by the guard before anything else.
 export const Route = createFileRoute("/api/public/payments/webhook")({
   server: {
     handlers: {

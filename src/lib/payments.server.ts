@@ -1,4 +1,4 @@
-// Single gateway for all payment calls (Lovable built-in Stripe, routed via the connector gateway).
+// Single gateway for all payment calls (Stripe, direct with the per-environment secret key).
 import type Stripe from "stripe";
 import type { StripeEnv } from "./stripe.server";
 

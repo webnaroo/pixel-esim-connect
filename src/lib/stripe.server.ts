@@ -8,36 +8,18 @@ const getEnv = (key: string): string => {
 
 export type StripeEnv = 'sandbox' | 'live';
 
-const GATEWAY_STRIPE_BASE = 'https://connector-gateway.lovable.dev/stripe';
-
 export function getConnectionApiKey(env: StripeEnv): string {
   return env === 'sandbox'
     ? getEnv('STRIPE_SANDBOX_API_KEY')
     : getEnv('STRIPE_LIVE_API_KEY');
 }
 
-// Routes api.stripe.com requests through the connector gateway.
-// Only api.stripe.com is proxied (not files.stripe.com or connect.stripe.com).
+// Talks to api.stripe.com directly with the secret key of the chosen environment.
+// fetch-based client: the Stripe node transport is not available on Cloudflare Workers.
 export function createStripeClient(env: StripeEnv): Stripe {
-  const connectionApiKey = getConnectionApiKey(env);
-  const lovableApiKey = getEnv('LOVABLE_API_KEY');
-
-  return new Stripe(connectionApiKey, {
+  return new Stripe(getConnectionApiKey(env), {
     apiVersion: '2026-03-25.dahlia',
-    httpClient: Stripe.createFetchHttpClient((input, init) => {
-      const stripeUrl = input instanceof Request ? input.url : input.toString();
-      const gatewayUrl = stripeUrl.replace('https://api.stripe.com', GATEWAY_STRIPE_BASE);
-      return fetch(gatewayUrl, {
-        ...init,
-        headers: {
-          ...Object.fromEntries(
-            new Headers(init?.headers ?? (input instanceof Request ? input.headers : undefined)).entries(),
-          ),
-          'X-Connection-Api-Key': connectionApiKey,
-          'Lovable-API-Key': lovableApiKey,
-        },
-      });
-    }),
+    httpClient: Stripe.createFetchHttpClient(),
   });
 }
 

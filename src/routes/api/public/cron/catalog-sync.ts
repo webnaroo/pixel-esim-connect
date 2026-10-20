@@ -1,14 +1,14 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { guardPublicRoute } from "@/lib/public-route-guard.server";
 
-// Called by the scheduler with `Authorization: Bearer <LOVABLE_CRON_SECRET>`.
+// Called by the scheduled job (pg_cron) with the server-only token from internal_secrets.
 export const Route = createFileRoute("/api/public/cron/catalog-sync")({
   server: {
     handlers: {
       POST: async ({ request }) => {
         const guard = await guardPublicRoute(request, {
           name: "cron-catalog-sync",
-          secretEnv: "LOVABLE_CRON_SECRET",
+          secretDb: "cron",
           auth: { kind: "bearer" },
           limit: { windowSeconds: 60, max: 3 },
         });
