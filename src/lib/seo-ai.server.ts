@@ -2,7 +2,7 @@ import { createClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
 import { normalizeAnalysis, seoReportInput } from "./seo-analysis";
 import { createSeoResponsesCall } from "./ai/responses.server";
-import { withLovableAiGatewayRunIdHeader } from "./ai/run-id.server.ts";
+import { AI_BLOCKING_STATUSES, upstreamErrorMessage } from "./ai/gemini.server";
 
 function jsonError(message: string, status: number) {
   return Response.json({ message }, { status, headers: { "Cache-Control": "no-store" } });
@@ -31,7 +31,7 @@ export async function handleSeoAnalysis(request: Request, config: { apiKey: stri
   const state = await db.from("seo_ai_state").select("blocked,reason,status_code").eq("id", true).maybeSingle();
   if (state.error) return jsonError("KI-Status konnte nicht geprüft werden.", 503);
   if (state.data?.blocked) return jsonError(state.data.reason ?? "KI-Zugriff pausiert. Nach Behebung ausdrücklich freigeben.", state.data.status_code ?? 403);
-  if (!config.apiKey) return jsonError("Lovable AI ist noch nicht eingerichtet.", 401);
+  if (!config.apiKey) return jsonError("KI ist noch nicht eingerichtet (GEMINI_API_KEY fehlt).", 401);
   if (Number(request.headers.get("Content-Length") ?? 0) > 180000) return jsonError("Bericht ist zu groß.", 413);
   let parsed;
   try {
@@ -46,14 +46,11 @@ export async function handleSeoAnalysis(request: Request, config: { apiKey: stri
   let upstreamStatus = 500;
   let safeMessage = "KI-Analyse fehlgeschlagen. Es wurde kein Ergebnis erstellt.";
   let providerRefused = false;
-  const { result, gateway } = createSeoResponsesCall(request, config.apiKey, parsed.report, latest.data, async (response) => {
+  const { result } = createSeoResponsesCall(request, config.apiKey, parsed.report, latest.data, async (response) => {
     if (response.ok) return;
     upstreamStatus = response.status;
-    try {
-      const body = await response.json() as { message?: string; error?: { message?: string } };
-      safeMessage = body.message ?? body.error?.message ?? safeMessage;
-    } catch { /* Preserve the status even without a JSON body. */ }
-    if ([402, 403, 404].includes(response.status)) {
+    safeMessage = await upstreamErrorMessage(response, safeMessage);
+    if (AI_BLOCKING_STATUSES.includes(response.status)) {
       await db.from("seo_ai_state").upsert({ id: true, blocked: true, reason: safeMessage, status_code: response.status, updated_at: new Date().toISOString() });
     }
   });
@@ -106,5 +103,5 @@ export async function handleSeoAnalysis(request: Request, config: { apiKey: stri
     },
     cancel: async () => { await iterator.return?.(); },
   });
-  return withLovableAiGatewayRunIdHeader(new Response(stream, { headers: { "Content-Type": "application/x-ndjson; charset=utf-8", "Cache-Control": "no-store" } }), gateway);
+  return new Response(stream, { headers: { "Content-Type": "application/x-ndjson; charset=utf-8", "Cache-Control": "no-store" } });
 }

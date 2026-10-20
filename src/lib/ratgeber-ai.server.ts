@@ -1,10 +1,9 @@
 // Admin-only Ratgeber AI route handler (generate draft, regenerate section/FAQ, suggestions). Never publishes.
 import { createClient } from "@supabase/supabase-js";
-import { createOpenAI } from "@ai-sdk/openai";
 import { Output, streamText } from "ai";
 import type { z } from "zod";
 import type { Database } from "@/integrations/supabase/types";
-import { createLovableAiGatewayRunIdFetch, getLovableAiGatewayRunId, withLovableAiGatewayRunIdHeader } from "./ai/run-id.server.ts";
+import { AI_BLOCKING_STATUSES, createGeminiModel, geminiModelId, upstreamErrorMessage } from "./ai/gemini.server";
 import { AI_RULES, aiRequestSchema, allowedPaths, cleanText, draftOut, draftRow, faqOut, sectionOut, suggestOut, type AiContext } from "./ratgeber-ai";
 import { LENGTHS, POST_TYPES, parseFaq, parseLinks, parseSections, parseSources } from "./ratgeber";
 import { computeScore, DEFAULT_WORDLIST } from "./ratgeber-score";
@@ -29,7 +28,7 @@ export async function handleRatgeberAi(request: Request, config: { apiKey: strin
   const role = await userDb.rpc("has_role", { _user_id: user.user.id, _role: "admin" });
   if (role.error || !role.data) return jsonError("Admin-Rolle erforderlich.", 403);
   if (request.headers.get("Origin") !== new URL(request.url).origin) return jsonError("Ungültiger Anfrageursprung.", 403);
-  if (!config.apiKey) return jsonError("Lovable AI ist noch nicht eingerichtet.", 401);
+  if (!config.apiKey) return jsonError("KI ist noch nicht eingerichtet (GEMINI_API_KEY fehlt).", 401);
 
   let req;
   try { req = aiRequestSchema.parse(JSON.parse(await request.text())); } catch { return jsonError("Ungültige Eingabe.", 400); }
@@ -78,29 +77,19 @@ export async function handleRatgeberAi(request: Request, config: { apiKey: strin
   }
   const allowed = allowedPaths(ctx);
 
-  const gateway = createLovableAiGatewayRunIdFetch(getLovableAiGatewayRunId(request));
   let upstreamStatus = 500; let safeMessage = "KI-Anfrage fehlgeschlagen.";
-  const provider = createOpenAI({
-    baseURL: "https://ai.gateway.lovable.dev/v1", apiKey: config.apiKey,
-    headers: { "Lovable-API-Key": config.apiKey, "X-Lovable-AIG-SDK": "vercel-ai-sdk" },
-    fetch: async (input, init) => {
-      const res = await gateway.fetch(input, init);
-      if (!res.ok) {
-        upstreamStatus = res.status;
-        try { const b = await res.clone().json() as { message?: string; error?: { message?: string } }; safeMessage = b.message ?? b.error?.message ?? safeMessage; } catch { /* keep status */ }
-        if ([402, 403].includes(res.status)) await db.from("seo_ai_state").upsert({ id: true, blocked: true, reason: safeMessage, status_code: res.status, updated_at: new Date().toISOString() });
-      }
-      return res;
-    },
+  const model = createGeminiModel(config.apiKey, async (res) => {
+    upstreamStatus = res.status;
+    safeMessage = await upstreamErrorMessage(res, safeMessage);
+    if (AI_BLOCKING_STATUSES.includes(res.status)) await db.from("seo_ai_state").upsert({ id: true, blocked: true, reason: safeMessage, status_code: res.status, updated_at: new Date().toISOString() });
   });
   const result = streamText({
-    model: provider.responses("openai/gpt-6-astra"),
+    model,
     maxRetries: 0,
     abortSignal: request.signal,
     output: Output.object({ schema }),
     instructions: AI_RULES,
     messages: [{ role: "user", content: JSON.stringify({ ...task as object, context: { allowed_links: [...allowed], destinations: ctx.destinations, other_posts: ctx.posts } }) }],
-    providerOptions: { openai: { forceReasoning: true, reasoningEffort: "low", reasoningSummary: "auto", store: false, include: ["reasoning.encrypted_content"] } },
   });
 
   const enc = new TextEncoder();
@@ -126,7 +115,7 @@ export async function handleRatgeberAi(request: Request, config: { apiKey: strin
           const used = new Set((taken ?? []).map((t) => t.slug));
           let slug = row.slug; for (let i = 2; used.has(slug); i++) slug = `${row.slug}-${i}`;
           const score = computeScore({ ...row, slug, sources: [], updated_at: new Date().toISOString() }, wordlist);
-          const ins = await db.from("blog_posts").insert({ ...row, slug, author_name: null, quality_score: score.total, quality_report: score as never, generation_meta: { model: "openai/gpt-6-astra", topic: req.topic, keyword: req.keyword, type: req.type, length: req.length, at: new Date().toISOString(), by: user.user.id } as never }).select("id").single();
+          const ins = await db.from("blog_posts").insert({ ...row, slug, author_name: null, quality_score: score.total, quality_report: score as never, generation_meta: { model: geminiModelId(), topic: req.topic, keyword: req.keyword, type: req.type, length: req.length, at: new Date().toISOString(), by: user.user.id } as never }).select("id").single();
           if (ins.error) throw new Error("Entwurf konnte nicht gespeichert werden.");
           await db.from("audit_log").insert({ actor_id: user.user.id, action: "blog_generated", entity: "blog_posts", entity_id: ins.data.id, meta: { topic: req.topic } });
           emit({ type: "result", postId: ins.data.id });
@@ -145,5 +134,5 @@ export async function handleRatgeberAi(request: Request, config: { apiKey: strin
     },
   });
   void parseLinks; void parseSources;
-  return withLovableAiGatewayRunIdHeader(new Response(stream, { headers: { "Content-Type": "application/x-ndjson; charset=utf-8", "Cache-Control": "no-store" } }), gateway);
+  return new Response(stream, { headers: { "Content-Type": "application/x-ndjson; charset=utf-8", "Cache-Control": "no-store" } });
 }

@@ -34,10 +34,10 @@ describe("sendResendEmail", () => {
   it("maps provider errors to status and code only (no message text) and marks 429/5xx retryable", async () => {
     vi.stubEnv("RESEND_API_KEY", "re_test");
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(JSON.stringify({ name: "validation_error", message: "secret detail kunde@example.com" }), { status: 422 })));
-    const err = await sendResendEmail(msg).catch((e) => e as EmailSendError);
+    const err = (await sendResendEmail(msg).catch((e) => e)) as EmailSendError;
     expect(err).toBeInstanceOf(EmailSendError);
     expect(err).toMatchObject({ status: 422, code: "validation_error", retryable: false });
-    expect(String(err.message)).not.toContain("kunde@example.com");
+    expect(err.message).not.toContain("kunde@example.com");
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response("oops", { status: 503 })));
     expect(await sendResendEmail(msg).catch((e) => e as EmailSendError)).toMatchObject({ status: 503, code: "send_failed", retryable: true });
   });
