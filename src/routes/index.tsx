@@ -17,11 +17,11 @@ import { destinationsQuery, faqsQuery, popularQuery } from "@/lib/catalog.functi
 import { CompatCheck } from "@/components/compat-check";
 import { isCompatFaq } from "@/lib/faq-rules";
 import airportBanner from "@/assets/home-airport.jpg";
-import mobileAirportBanner from "@/assets/home-airport-mobile.jpg.asset.json";
-import speedIcon from "@/assets/speed.png.asset.json";
-import wifiIcon from "@/assets/wifi.png.asset.json";
-import shieldIcon from "@/assets/shield.png.asset.json";
-import worldIcon from "@/assets/world.png.asset.json";
+import mobileAirportBanner from "@/assets/home-airport-mobile.jpg";
+import speedIcon from "@/assets/speed.png";
+import wifiIcon from "@/assets/wifi.png";
+import shieldIcon from "@/assets/shield.png";
+import worldIcon from "@/assets/world.png";
 import { pageIdentity } from "@/lib/seo";
 
 export const Route = createFileRoute("/")({
@@ -62,20 +62,20 @@ function Home() {
 
 function Hero() {
   const benefits = [
-    { icon: speedIcon.url, title: "Sofort per E-Mail", detail: "Digital statt per Post" },
-    { icon: wifiIcon.url, title: "Lokale Tarife", detail: "Für dein Reiseziel" },
-    { icon: shieldIcon.url, title: "Sicher bezahlen", detail: "SSL-verschlüsselt" },
+    { icon: speedIcon, title: "Sofort per E-Mail", detail: "Digital statt per Post" },
+    { icon: wifiIcon, title: "Lokale Tarife", detail: "Für dein Reiseziel" },
+    { icon: shieldIcon, title: "Sicher bezahlen", detail: "SSL-verschlüsselt" },
   ];
   return (
     <section className="home-hero relative isolate" aria-labelledby="home-title">
       <picture className="home-hero-image">
-        <source media="(max-width: 1023px)" srcSet={mobileAirportBanner.url} />
+        <source media="(max-width: 1023px)" srcSet={mobileAirportBanner} />
         <img src={airportBanner} alt="Reisende am Flughafen mit Smartphone und GlobeSIM Reise-eSIM" width={1920} height={960} fetchPriority="high" />
       </picture>
       <div className="container-page relative z-10">
         <div className="home-hero-copy pb-6 pt-5 lg:py-14">
           <p className="mb-2 flex items-center gap-2 text-sm font-medium text-primary lg:mb-4">
-            <img src={speedIcon.url} alt="" className="size-6 object-contain" aria-hidden />
+            <img src={speedIcon} alt="" className="size-6 object-contain" aria-hidden />
             GlobeSIM · Deine Reise-eSIM
           </p>
           <h1 id="home-title" className="!tracking-normal"><span className="sm:hidden">Online, sobald<br />du landest.</span><span className="hidden sm:inline">GlobeSIM Reise-eSIM</span></h1>
@@ -97,7 +97,7 @@ function Hero() {
             ))}
           </ul>
           <div className="home-world-benefit mt-5 flex items-center gap-3 border-t border-line pt-4 lg:mt-7">
-            <img src={worldIcon.url} alt="" aria-hidden className="size-9 shrink-0 object-contain" />
+            <img src={worldIcon} alt="" aria-hidden className="size-9 shrink-0 object-contain" />
             <div>
               <p className="text-sm font-medium">Weltweit verbunden</p>
               <p className="text-xs text-ink-muted">Deine SIM bleibt aktiv · Preise inkl. MwSt.<NoThrottleClaim className="before:content-['_·_']" /></p>

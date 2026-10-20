@@ -1,12 +1,12 @@
 import { Link } from "@tanstack/react-router";
 import { Globe } from "@phosphor-icons/react";
 import { cn } from "@/lib/utils";
-import logoAsset from "@/assets/globesim-logo.png.asset.json";
+import logo from "@/assets/globesim-logo.png";
 
 export function Wordmark({ className }: { className?: string }) {
   return (
     <Link to="/" aria-label="GlobeSIM Startseite" className={cn("inline-flex shrink-0 items-center gap-2 font-display text-[22px] font-semibold tracking-normal leading-none", className)}>
-      <img src={logoAsset.url} alt="" aria-hidden className="size-9 shrink-0 object-contain" />
+      <img src={logo} alt="" aria-hidden className="size-9 shrink-0 object-contain" />
       <span><span className="text-ink">Globe</span><span className="text-primary">SIM</span></span>
     </Link>
   );

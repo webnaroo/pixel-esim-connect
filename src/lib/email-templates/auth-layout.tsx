@@ -2,7 +2,7 @@ import * as React from 'react'
 import { Body, Button, Container, Head, Heading, Html, Img, Preview, Text } from '@react-email/components'
 
 // GlobeSIM auth mail layout: cream/navy, logo, German, factual, support hint.
-const LOGO = 'https://globesim.de/__l5e/assets-v1/315cc6d3-c5ee-45d1-b200-403700923f20/globesim-logo.png'
+const LOGO = 'https://globesim.de/globesim-logo.png'
 export function AuthLayout({ preview, title, children, cta }: { preview: string; title: string; children: React.ReactNode; cta?: { href: string; label: string } }) {
   return (
     <Html lang="de" dir="ltr">
