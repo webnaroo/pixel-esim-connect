@@ -32,7 +32,7 @@ Als **Secrets** (Laufzeit):
 | `RESEND_API_KEY` | resend.com → API Keys |
 | `SEND_EMAIL_HOOK_SECRET` | Supabase → Authentication → Hooks → Send Email (siehe 3.) |
 | `GEMINI_API_KEY` | aistudio.google.com → Get API key (optional, nur für Ratgeber-KI und SEO-Analyse) |
-| `GEMINI_MODEL` | optional, Standard `gemini-2.5-flash` |
+| `GEMINI_MODEL` | optional, Standard `gemini-3.8-flash` |
 | `EMAIL_FROM_DOMAIN` | optional, Absender-Domain, falls in den Shop-Einstellungen keine hinterlegt ist |
 
 **Achtung Stripe:** In `VITE_PAYMENTS_CLIENT_TOKEN` gehört ausschließlich der *Publishable key* (`pk_...`). `VITE_`-Variablen landen im Browser-Code, ein `sk_`/`rk_`-Schlüssel dort wäre öffentlich. Geheimschlüssel kommen nur als Worker-Secret (`STRIPE_*_API_KEY`).

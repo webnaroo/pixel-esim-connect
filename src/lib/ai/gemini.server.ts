@@ -2,7 +2,7 @@
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
 
 // Free-tier availability of Gemini models changes; override with GEMINI_MODEL without a code change.
-export const GEMINI_MODEL_DEFAULT = "gemini-2.5-flash";
+export const GEMINI_MODEL_DEFAULT = "gemini-3.8-flash";
 export const geminiModelId = () => process.env["GEMINI_MODEL"]?.trim() || GEMINI_MODEL_DEFAULT;
 
 /** Upstream statuses that pause the AI until an admin releases it: bad/forbidden key, exhausted plan, unknown model. */
