@@ -80,3 +80,12 @@ In Resend die Absender-Domain verifizieren (DNS-Einträge SPF/DKIM). Im Admin (G
 - **Sandbox/Live:** `VITE_PAYMENTS_CLIENT_TOKEN` (`pk_test_`/`pk_live_`) bestimmt beim Build den Modus. Der eSIMerge-Sandbox-Katalog hat nur 8 Tarife; mit Sandbox-Token lassen sich nur diese bestellen.
 - **Aufräumen nach Tests:** Testbestellungen (`is_sandbox`/`is_test`) lassen sich mit `delete from public.orders where is_sandbox or is_test` entfernen (`esims` folgt per CASCADE). Live-Bestellungen nie pauschal löschen.
 - **Backups:** Supabase-Backups und -Plan prüfen (Project Settings → Database → Backups). Kostenlose Projekte werden nach Inaktivität pausiert und haben keine täglichen Backups.
+
+## 8. Datenbank-Sicherung auf dem eigenen Rechner (Windows)
+Solange das Supabase-Projekt im Free-Plan läuft (keine täglichen Backups), sichert `scripts/backup-supabase.ps1` die Datenbank in Dateien.
+1. Passwortdatei anlegen: `%APPDATA%\postgresql\pgpass.conf` mit einer Zeile
+   `aws-0-eu-west-2.pooler.supabase.com:5432:postgres:postgres.<projekt-id>:<datenbank-passwort>`
+2. Einmal von Hand starten: `powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\backup-supabase.ps1`. Ergebnis: Dateien in `%USERPROFILE%\Backups\globesim` und eine Zeile "Fertig." in `backup.log`.
+3. Wöchentlich planen (Aufgabenplanung): `schtasks /create /sc weekly /d SUN /st 03:00 /tn "GlobeSIM DB Backup" /tr "powershell -NoProfile -ExecutionPolicy Bypass -File C:\Pfad\zum\Repo\scripts\backup-supabase.ps1"`
+4. Die Sicherung enthält personenbezogene Daten: nur auf geschütztem Laufwerk, nie im Git-Repo. Storage-Dateien (`blog-covers`) sind nicht enthalten.
+5. Wiederherstellung: wie in Abschnitt 2 (zuerst `auth`, dann `public` mit `pg_restore`).
