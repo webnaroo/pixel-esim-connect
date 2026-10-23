@@ -74,12 +74,18 @@ public class GlobeSimAppPlugin extends Plugin {
         } catch (Exception first) {
             // Schlüssel oder Datei beschädigt (z. B. nach Geräte-Wiederherstellung): neu anlegen.
             try {
-                ContextCompat.deleteSharedPreferences(c, SECURE_PREFS);
+                deleteSecure(c);
                 return openSecure(c);
             } catch (Exception second) {
                 return null;
             }
         }
+    }
+
+    /** Löscht die verschlüsselte Datei (Context.deleteSharedPreferences gibt es erst ab Android 7). */
+    private static void deleteSecure(Context c) {
+        c.getSharedPreferences(SECURE_PREFS, Context.MODE_PRIVATE).edit().clear().commit();
+        new java.io.File(c.getApplicationInfo().dataDir, "shared_prefs/" + SECURE_PREFS + ".xml").delete();
     }
 
     private static SharedPreferences openSecure(Context c) throws Exception {
@@ -248,6 +254,6 @@ public class GlobeSimAppPlugin extends Plugin {
     private void clearOffline() {
         Context c = getContext();
         prefs(c).edit().putBoolean(KEY_OFFLINE, false).remove(KEY_OFFLINE_SAVED_AT).apply();
-        ContextCompat.deleteSharedPreferences(c, SECURE_PREFS);
+        deleteSecure(c);
     }
 }
