@@ -35,7 +35,9 @@ jobs:
         with:
           distribution: temurin
           java-version: 17
-      - uses: android-actions/setup-android@v3
+      # Das Android SDK ist auf den GitHub-Rechnern schon installiert; nur die Lizenzen bestätigen.
+      - name: Android-Lizenzen bestätigen
+        run: yes | "$(ls -d "$ANDROID_HOME"/cmdline-tools/*/bin | tail -1)/sdkmanager" --licenses > /dev/null || true
       - run: npm ci
       - run: npx cap sync android
       - name: Firebase-Datei für Push-Mitteilungen schreiben (optional)
