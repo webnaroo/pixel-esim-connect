@@ -10,17 +10,18 @@ export const Route = createFileRoute("/api/public/cron/indexnow")({
         const guard = await guardPublicRoute(request, { name: "cron-indexnow", secretDb: "cron", auth: { kind: "bearer" }, limit: { windowSeconds: 60, max: 3 } });
         if (!guard.ok) return guard.response;
         const { supabaseAdmin: db } = await import("@/integrations/supabase/client.server");
-        const { loadSitemapPaths } = await import("@/lib/sitemap.server");
         const { pageUrl } = await import("@/lib/seo");
         const { INDEXNOW_ENDPOINT, indexNowAccepted, indexNowPayload } = await import("@/lib/indexnow");
 
-        let loaded;
-        try { loaded = await loadSitemapPaths(); } catch { return Response.json({ ok: false, reason: "sitemap_unavailable" }, { status: 503 }); }
         const { data: state } = await db.from("app_settings").select("value").eq("key", "indexnow_state").maybeSingle();
         const initialized = Boolean((state?.value as { initialized_at?: string } | null)?.initialized_at);
-        const since = Date.now() - 26 * 3_600_000;
-        const changed = loaded.posts.filter((p) => new Date(p.updated_at).getTime() >= since).map((p) => pageUrl(`/ratgeber/${p.slug}`));
-        const urls = initialized ? changed : loaded.paths.map(pageUrl);
+        const { loadChangedPostPaths, loadSitemapPaths } = await import("@/lib/sitemap.server");
+        let paths: string[];
+        try {
+          // Erster Lauf: alle Seiten. Danach nur Beiträge der letzten 26 Stunden (eine kleine Abfrage statt der ganzen Sitemap).
+          paths = initialized ? await loadChangedPostPaths(new Date(Date.now() - 26 * 3_600_000).toISOString()) : (await loadSitemapPaths()).paths;
+        } catch { return Response.json({ ok: false, reason: "sitemap_unavailable" }, { status: 503 }); }
+        const urls = paths.map(pageUrl);
         if (!urls.length) return Response.json({ ok: true, submitted: 0 });
 
         const payload = indexNowPayload(urls);

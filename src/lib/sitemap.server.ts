@@ -15,3 +15,11 @@ export async function loadSitemapPaths(): Promise<{ paths: string[]; posts: { sl
   const paths = ["/", "/destinations", "/how-it-works", "/faq", "/help", ...(posts.length ? ["/ratgeber"] : []), ...dest, ...legal.map((l) => `/legal/${l.slug}`), ...posts.map((p) => `/ratgeber/${p.slug}`)];
   return { paths, posts: posts.map((p) => ({ slug: p.slug, updated_at: p.updated_at })) };
 }
+
+/** Ratgeber-Pfade, die seit `sinceIso` geändert wurden (für den täglichen IndexNow-Lauf; eine kleine Abfrage). */
+export async function loadChangedPostPaths(sinceIso: string): Promise<string[]> {
+  const { publicDb } = await import("./public-db.server");
+  const db = publicDb();
+  const rows = await readAllPages((from, to) => db.from("blog_posts").select("slug").in("status", ["published", "scheduled"]).not("published_at", "is", null).lte("published_at", new Date().toISOString()).gte("updated_at", sinceIso).order("slug").range(from, to));
+  return rows.map((r) => `/ratgeber/${r.slug}`);
+}
