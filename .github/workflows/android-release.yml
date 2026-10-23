@@ -58,9 +58,11 @@ jobs:
           ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
           ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
         working-directory: mobile/android
-        run: ./gradlew bundleRelease -PversionCode=${{ inputs.version_code || '1' }} -PversionName=${{ inputs.version_name || '1.0' }}
+        run: ./gradlew bundleRelease assembleRelease -PversionCode=${{ inputs.version_code || '1' }} -PversionName=${{ inputs.version_name || '1.0' }}
       - uses: actions/upload-artifact@v4
         with:
-          name: globesim-release-aab
-          path: mobile/android/app/build/outputs/bundle/release/app-release.aab
+          name: globesim-release
+          path: |
+            mobile/android/app/build/outputs/bundle/release/app-release.aab
+            mobile/android/app/build/outputs/apk/release/app-release.apk
           if-no-files-found: error

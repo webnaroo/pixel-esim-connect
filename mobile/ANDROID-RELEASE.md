@@ -36,7 +36,7 @@ Ohne diesen Schritt läuft die App normal, nur ohne Mitteilungen (der Schalter e
 
 ## 3. Bauen
 GitHub → Actions → **Android App Bundle** → Run workflow. `versionCode` bei jedem Upload um 1 erhöhen.
-Danach unter dem Lauf bei **Artifacts** `globesim-release-aab` herunterladen und in der Play Console hochladen.
+Danach unter dem Lauf bei **Artifacts** `globesim-release` herunterladen (ZIP). Darin liegen `app-release.aab` (für die Play Console) und `app-release.apk` (zum Ausprobieren: aufs Handy kopieren und installieren, dafür „Apps aus unbekannten Quellen“ für den Dateimanager erlauben).
 
 ## Was die App kann (Einstellungen → App)
 - **Mitteilungen:** „eSIM bereit“, „80 % / 100 % Datenvolumen“ und „eSIM läuft bald ab“ (48 Stunden vor Tarifende, nur für angemeldete Kunden).
