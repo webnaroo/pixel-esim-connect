@@ -6,7 +6,11 @@
   "server": {
     "url": "https://globesim.de",
     "cleartext": false,
-    "allowNavigation": ["globesim.de", "*.globesim.de", "notify.globesim.de"],
+    "allowNavigation": [
+      "globesim.de",
+      "*.globesim.de",
+      "notify.globesim.de"
+    ],
     "appendOrigin": false,
     "showSpinner": false
   },
@@ -23,7 +27,7 @@
     "SplashScreen": {
       "launchShowDuration": 900,
       "launchAutoHide": true,
-      "backgroundColor": "#0B3C49",
+      "backgroundColor": "#F6F3EE",
       "androidScaleType": "CENTER_CROP",
       "showSpinner": false,
       "splashFullScreen": true,

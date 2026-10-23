@@ -13,8 +13,9 @@ Dieser Ordner ist eine eigene Capacitor-App-Hülle um die Live-Seite `https://gl
 - `capacitor.config.json` hält die Ziel-URL und die App-Kennung `de.globesim.app`.
   Nach jeder Änderung hier oder an `assets/`: `npx cap sync`.
 - `android/` und `ios/` sind echte, generierte Projektordner. Sie werden mit
-  `npx @capacitor/assets generate --android --ios` aus `assets/icon-source.png` und
-  `assets/splash-source.png` erzeugt – nicht von Hand nachmalen.
+  `npx @capacitor/assets generate --android --ios` aus `assets/icon-source.png`, `icon-foreground.png`,
+  `icon-background.png`, `splash-source.png` und `splash-dark.png` erzeugt – nicht von Hand nachmalen.
+  Das Icon ist das Website-Logo (`public/globesim-logo.png`) auf Weiß, das Startbild auf Creme (#F6F3EE).
 - Die echten Store-Dateien baut und signiert der Inhaber selbst: iPhone nur auf einem Mac mit
   Xcode, Android mit Android Studio und eigenem Keystore. Diese Umgebung gibt es hier nicht,
   und die Store-Konten gehören dem Inhaber.
