@@ -290,7 +290,10 @@ export const getWebhookEvents = createServerFn({ method: "GET" })
     const evIds = (data ?? []).map((e) => e.id);
     const { data: res } = evIds.length ? await supabaseAdmin.from("audit_log").select("entity_id,created_at,meta").eq("action", "webhook_event_resolved").in("entity_id", evIds) : { data: [] };
     const resolved = new Map((res ?? []).map((r) => [r.entity_id, r]));
-    const live = (alerts ?? []).filter((a) => !((a.meta as { code?: string } | null)?.code === "request_in_flight" && a.entity_id && past.has(a.entity_id)));
+    const alertIds = (alerts ?? []).map((a) => a.id);
+    const { data: dismissedRows } = alertIds.length ? await supabaseAdmin.from("audit_log").select("entity_id").eq("action", "provider_alert_dismissed").in("entity_id", alertIds) : { data: [] };
+    const dismissed = new Set((dismissedRows ?? []).map((d) => d.entity_id));
+    const live = (alerts ?? []).filter((a) => !dismissed.has(a.id) && !((a.meta as { code?: string } | null)?.code === "request_in_flight" && a.entity_id && past.has(a.entity_id)));
     return {
       secretSet: providerSetupStatus().webhookSecretSet,
       events: (data ?? []).map((e) => { const r = resolved.get(e.id); return { ...e, resolved_at: r?.created_at ?? null, resolved_note: r ? String((r.meta as { note?: string } | null)?.note ?? "") : null }; }),
@@ -308,6 +311,20 @@ export const resolveWebhookEvent = createServerFn({ method: "POST" })
     if (!e) throw new Error("Ereignis nicht gefunden.");
     await supabaseAdmin.from("audit_log").insert({ actor_id: context.userId, action: "webhook_event_resolved", entity: "provider_webhook_event", entity_id: data.eventId, meta: { note: data.note } });
     return { ok: true };
+  });
+
+// Hides provider alerts from the admin list. The audit_log rows stay untouched; a dismissal is a new audit entry.
+export const dismissProviderAlerts = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((i) => z.object({ alertIds: z.array(z.string().uuid()).min(1).max(50) }).parse(i))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context as unknown as Ctx);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: found } = await supabaseAdmin.from("audit_log").select("id").in("id", data.alertIds);
+    const ids = (found ?? []).map((a) => a.id);
+    if (ids.length === 0) return { ok: true, dismissed: 0 };
+    await supabaseAdmin.from("audit_log").insert(ids.map((id) => ({ actor_id: context.userId, action: "provider_alert_dismissed", entity: "audit_log", entity_id: id })));
+    return { ok: true, dismissed: ids.length };
   });
 
 export const webhookEventsQuery = () => queryOptions({ queryKey: ["admin", "webhooks"], queryFn: () => getWebhookEvents() });

@@ -4,7 +4,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 import { adminOrdersQuery, markProviderRefundRequested, refundOrder } from "@/lib/orders.functions";
-import { resolveWebhookEvent, webhookEventsQuery } from "@/lib/admin.functions";
+import { dismissProviderAlerts, resolveWebhookEvent, webhookEventsQuery } from "@/lib/admin.functions";
 import { Chip, ErrorBox, EmptyState } from "@/components/brand";
 import { Button, Input } from "@/components/ui-kit";
 import { formatPrice } from "@/lib/format";
@@ -150,6 +150,13 @@ function WebhookEvents() {
     try { await resolve({ data: { eventId: id, note } }); await qc.invalidateQueries({ queryKey: ["admin", "webhooks"] }); }
     catch (err) { alert(err instanceof Error ? err.message : "Fehlgeschlagen"); }
   };
+  const dismiss = useServerFn(dismissProviderAlerts);
+  const dismissAlerts = async (ids: string[]) => {
+    if (ids.length === 0) return;
+    if (ids.length > 1 && !confirm(`${ids.length} Hinweise ausblenden? Sie bleiben im Protokoll gespeichert.`)) return;
+    try { await dismiss({ data: { alertIds: ids } }); await qc.invalidateQueries({ queryKey: ["admin", "webhooks"] }); }
+    catch (err) { alert(err instanceof Error ? err.message : "Fehlgeschlagen"); }
+  };
   const rows = all.filter((e) => (!type || e.event_type === type) && (!st || e.status === st) && (!mode || e.mode === mode));
   const types = [...new Set(all.map((e) => e.event_type))];
   const sel = "h-10 rounded-md border border-line bg-surface px-3 text-sm";
@@ -161,7 +168,10 @@ function WebhookEvents() {
       </div>
       {(q.data?.alerts ?? []).length > 0 && (
         <div role="alert" className="space-y-1 rounded-lg border border-line border-l-4 border-l-warning p-3 text-sm">
-          <p className="font-semibold text-ink">Hinweise von eSIMerge</p>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <p className="font-semibold text-ink">Hinweise von eSIMerge</p>
+            <button type="button" className="rounded-md border border-line-strong px-2 py-1 text-xs hover:border-ink-muted" onClick={() => dismissAlerts(q.data!.alerts.map((a) => a.id).slice(0, 50))}>Alle ausblenden</button>
+          </div>
           <ul className="space-y-1">
             {q.data!.alerts.slice(0, 10).map((a) => (
               <li key={a.id}>
@@ -170,6 +180,7 @@ function WebhookEvents() {
                 {a.code && <span className="ml-1 font-mono text-xs text-ink-muted">· {a.code}</span>}
                 {a.field && <span className="ml-1 font-mono text-xs text-ink-muted">· Feld {a.field}</span>}
                 {a.requestId && <span className="ml-1 font-mono text-xs text-ink-muted">· request_id {a.requestId}</span>}
+                <button type="button" aria-label="Hinweis ausblenden" className="ml-2 rounded border border-line-strong px-1.5 text-xs hover:border-ink-muted" onClick={() => dismissAlerts([a.id])}>Ausblenden</button>
               </li>
             ))}
           </ul>
