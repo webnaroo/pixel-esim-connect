@@ -12,6 +12,8 @@ import { getEsimUsage } from "@/lib/usage.functions";
 import { formatPrice } from "@/lib/format";
 import { DELETE_CONFIRM_WORD } from "@/lib/anonymize";
 import { supabase } from "@/integrations/supabase/client";
+import { AppSettingsCard } from "@/components/app-settings-card";
+import { useOfflineAutoSync } from "@/lib/app-offline-sync";
 
 export const Route = createFileRoute("/_authenticated/account")({
   validateSearch: (search: Record<string, unknown>): { tab?: "esims" | "orders" | "settings" } => {
@@ -41,6 +43,7 @@ function Account() {
   const { tab: initialTab } = Route.useSearch();
   const [tab, setTab] = useState<Tab>(initialTab ?? "esims");
   const q = useQuery(myAccountQuery());
+  useOfflineAutoSync(q.data);
   return (
     <SiteLayout>
       <section className="container-page max-w-3xl pb-20 pt-8">
@@ -209,6 +212,8 @@ function Settings({ data }: { data: Data }) {
         <label className="block text-sm font-medium">Neues Passwort<Input className="mt-1" type="password" value={pw} onChange={(e) => setPw(e.target.value)} autoComplete="new-password" /></label>
         <Button type="submit" variant="secondary" loading={busy}>Passwort ändern</Button>
       </form>
+
+      <AppSettingsCard data={data} />
 
       <Button variant="secondary" onClick={async () => { await signOut(); nav({ to: "/" }); }}>Abmelden</Button>
 

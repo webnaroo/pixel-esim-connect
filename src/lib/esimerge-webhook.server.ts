@@ -81,6 +81,8 @@ export const dbWebhookDeps: WebhookDeps = {
     // Usage hint mail (80 / 100 %). No top-up link (no top-up product).
     const { sendOrderEmail } = await import("./email.server");
     await sendOrderEmail(orderId, "usage_alert", { threshold });
+    const { notifyOrderPush } = await import("./push.server");
+    await notifyOrderPush(orderId, "usage_alert", { threshold });
   },
   now: () => new Date(),
   async nudgeWaitingFulfillments(mode) {

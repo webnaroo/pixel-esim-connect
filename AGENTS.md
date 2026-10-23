@@ -38,3 +38,4 @@
 - SEO: shared helpers, leaf-only canonicals; sitemap uses public origin, paginated reads, 503 on errors; tests and admin audits share one validator; SEO AI runs only via an admin-verified route with history.
 - Meta Pixel only via src/lib/meta-pixel.ts after consent; Purchase only for server-paid non-test orders, once per order — no duplicate purchases.
 - Subdirectories have their own AGENTS.md — read it before changing files there.
+- Android-App-Funktionen (Push, Fingerabdruck-Sperre, Offline-eSIMs): Push nur über src/lib/push.server.ts (Texte aus push.ts, nie Aktivierungsdaten), Gerätetabelle push_devices nur über Serverfunktionen; Offline-Daten nur auf dem Gerät, beim Abmelden gelöscht (native-app.ts).

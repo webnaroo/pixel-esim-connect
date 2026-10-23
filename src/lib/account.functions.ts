@@ -62,6 +62,26 @@ export const getMyInstallData = createServerFn({ method: "POST" })
     return { lpa: e.lpa_string, smdp: e.smdp_address, activationCode: e.activation_code, iosUrl: e.ios_install_url, androidUrl: e.android_install_url };
   });
 
+/** App-Gerät für Push-Mitteilungen anmelden (nur eingeloggte Kunden, ein Token gehört genau einem Konto). */
+export const registerPushDevice = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((i) => z.object({ token: z.string().min(20).max(4096).regex(/^\S+$/), platform: z.enum(["android", "ios"]) }).parse(i))
+  .handler(async ({ data, context }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin.from("push_devices").upsert({ user_id: context.userId, token: data.token, platform: data.platform, last_seen_at: new Date().toISOString() }, { onConflict: "token" });
+    if (error) throw new Error("Mitteilungen konnten nicht aktiviert werden.");
+    return { ok: true };
+  });
+
+export const unregisterPushDevice = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((i) => z.object({ token: z.string().min(20).max(4096) }).parse(i))
+  .handler(async ({ data, context }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    await supabaseAdmin.from("push_devices").delete().eq("user_id", context.userId).eq("token", data.token);
+    return { ok: true };
+  });
+
 export const updateMyProfile = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((i) => z.object({ name: z.string().trim().max(120), locale: z.enum(["de", "en"]) }).parse(i))

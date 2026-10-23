@@ -22,9 +22,27 @@ Repo → Settings → Secrets and variables → Actions → New repository secre
 | `ANDROID_KEY_ALIAS` | `globesim` |
 | `ANDROID_KEY_PASSWORD` | Passwort des Schlüssels |
 
+## 2b. Push-Mitteilungen einrichten (Firebase, einmalig, kostenlos)
+Ohne diesen Schritt läuft die App normal, nur ohne Mitteilungen (der Schalter erscheint dann nicht).
+
+1. https://console.firebase.google.com → **Projekt hinzufügen** (Name z. B. „GlobeSIM“, Analytics kann aus bleiben).
+2. Im Projekt: **Android-App hinzufügen**, Paketname **`de.globesim.app`** → `google-services.json` herunterladen.
+   Als Secret **`ANDROID_GOOGLE_SERVICES_JSON_BASE64`** eintragen:
+   `[Convert]::ToBase64String([IO.File]::ReadAllBytes("google-services.json"))`
+3. Firebase → Projekteinstellungen → **Dienstkonten** → **Neuen privaten Schlüssel generieren**. Die JSON-Datei
+   als **Runtime-Secret `FCM_SERVICE_ACCOUNT_JSON`** im Cloudflare-Worker eintragen (ganzer Dateiinhalt). Nicht ins Repo.
+4. Datenbank-Tabelle anlegen: den Inhalt von `drizzle/migrations/0030_push_devices.sql` im Supabase SQL Editor ausführen.
+
 ## 3. Bauen
 GitHub → Actions → **Android App Bundle** → Run workflow. `versionCode` bei jedem Upload um 1 erhöhen.
 Danach unter dem Lauf bei **Artifacts** `globesim-release-aab` herunterladen und in der Play Console hochladen.
+
+## Was die App kann (Einstellungen → App)
+- **Mitteilungen:** „eSIM bereit“ und „80 % / 100 % Datenvolumen“ (nur für angemeldete Kunden).
+- **Fingerabdruck-Sperre:** App öffnet sich nur mit Fingerabdruck, Gesicht oder Geräte-PIN (Sperre nach 30 s im Hintergrund).
+- **eSIMs offline:** QR-Code und Installationsdaten verschlüsselt auf dem Gerät. Beim Abmelden werden sie gelöscht.
+  Das Installieren einer eSIM selbst braucht kurz WLAN oder mobile Daten.
+- Tippen auf eine Mitteilung öffnet das Konto, wenn die App schon läuft. Bei komplett beendeter App öffnet sich die Startseite.
 
 ## Vor dem Einreichen prüfen
 - Google verlangt für neue Uploads ein aktuelles `targetSdkVersion`. Aktuell steht 34 in

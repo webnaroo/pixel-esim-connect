@@ -132,6 +132,11 @@ function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const router = useRouter();
 
+  // Android-App: Tippen auf eine Mitteilung öffnet die genannte Seite (nur eigene Pfade).
+  useEffect(() => {
+    void import("@/lib/native-app").then((m) => m.onNotificationOpened((path) => router.history.push(path)));
+  }, [router]);
+
   useEffect(() => {
     const { data } = supabase.auth.onAuthStateChange((event) => {
       if (event !== "SIGNED_IN" && event !== "SIGNED_OUT" && event !== "USER_UPDATED") return;

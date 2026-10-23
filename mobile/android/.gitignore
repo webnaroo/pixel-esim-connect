@@ -99,3 +99,6 @@ app/src/main/assets/public
 app/src/main/assets/capacitor.config.json
 app/src/main/assets/capacitor.plugins.json
 app/src/main/res/xml/config.xml
+
+# Firebase-Zugangsdatei kommt nur über das GitHub-Secret ANDROID_GOOGLE_SERVICES_JSON_BASE64, nie ins Repo
+app/google-services.json

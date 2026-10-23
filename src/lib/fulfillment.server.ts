@@ -51,6 +51,8 @@ export const dbFulfillmentStore: FulfillmentStore = {
     if (lpa) {
       const { sendOrderReadyEmail } = await import("./email.server");
       await sendOrderReadyEmail(orderId);
+      const { notifyOrderPush } = await import("./push.server");
+      await notifyOrderPush(orderId, "esim_ready");
     }
   },
   async scheduleRetry(orderId, at, error) {

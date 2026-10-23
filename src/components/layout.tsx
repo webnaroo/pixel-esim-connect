@@ -192,7 +192,14 @@ export function SiteLayout({ children }: { children: React.ReactNode }) {
   );
 }
 
+// In der App: Mitteilungs-Gerät abmelden und Offline-Daten löschen, bevor die Sitzung endet.
+async function clearAppDataBeforeSignOut() {
+  const [{ clearNativeAppData }, { unregisterPushDevice }] = await Promise.all([import("@/lib/native-app"), import("@/lib/account.functions")]);
+  await clearNativeAppData((token) => unregisterPushDevice({ data: { token } })).catch(() => {});
+}
+
 export async function signOut() {
+  await clearAppDataBeforeSignOut();
   await supabase.auth.signOut();
 }
 
@@ -208,6 +215,7 @@ function SignOutButton({ className }: { className?: string }) {
         setBusy(true);
         await queryClient.cancelQueries();
         queryClient.clear();
+        await clearAppDataBeforeSignOut();
         await supabase.auth.signOut();
         navigate({ to: "/", replace: true });
       }}
