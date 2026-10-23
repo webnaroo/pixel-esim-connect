@@ -1,6 +1,9 @@
 package de.globesim.app;
 
+import android.content.ActivityNotFoundException;
 import android.content.Context;
+import android.content.Intent;
+import android.net.Uri;
 import android.content.SharedPreferences;
 
 import androidx.annotation.Nullable;
@@ -34,6 +37,8 @@ public class GlobeSimAppPlugin extends Plugin {
     private static final String KEY_OFFLINE_SAVED_AT = "offline_saved_at";
     private static final String KEY_SNAPSHOT = "offline_snapshot";
     private static final int MAX_SNAPSHOT_CHARS = 1_500_000;
+    // LPA:1$<SM-DP+-Adresse>$<Aktivierungscode>[$<Bestätigungscode>]
+    private static final java.util.regex.Pattern LPA_PATTERN = java.util.regex.Pattern.compile("^LPA:1\\$[A-Za-z0-9.\\-]{3,255}(\\$[A-Za-z0-9._\\-]{0,128}){0,2}$");
 
     /** Gleiche Regel wie in MainActivity: Fingerabdruck oder Gesicht, ersatzweise Geräte-PIN. */
     static final int AUTHENTICATORS = Authenticators.BIOMETRIC_WEAK | Authenticators.DEVICE_CREDENTIAL;
@@ -146,6 +151,33 @@ public class GlobeSimAppPlugin extends Plugin {
                 .build();
             prompt.authenticate(info);
         });
+    }
+
+    /**
+     * eSIM-Installation per Knopfdruck: öffnet den Android-Installationsdialog für genau diese eSIM.
+     * Die Adresse baut die App selbst aus dem LPA-Code; fremde Adressen werden nie geöffnet.
+     */
+    @PluginMethod
+    public void openEsimInstall(PluginCall call) {
+        String lpa = call.getString("lpa");
+        if (lpa == null || !LPA_PATTERN.matcher(lpa).matches()) {
+            call.reject("Ungültiger eSIM-Code.");
+            return;
+        }
+        Uri uri = new Uri.Builder()
+            .scheme("https")
+            .authority("esimsetup.android.com")
+            .appendPath("esim_qrcode_provisioning")
+            .appendQueryParameter("carddata", lpa)
+            .build();
+        try {
+            Intent intent = new Intent(Intent.ACTION_VIEW, uri);
+            intent.addCategory(Intent.CATEGORY_BROWSABLE);
+            getActivity().startActivity(intent);
+            call.resolve();
+        } catch (ActivityNotFoundException e) {
+            call.reject("Dieses Gerät kann die eSIM nicht direkt installieren. Bitte den QR-Code scannen.");
+        }
     }
 
     @PluginMethod

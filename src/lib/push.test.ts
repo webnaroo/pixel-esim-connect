@@ -14,6 +14,11 @@ describe("push texts", () => {
     expect(buildPushMessage("usage_alert", { threshold: 100 })!.title).toContain("aufgebraucht");
     expect(buildPushMessage("usage_alert", { threshold: 50 })).toBeNull();
   });
+  it("Ablauf: morgen oder in n Tagen, nie ohne Restzeit", () => {
+    expect(buildPushMessage("esim_expiring", { plan: "Ägypten", daysLeft: 1 })!.title).toBe("Deine eSIM läuft morgen ab");
+    expect(buildPushMessage("esim_expiring", { daysLeft: 2 })!.title).toBe("Deine eSIM läuft in 2 Tagen ab");
+    expect(buildPushMessage("esim_expiring", { daysLeft: 0 })).toBeNull();
+  });
   it("Texte enthalten nie Installationsdaten", () => {
     for (const m of [buildPushMessage("esim_ready", { plan: "X" }), buildPushMessage("usage_alert", { threshold: 80 })]) {
       expect(JSON.stringify(m)).not.toMatch(/LPA|activation|QR/i);

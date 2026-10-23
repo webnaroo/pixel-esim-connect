@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { SegmentedControl, btnClass } from "@/components/ui-kit";
 import { detectInstallDevice, installLinks, type InstallDevice } from "@/lib/install-device";
+import { isAndroidApp, openEsimInstall } from "@/lib/native-app";
 
 export type InstallPanelData = {
   lpa: string;
@@ -91,7 +92,16 @@ export function EsimInstallPanel({ data }: { data: InstallPanelData }) {
       )}
       {shown === "android" && (
         <div className="mt-5">
-          <a href={links.android} className={btnClass("primary", "min-h-12 w-full sm:w-auto")}>Auf Android installieren</a>
+          <a
+            href={links.android}
+            className={btnClass("primary", "min-h-12 w-full sm:w-auto")}
+            onClick={(e) => {
+              // In der App: direkt den Android-Installationsdialog öffnen. Klappt das nicht, läuft der normale Link.
+              if (!isAndroidApp()) return;
+              e.preventDefault();
+              openEsimInstall(data.lpa).catch(() => { window.location.href = links.android; });
+            }}
+          >Auf Android installieren</a>
           <button type="button" onClick={() => setOverride("ios")} className="mt-2 block min-h-11 text-sm text-ink-muted underline">iPhone oder anderes Gerät</button>
         </div>
       )}

@@ -33,7 +33,7 @@ Als **Secrets** (Laufzeit):
 | `SEND_EMAIL_HOOK_SECRET` | Supabase → Authentication → Hooks → Send Email (siehe 3.) |
 | `GEMINI_API_KEY` | aistudio.google.com → Get API key (optional, nur für Ratgeber-KI und SEO-Analyse) |
 | `GEMINI_MODEL` | optional, Standard `gemini-3.8-flash` |
-| `FCM_SERVICE_ACCOUNT_JSON` | optional, Push für die Android-App: Firebase → Dienstkonten → privater Schlüssel (ganzer JSON-Inhalt). Einrichtung in `mobile/ANDROID-RELEASE.md`. Dazu `drizzle/migrations/0030_push_devices.sql` im SQL Editor ausführen. |
+| `FCM_SERVICE_ACCOUNT_JSON` | optional, Push für die Android-App: Firebase → Dienstkonten → privater Schlüssel (ganzer JSON-Inhalt). Einrichtung in `mobile/ANDROID-RELEASE.md`. Dazu `0030_push_devices.sql` und `0031_esim_expiry_alert.sql` im SQL Editor ausführen und den Cron-Job 5 aus `docs/self-hosting-cron.sql` anlegen. |
 | `EMAIL_FROM_DOMAIN` | optional, Absender-Domain, falls in den Shop-Einstellungen keine hinterlegt ist |
 
 **Achtung Stripe:** In `VITE_PAYMENTS_CLIENT_TOKEN` gehört ausschließlich der *Publishable key* (`pk_...`). `VITE_`-Variablen landen im Browser-Code, ein `sk_`/`rk_`-Schlüssel dort wäre öffentlich. Geheimschlüssel kommen nur als Worker-Secret (`STRIPE_*_API_KEY`).

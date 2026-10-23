@@ -52,6 +52,7 @@ import { Route as AuthenticatedAdminUnlimitedRouteImport } from './routes/_authe
 import { Route as BildRatgeberFileRouteImport } from './routes/bild.ratgeber.$file'
 import { Route as ApiPublicAuthEmailHookRouteImport } from './routes/api/public/auth/email-hook'
 import { Route as ApiPublicCronCatalogSyncRouteImport } from './routes/api/public/cron/catalog-sync'
+import { Route as ApiPublicCronEsimExpiryAlertsRouteImport } from './routes/api/public/cron/esim-expiry-alerts'
 import { Route as ApiPublicCronEsimStatusPollRouteImport } from './routes/api/public/cron/esim-status-poll'
 import { Route as ApiPublicCronFulfillmentRetryRouteImport } from './routes/api/public/cron/fulfillment-retry'
 import { Route as ApiPublicCronFxRefreshRouteImport } from './routes/api/public/cron/fx-refresh'
@@ -283,6 +284,12 @@ const ApiPublicCronCatalogSyncRoute =
     path: '/api/public/cron/catalog-sync',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicCronEsimExpiryAlertsRoute =
+  ApiPublicCronEsimExpiryAlertsRouteImport.update({
+    id: '/api/public/cron/esim-expiry-alerts',
+    path: '/api/public/cron/esim-expiry-alerts',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicCronEsimStatusPollRoute =
   ApiPublicCronEsimStatusPollRouteImport.update({
     id: '/api/public/cron/esim-status-poll',
@@ -356,6 +363,7 @@ export interface FileRoutesByFullPath {
   '/admin/': typeof AuthenticatedAdminIndexRoute
   '/api/public/auth/email-hook': typeof ApiPublicAuthEmailHookRoute
   '/api/public/cron/catalog-sync': typeof ApiPublicCronCatalogSyncRoute
+  '/api/public/cron/esim-expiry-alerts': typeof ApiPublicCronEsimExpiryAlertsRoute
   '/api/public/cron/esim-status-poll': typeof ApiPublicCronEsimStatusPollRoute
   '/api/public/cron/fulfillment-retry': typeof ApiPublicCronFulfillmentRetryRoute
   '/api/public/cron/fx-refresh': typeof ApiPublicCronFxRefreshRoute
@@ -404,6 +412,7 @@ export interface FileRoutesByTo {
   '/admin': typeof AuthenticatedAdminIndexRoute
   '/api/public/auth/email-hook': typeof ApiPublicAuthEmailHookRoute
   '/api/public/cron/catalog-sync': typeof ApiPublicCronCatalogSyncRoute
+  '/api/public/cron/esim-expiry-alerts': typeof ApiPublicCronEsimExpiryAlertsRoute
   '/api/public/cron/esim-status-poll': typeof ApiPublicCronEsimStatusPollRoute
   '/api/public/cron/fulfillment-retry': typeof ApiPublicCronFulfillmentRetryRoute
   '/api/public/cron/fx-refresh': typeof ApiPublicCronFxRefreshRoute
@@ -455,6 +464,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
   '/api/public/auth/email-hook': typeof ApiPublicAuthEmailHookRoute
   '/api/public/cron/catalog-sync': typeof ApiPublicCronCatalogSyncRoute
+  '/api/public/cron/esim-expiry-alerts': typeof ApiPublicCronEsimExpiryAlertsRoute
   '/api/public/cron/esim-status-poll': typeof ApiPublicCronEsimStatusPollRoute
   '/api/public/cron/fulfillment-retry': typeof ApiPublicCronFulfillmentRetryRoute
   '/api/public/cron/fx-refresh': typeof ApiPublicCronFxRefreshRoute
@@ -506,6 +516,7 @@ export interface FileRouteTypes {
     | '/admin/'
     | '/api/public/auth/email-hook'
     | '/api/public/cron/catalog-sync'
+    | '/api/public/cron/esim-expiry-alerts'
     | '/api/public/cron/esim-status-poll'
     | '/api/public/cron/fulfillment-retry'
     | '/api/public/cron/fx-refresh'
@@ -554,6 +565,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/api/public/auth/email-hook'
     | '/api/public/cron/catalog-sync'
+    | '/api/public/cron/esim-expiry-alerts'
     | '/api/public/cron/esim-status-poll'
     | '/api/public/cron/fulfillment-retry'
     | '/api/public/cron/fx-refresh'
@@ -604,6 +616,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/'
     | '/api/public/auth/email-hook'
     | '/api/public/cron/catalog-sync'
+    | '/api/public/cron/esim-expiry-alerts'
     | '/api/public/cron/esim-status-poll'
     | '/api/public/cron/fulfillment-retry'
     | '/api/public/cron/fx-refresh'
@@ -638,6 +651,7 @@ export interface RootRouteChildren {
   BildRatgeberFileRoute: typeof BildRatgeberFileRoute
   ApiPublicAuthEmailHookRoute: typeof ApiPublicAuthEmailHookRoute
   ApiPublicCronCatalogSyncRoute: typeof ApiPublicCronCatalogSyncRoute
+  ApiPublicCronEsimExpiryAlertsRoute: typeof ApiPublicCronEsimExpiryAlertsRoute
   ApiPublicCronEsimStatusPollRoute: typeof ApiPublicCronEsimStatusPollRoute
   ApiPublicCronFulfillmentRetryRoute: typeof ApiPublicCronFulfillmentRetryRoute
   ApiPublicCronFxRefreshRoute: typeof ApiPublicCronFxRefreshRoute
@@ -948,6 +962,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicCronCatalogSyncRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/cron/esim-expiry-alerts': {
+      id: '/api/public/cron/esim-expiry-alerts'
+      path: '/api/public/cron/esim-expiry-alerts'
+      fullPath: '/api/public/cron/esim-expiry-alerts'
+      preLoaderRoute: typeof ApiPublicCronEsimExpiryAlertsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/cron/esim-status-poll': {
       id: '/api/public/cron/esim-status-poll'
       path: '/api/public/cron/esim-status-poll'
@@ -1065,6 +1086,7 @@ const rootRouteChildren: RootRouteChildren = {
   BildRatgeberFileRoute: BildRatgeberFileRoute,
   ApiPublicAuthEmailHookRoute: ApiPublicAuthEmailHookRoute,
   ApiPublicCronCatalogSyncRoute: ApiPublicCronCatalogSyncRoute,
+  ApiPublicCronEsimExpiryAlertsRoute: ApiPublicCronEsimExpiryAlertsRoute,
   ApiPublicCronEsimStatusPollRoute: ApiPublicCronEsimStatusPollRoute,
   ApiPublicCronFulfillmentRetryRoute: ApiPublicCronFulfillmentRetryRoute,
   ApiPublicCronFxRefreshRoute: ApiPublicCronFxRefreshRoute,

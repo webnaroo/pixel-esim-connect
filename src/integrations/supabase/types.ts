@@ -536,6 +536,7 @@ export type Database = {
       }
       esims: {
         Row: {
+          expiry_alert_sent_at: string | null
           activated_at: string | null
           activation_code: string | null
           android_install_url: string | null
@@ -563,6 +564,7 @@ export type Database = {
           user_id: string | null
         }
         Insert: {
+          expiry_alert_sent_at?: string | null
           activated_at?: string | null
           activation_code?: string | null
           android_install_url?: string | null
@@ -590,6 +592,7 @@ export type Database = {
           user_id?: string | null
         }
         Update: {
+          expiry_alert_sent_at?: string | null
           activated_at?: string | null
           activation_code?: string | null
           android_install_url?: string | null

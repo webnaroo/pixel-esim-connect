@@ -31,14 +31,16 @@ Ohne diesen Schritt läuft die App normal, nur ohne Mitteilungen (der Schalter e
    `[Convert]::ToBase64String([IO.File]::ReadAllBytes("google-services.json"))`
 3. Firebase → Projekteinstellungen → **Dienstkonten** → **Neuen privaten Schlüssel generieren**. Die JSON-Datei
    als **Runtime-Secret `FCM_SERVICE_ACCOUNT_JSON`** im Cloudflare-Worker eintragen (ganzer Dateiinhalt). Nicht ins Repo.
-4. Datenbank-Tabelle anlegen: den Inhalt von `drizzle/migrations/0030_push_devices.sql` im Supabase SQL Editor ausführen.
+4. Datenbank: `drizzle/migrations/0030_push_devices.sql` und `0031_esim_expiry_alert.sql` im Supabase SQL Editor ausführen.
+5. Ablauf-Mitteilung: den Abschnitt 5 aus `docs/self-hosting-cron.sql` im SQL Editor ausführen (stündlicher Job).
 
 ## 3. Bauen
 GitHub → Actions → **Android App Bundle** → Run workflow. `versionCode` bei jedem Upload um 1 erhöhen.
 Danach unter dem Lauf bei **Artifacts** `globesim-release-aab` herunterladen und in der Play Console hochladen.
 
 ## Was die App kann (Einstellungen → App)
-- **Mitteilungen:** „eSIM bereit“ und „80 % / 100 % Datenvolumen“ (nur für angemeldete Kunden).
+- **Mitteilungen:** „eSIM bereit“, „80 % / 100 % Datenvolumen“ und „eSIM läuft bald ab“ (48 Stunden vor Tarifende, nur für angemeldete Kunden).
+- **Installation per Knopfdruck:** „Auf Android installieren“ öffnet direkt den Installationsdialog von Android (auch in der Offline-Ansicht).
 - **Fingerabdruck-Sperre:** App öffnet sich nur mit Fingerabdruck, Gesicht oder Geräte-PIN (Sperre nach 30 s im Hintergrund).
 - **eSIMs offline:** QR-Code und Installationsdaten verschlüsselt auf dem Gerät. Beim Abmelden werden sie gelöscht.
   Das Installieren einer eSIM selbst braucht kurz WLAN oder mobile Daten.

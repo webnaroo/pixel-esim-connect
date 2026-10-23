@@ -61,6 +61,11 @@ export async function setOfflineStorage(enabled: boolean, snapshotJson?: string)
   await call(APP_PLUGIN, "setOffline", { enabled, snapshot: snapshotJson ?? null });
 }
 
+/** Öffnet den Installationsdialog von Android für diese eSIM. Wirft, wenn das Gerät es nicht kann. */
+export async function openEsimInstall(lpa: string): Promise<void> {
+  await call(APP_PLUGIN, "openEsimInstall", { lpa });
+}
+
 export async function saveOfflineSnapshot(snapshotJson: string): Promise<void> {
   await call(APP_PLUGIN, "saveOffline", { snapshot: snapshotJson });
 }

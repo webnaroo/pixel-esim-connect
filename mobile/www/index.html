@@ -38,6 +38,7 @@
       .card img { display: block; width: 220px; max-width: 100%; margin: 0 auto 12px; }
       .card dt { font-size: 12px; color: #5b666c; margin-top: 8px; }
       .card dd { margin: 2px 0 0; font-size: 13px; word-break: break-all; font-family: ui-monospace, Menlo, Consolas, monospace; }
+      .card button.primary { background: #0b3c49; color: #fff; display: block; width: 100%; min-height: 48px; margin: 0 0 6px; }
       .card button { margin-top: 8px; min-height: 40px; padding: 0 14px; border-radius: 10px; border: 1px solid #0b3c49; background: #fff; color: #0b3c49; font-size: 14px; font-weight: 600; }
     </style>
   </head>
@@ -91,6 +92,15 @@
               dl.appendChild(dt); dl.appendChild(dd);
             });
             card.appendChild(dl);
+            if (e.lpa) {
+              var ib = document.createElement("button"); ib.type = "button"; ib.className = "primary"; ib.textContent = "Jetzt installieren";
+              ib.addEventListener("click", function () {
+                cap.nativePromise("GlobeSimApp", "openEsimInstall", { lpa: String(e.lpa) }).catch(function () {
+                  ib.textContent = "Nicht möglich: bitte QR-Code scannen";
+                });
+              });
+              card.appendChild(ib);
+            }
             if (e.lpa && navigator.clipboard) {
               var b = document.createElement("button"); b.type = "button"; b.textContent = "LPA kopieren";
               b.addEventListener("click", function () {

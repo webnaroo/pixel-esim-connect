@@ -31,3 +31,11 @@ $job$);
 
 -- 'fulfillment-retry' (alle 30 s) legt die Datenbank selbst an, sobald eine Bestellung wartet (arm_fulfillment_retry).
 -- Prüfen: select jobname, schedule, active from cron.job;
+
+-- 5) Mitteilung "eSIM läuft bald ab" (Android-App), stündlich. Vorher drizzle/migrations/0031_esim_expiry_alert.sql ausführen.
+select cron.schedule('esim-expiry-alerts', '25 * * * *', $job$
+  select net.http_post(
+    url := (select value from public.internal_secrets where name = 'cron_url') || '/api/public/cron/esim-expiry-alerts',
+    headers := jsonb_build_object('Content-Type','application/json','Authorization','Bearer ' || (select value from public.internal_secrets where name = 'cron')),
+    body := '{}'::jsonb);
+$job$);
