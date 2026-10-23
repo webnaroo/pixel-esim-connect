@@ -56,6 +56,7 @@ import { Route as ApiPublicCronEsimExpiryAlertsRouteImport } from './routes/api/
 import { Route as ApiPublicCronEsimStatusPollRouteImport } from './routes/api/public/cron/esim-status-poll'
 import { Route as ApiPublicCronFulfillmentRetryRouteImport } from './routes/api/public/cron/fulfillment-retry'
 import { Route as ApiPublicCronFxRefreshRouteImport } from './routes/api/public/cron/fx-refresh'
+import { Route as ApiPublicCronIndexnowRouteImport } from './routes/api/public/cron/indexnow'
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
 import { Route as ApiPublicWebhooksEsimergeRouteImport } from './routes/api/public/webhooks/esimerge'
 
@@ -307,6 +308,11 @@ const ApiPublicCronFxRefreshRoute = ApiPublicCronFxRefreshRouteImport.update({
   path: '/api/public/cron/fx-refresh',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicCronIndexnowRoute = ApiPublicCronIndexnowRouteImport.update({
+  id: '/api/public/cron/indexnow',
+  path: '/api/public/cron/indexnow',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicPaymentsWebhookRoute =
   ApiPublicPaymentsWebhookRouteImport.update({
     id: '/api/public/payments/webhook',
@@ -367,6 +373,7 @@ export interface FileRoutesByFullPath {
   '/api/public/cron/esim-status-poll': typeof ApiPublicCronEsimStatusPollRoute
   '/api/public/cron/fulfillment-retry': typeof ApiPublicCronFulfillmentRetryRoute
   '/api/public/cron/fx-refresh': typeof ApiPublicCronFxRefreshRoute
+  '/api/public/cron/indexnow': typeof ApiPublicCronIndexnowRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/api/public/webhooks/esimerge': typeof ApiPublicWebhooksEsimergeRoute
 }
@@ -416,6 +423,7 @@ export interface FileRoutesByTo {
   '/api/public/cron/esim-status-poll': typeof ApiPublicCronEsimStatusPollRoute
   '/api/public/cron/fulfillment-retry': typeof ApiPublicCronFulfillmentRetryRoute
   '/api/public/cron/fx-refresh': typeof ApiPublicCronFxRefreshRoute
+  '/api/public/cron/indexnow': typeof ApiPublicCronIndexnowRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/api/public/webhooks/esimerge': typeof ApiPublicWebhooksEsimergeRoute
 }
@@ -468,6 +476,7 @@ export interface FileRoutesById {
   '/api/public/cron/esim-status-poll': typeof ApiPublicCronEsimStatusPollRoute
   '/api/public/cron/fulfillment-retry': typeof ApiPublicCronFulfillmentRetryRoute
   '/api/public/cron/fx-refresh': typeof ApiPublicCronFxRefreshRoute
+  '/api/public/cron/indexnow': typeof ApiPublicCronIndexnowRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/api/public/webhooks/esimerge': typeof ApiPublicWebhooksEsimergeRoute
 }
@@ -520,6 +529,7 @@ export interface FileRouteTypes {
     | '/api/public/cron/esim-status-poll'
     | '/api/public/cron/fulfillment-retry'
     | '/api/public/cron/fx-refresh'
+    | '/api/public/cron/indexnow'
     | '/api/public/payments/webhook'
     | '/api/public/webhooks/esimerge'
   fileRoutesByTo: FileRoutesByTo
@@ -569,6 +579,7 @@ export interface FileRouteTypes {
     | '/api/public/cron/esim-status-poll'
     | '/api/public/cron/fulfillment-retry'
     | '/api/public/cron/fx-refresh'
+    | '/api/public/cron/indexnow'
     | '/api/public/payments/webhook'
     | '/api/public/webhooks/esimerge'
   id:
@@ -620,6 +631,7 @@ export interface FileRouteTypes {
     | '/api/public/cron/esim-status-poll'
     | '/api/public/cron/fulfillment-retry'
     | '/api/public/cron/fx-refresh'
+    | '/api/public/cron/indexnow'
     | '/api/public/payments/webhook'
     | '/api/public/webhooks/esimerge'
   fileRoutesById: FileRoutesById
@@ -655,6 +667,7 @@ export interface RootRouteChildren {
   ApiPublicCronEsimStatusPollRoute: typeof ApiPublicCronEsimStatusPollRoute
   ApiPublicCronFulfillmentRetryRoute: typeof ApiPublicCronFulfillmentRetryRoute
   ApiPublicCronFxRefreshRoute: typeof ApiPublicCronFxRefreshRoute
+  ApiPublicCronIndexnowRoute: typeof ApiPublicCronIndexnowRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
   ApiPublicWebhooksEsimergeRoute: typeof ApiPublicWebhooksEsimergeRoute
 }
@@ -990,6 +1003,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicCronFxRefreshRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/cron/indexnow': {
+      id: '/api/public/cron/indexnow'
+      path: '/api/public/cron/indexnow'
+      fullPath: '/api/public/cron/indexnow'
+      preLoaderRoute: typeof ApiPublicCronIndexnowRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/payments/webhook': {
       id: '/api/public/payments/webhook'
       path: '/api/public/payments/webhook'
@@ -1090,6 +1110,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicCronEsimStatusPollRoute: ApiPublicCronEsimStatusPollRoute,
   ApiPublicCronFulfillmentRetryRoute: ApiPublicCronFulfillmentRetryRoute,
   ApiPublicCronFxRefreshRoute: ApiPublicCronFxRefreshRoute,
+  ApiPublicCronIndexnowRoute: ApiPublicCronIndexnowRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
   ApiPublicWebhooksEsimergeRoute: ApiPublicWebhooksEsimergeRoute,
 }

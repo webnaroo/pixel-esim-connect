@@ -39,3 +39,11 @@ select cron.schedule('esim-expiry-alerts', '25 * * * *', $job$
     headers := jsonb_build_object('Content-Type','application/json','Authorization','Bearer ' || (select value from public.internal_secrets where name = 'cron')),
     body := '{}'::jsonb);
 $job$);
+
+-- 6) IndexNow: neue und geänderte Seiten an Bing & Co. melden, täglich. Beim ersten Lauf gehen alle Sitemap-Seiten raus.
+select cron.schedule('indexnow', '40 4 * * *', $job$
+  select net.http_post(
+    url := (select value from public.internal_secrets where name = 'cron_url') || '/api/public/cron/indexnow',
+    headers := jsonb_build_object('Content-Type','application/json','Authorization','Bearer ' || (select value from public.internal_secrets where name = 'cron')),
+    body := '{}'::jsonb);
+$job$);

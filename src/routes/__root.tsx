@@ -92,7 +92,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     scripts: [
       {
         type: "application/ld+json",
-        children: JSON.stringify({ "@context": "https://schema.org", "@type": "Organization", "@id": "https://globesim.de/#organization", name: "GlobeSIM", url: "https://globesim.de/" }),
+        children: JSON.stringify({ "@context": "https://schema.org", "@type": "Organization", "@id": "https://globesim.de/#organization", name: "GlobeSIM", url: "https://globesim.de/", logo: "https://globesim.de/globesim-logo.png" }),
       },
     ],
   }),
