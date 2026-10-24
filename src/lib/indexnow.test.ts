@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { INDEXNOW_KEY, indexNowAccepted, indexNowPayload, indexNowKeyLocation, ownUrls } from "./indexnow";
+import { INDEXNOW_ENDPOINTS, INDEXNOW_KEY, indexNowAccepted, indexNowPayload, indexNowKeyLocation, ownUrls } from "./indexnow";
 
 describe("IndexNow", () => {
   it("der Schlüssel liegt als öffentliche Datei mit genau diesem Inhalt auf der Domain", () => {
@@ -15,6 +15,10 @@ describe("IndexNow", () => {
   it("baut die Meldung mit Host, Schlüssel und Schlüssel-Adresse", () => {
     const p = indexNowPayload(["https://globesim.de/ratgeber/esim-tuerkei"]);
     expect(p).toMatchObject({ host: "globesim.de", key: INDEXNOW_KEY, urlList: ["https://globesim.de/ratgeber/esim-tuerkei"] });
+  });
+  it("hat mehrere Annahmestellen, alle über https", () => {
+    expect(INDEXNOW_ENDPOINTS.length).toBeGreaterThan(1);
+    for (const e of INDEXNOW_ENDPOINTS) expect(e.startsWith("https://")).toBe(true);
   });
   it("nimmt 200 und 202 an, alles andere nicht", () => {
     expect(indexNowAccepted(200)).toBe(true);

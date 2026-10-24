@@ -3,7 +3,9 @@
 import { SITE_URL } from "./seo";
 
 export const INDEXNOW_KEY = "61fcccd3a412778e48e6a0cb05c23abe";
-export const INDEXNOW_ENDPOINT = "https://api.indexnow.org/indexnow";
+// Reihenfolge der Annahmestellen. Alle teilen die Meldung mit den anderen Suchmaschinen; wenn eine ablehnt (z. B. 429), kommt die nächste.
+export const INDEXNOW_ENDPOINTS = ["https://api.indexnow.org/indexnow", "https://www.bing.com/indexnow", "https://yandex.com/indexnow"] as const;
+export const INDEXNOW_USER_AGENT = "GlobeSIM-IndexNow/1.0 (+https://globesim.de)";
 export const INDEXNOW_MAX_URLS = 10_000;
 
 export function indexNowKeyLocation() {

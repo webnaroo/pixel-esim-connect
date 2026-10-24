@@ -11,7 +11,7 @@ export const Route = createFileRoute("/api/public/cron/indexnow")({
         if (!guard.ok) return guard.response;
         const { supabaseAdmin: db } = await import("@/integrations/supabase/client.server");
         const { pageUrl } = await import("@/lib/seo");
-        const { INDEXNOW_ENDPOINT, indexNowAccepted, indexNowPayload } = await import("@/lib/indexnow");
+        const { INDEXNOW_ENDPOINTS, INDEXNOW_USER_AGENT, indexNowAccepted, indexNowPayload } = await import("@/lib/indexnow");
 
         const { data: state } = await db.from("app_settings").select("value").eq("key", "indexnow_state").maybeSingle();
         const initialized = Boolean((state?.value as { initialized_at?: string } | null)?.initialized_at);
@@ -25,10 +25,22 @@ export const Route = createFileRoute("/api/public/cron/indexnow")({
         if (!urls.length) return Response.json({ ok: true, submitted: 0 });
 
         const payload = indexNowPayload(urls);
-        const res = await fetch(INDEXNOW_ENDPOINT, { method: "POST", headers: { "content-type": "application/json; charset=utf-8" }, body: JSON.stringify(payload) });
-        if (!indexNowAccepted(res.status)) return Response.json({ ok: false, status: res.status, submitted: 0 }, { status: 502 });
+        // Annahmestellen nacheinander probieren; die erste, die annimmt, genügt.
+        const attempts: { host: string; status: number | null }[] = [];
+        let accepted = false;
+        for (const endpoint of INDEXNOW_ENDPOINTS) {
+          const host = new URL(endpoint).host;
+          try {
+            const res = await fetch(endpoint, { method: "POST", headers: { "content-type": "application/json; charset=utf-8", "user-agent": INDEXNOW_USER_AGENT }, body: JSON.stringify(payload) });
+            attempts.push({ host, status: res.status });
+            if (indexNowAccepted(res.status)) { accepted = true; break; }
+          } catch {
+            attempts.push({ host, status: null });
+          }
+        }
+        if (!accepted) return Response.json({ ok: false, submitted: 0, attempts }, { status: 502 });
         if (!initialized) await db.from("app_settings").upsert({ key: "indexnow_state", value: { initialized_at: new Date().toISOString(), first_count: payload.urlList.length }, updated_at: new Date().toISOString() });
-        return Response.json({ ok: true, status: res.status, submitted: payload.urlList.length, initial: !initialized });
+        return Response.json({ ok: true, submitted: payload.urlList.length, initial: !initialized, attempts });
       },
     },
   },
