@@ -21,7 +21,7 @@ export function ReferralCard() {
   return (
     <section className="rounded-[14px] border border-line bg-surface p-5" aria-labelledby="referral-title">
       <h2 id="referral-title" className="text-xl">Empfehlen & Verdienen</h2>
-      <p className="mt-1 text-sm text-ink-muted">Du bekommst {reward} {LOYALTY_NAME} für jeden Freund, der sich anmeldet und kauft. Dein Freund bekommt ebenfalls {reward}.</p>
+      <p className="mt-1 text-sm text-ink-muted">Dein Freund bekommt {reward} Rabatt auf seinen ersten Einkauf, wenn er sich mit deinem Link anmeldet (als {LOYALTY_NAME}, im Bezahlvorgang einlösbar). Du bekommst {reward} {LOYALTY_NAME}, sobald er seinen ersten Einkauf bezahlt hat.</p>
       <div className="mt-4 flex flex-wrap items-center gap-3 rounded-lg border border-line px-3 py-2">
         <div className="min-w-0 flex-1">
           <div className="text-xs text-ink-muted">Dein Empfehlungscode</div>

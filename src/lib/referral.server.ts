@@ -43,10 +43,17 @@ export async function applyReferral(userId: string, rawCode: string): Promise<Ap
   const { count } = await db.from("orders").select("id", { count: "exact", head: true }).eq("user_id", userId).eq("is_test", false).in("status", [...EARN_STATUSES]);
   if ((count ?? 0) > 0) return "not_new";
   const { error } = await db.from("referrals").insert({ referred_id: userId, referrer_id: owner.user_id, code });
-  return error ? "already_referred" : "ok";
+  if (error) return "already_referred";
+  // Der Freund bekommt sein Guthaben sofort, damit er es schon beim ersten Kauf einsetzen kann (wie ein Rabatt).
+  const { error: credit } = await db.from("loyalty_adjustments").insert({ user_id: userId, amount: toEuro(REFERRAL_REWARD_CENTS), reason: "Empfehlung: Rabatt auf den ersten Kauf", counts_for_tier: false });
+  if (credit) {
+    await db.from("referrals").delete().eq("referred_id", userId);
+    throw credit;
+  }
+  return "ok";
 }
 
-/** Nach bestätigter Zahlung: erste echte Bestellung eines geworbenen Kontos bringt beiden 2 € GlobeMoney, genau einmal. */
+/** Nach bestätigter Zahlung: erste echte Bestellung eines geworbenen Kontos bringt dem Werber 2 € GlobeMoney, genau einmal (der Freund hat seine 2 € schon bei der Zuordnung bekommen). */
 export async function rewardReferral(orderId: string): Promise<void> {
   try {
     const db = await admin();
@@ -61,10 +68,7 @@ export async function rewardReferral(orderId: string): Promise<void> {
       .eq("referred_id", order.user_id).is("rewarded_at", null).select("referred_id");
     if (!claimed?.length) return;
     const amount = toEuro(REFERRAL_REWARD_CENTS);
-    const { error } = await db.from("loyalty_adjustments").insert([
-      { user_id: ref.referrer_id, amount, reason: "Empfehlung: Freund hat gekauft", counts_for_tier: false },
-      { user_id: order.user_id, amount, reason: "Empfehlung: Willkommensguthaben", counts_for_tier: false },
-    ]);
+    const { error } = await db.from("loyalty_adjustments").insert({ user_id: ref.referrer_id, amount, reason: "Empfehlung: Freund hat gekauft", counts_for_tier: false });
     if (error) {
       await db.from("referrals").update({ rewarded_at: null, reward_order_id: null }).eq("referred_id", order.user_id);
       throw error;
