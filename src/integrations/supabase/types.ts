@@ -749,6 +749,18 @@ export type Database = {
         }
         Relationships: []
       }
+      referral_codes: {
+        Row: { code: string; created_at: string; user_id: string }
+        Insert: { code: string; created_at?: string; user_id: string }
+        Update: { code?: string; created_at?: string; user_id?: string }
+        Relationships: []
+      }
+      referrals: {
+        Row: { code: string; created_at: string; referred_id: string; referrer_id: string; reward_order_id: string | null; rewarded_at: string | null }
+        Insert: { code: string; created_at?: string; referred_id: string; referrer_id: string; reward_order_id?: string | null; rewarded_at?: string | null }
+        Update: { code?: string; created_at?: string; referred_id?: string; referrer_id?: string; reward_order_id?: string | null; rewarded_at?: string | null }
+        Relationships: []
+      }
       loyalty_adjustments: {
         Row: {
           counts_for_tier: boolean

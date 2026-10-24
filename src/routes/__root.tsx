@@ -18,6 +18,7 @@ import instrument500 from "@fontsource/instrument-sans/500.css?url";
 import instrument600 from "@fontsource/instrument-sans/600.css?url";
 import { supabase } from "@/integrations/supabase/client";
 import { Toaster } from "@/components/ui/sonner";
+import { ReferralCapture } from "@/components/referral-capture";
 import { SearchBox } from "@/components/search-box";
 import { legalIndexQuery } from "@/lib/content.functions";
 import { trackPageView } from "@/lib/meta-pixel";
@@ -158,6 +159,7 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <Outlet />
+      <ReferralCapture />
       <Toaster />
     </QueryClientProvider>
   );
