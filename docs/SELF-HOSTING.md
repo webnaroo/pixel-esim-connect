@@ -93,4 +93,5 @@ Solange das Supabase-Projekt im Free-Plan läuft (keine täglichen Backups), sic
 
 ## GlobeMoney (Guthaben pro Kauf)
 `drizzle/migrations/0033_globemoney.sql` im SQL Editor ausführen (zwei neue Spalten in `orders`, zwei Funktionen nur für service_role). Optional `0034_globemoney_page.sql`: legt die Seite „GlobeMoney: Teilnahmebedingungen“ als **unveröffentlichten Entwurf** an (im Admin unter Rechtstexte prüfen und veröffentlichen). Stufen und Prozente stehen in `src/lib/loyalty.ts`.
+Zum Buchen von Hand (Admin → Kunden → „GlobeMoney buchen“) zusätzlich `drizzle/migrations/0035_globemoney_adjustments.sql` ausführen (nach 0033).
 
