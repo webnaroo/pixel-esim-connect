@@ -16,7 +16,7 @@ import { CaretRight, Funnel } from "@phosphor-icons/react";
 import { destinationQuery, shopStateQuery, type PlanItem } from "@/lib/catalog.functions";
 import { formatDays, formatPrice, formatData } from "@/lib/format";
 import { Flag, Chip, EmptyState } from "./brand";
-import { DestinationRow, PlanCard } from "./catalog";
+import { DestinationRow, PlanList } from "./catalog";
 import { SegmentedControl, Button, LinkButton } from "./ui-kit";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerTrigger } from "@/components/ui/drawer";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
@@ -128,11 +128,7 @@ export function DestinationPage({ slug }: { slug: string }) {
                   </DrawerContent>
                 </Drawer>
               </div>
-              <div className="mt-5 grid items-start gap-3 sm:grid-cols-2 xl:grid-cols-3">
-                {plans.map((p) => (
-                  <PlanCard key={p.id} plan={p} selected={selected === p.id} onSelect={() => setSelected(p.id)} />
-                ))}
-              </div>
+              <div className="mt-5"><PlanList plans={plans} selectedId={selected} onSelect={setSelected} /></div>
               {plans.length === 0 && <p className="mt-6 text-sm text-ink-muted">Keine Tarife für diese Filter.</p>}
             </div>
           </div>

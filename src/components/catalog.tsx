@@ -83,3 +83,50 @@ function PlanCardButton({ plan, selected, onSelect, disabled }: { plan: PlanItem
 export function PlanCardSkeleton() {
   return <div className="h-[128px] animate-pulse rounded-lg border border-line bg-surface" />;
 }
+
+/** Preisübersicht: Tarife nach Laufzeit gruppiert, pro Zeile Datenmenge links und Preis rechts. */
+export function PlanList({ plans, selectedId, onSelect }: { plans: PlanItem[]; selectedId: string | null; onSelect: (id: string) => void }) {
+  const days = [...new Set(plans.map((p) => p.validityDays))].sort((a, b) => a - b);
+  return (
+    <div className="space-y-6">
+      <h3 className="text-lg font-semibold text-ink">Wähle dein Paket</h3>
+      {days.map((d) => (
+        <section key={d} aria-label={formatDays(d)}>
+          <h4 className="mb-2 text-sm font-semibold text-ink">{formatDays(d)}</h4>
+          <ul className="space-y-2">
+            {plans.filter((p) => p.validityDays === d).sort((a, b) => (a.dataMb ?? Infinity) - (b.dataMb ?? Infinity) || a.price - b.price).map((p) => (
+              <li key={p.id}>
+                <button
+                  type="button"
+                  onClick={() => onSelect(p.id)}
+                  aria-pressed={selectedId === p.id}
+                  className={cn(
+                    "flex min-h-14 w-full items-center justify-between gap-3 rounded-xl bg-surface px-4 py-3 text-left transition-colors duration-150",
+                    selectedId === p.id ? "border-2 border-primary px-[15px] py-[11px]" : "border border-line hover:border-line-strong",
+                  )}
+                >
+                  <span className="min-w-0">
+                    <span className="block font-display text-lg font-semibold text-ink">
+                      {p.type === "unlimited" ? <UnlimitedLabel throttleClaim={p.throttleClaim} /> : formatData(p.dataMb)}
+                    </span>
+                    {(p.badge || p.networkType) && (
+                      <span className="mt-0.5 flex flex-wrap items-center gap-2 text-xs text-ink-muted">
+                        {p.badge && <Chip>{p.badge === "best_price" ? "Bestpreis" : p.badge === "popular" ? "Beliebt" : p.badge}</Chip>}
+                        {p.networkType && <span>{p.networkType}</span>}
+                      </span>
+                    )}
+                  </span>
+                  <span className="flex shrink-0 items-center gap-2">
+                    <span className="tabular text-xl font-semibold text-ink">{formatPrice(p.price, p.currency)}</span>
+                    {selectedId === p.id && <Check size={18} weight="bold" aria-hidden className="text-primary" />}
+                  </span>
+                </button>
+                {showsNoThrottle(p) && <div className="px-1 pt-1"><UnlimitedNote throttleClaim={p.throttleClaim} /></div>}
+              </li>
+            ))}
+          </ul>
+        </section>
+      ))}
+    </div>
+  );
+}
