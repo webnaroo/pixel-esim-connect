@@ -90,3 +90,7 @@ Solange das Supabase-Projekt im Free-Plan läuft (keine täglichen Backups), sic
 3. Wöchentlich planen (Aufgabenplanung): `schtasks /create /sc weekly /d SUN /st 03:00 /tn "GlobeSIM DB Backup" /tr "powershell -NoProfile -ExecutionPolicy Bypass -File C:\Pfad\zum\Repo\scripts\backup-supabase.ps1"`
 4. Die Sicherung enthält personenbezogene Daten: nur auf geschütztem Laufwerk, nie im Git-Repo. Storage-Dateien (`blog-covers`) sind nicht enthalten.
 5. Wiederherstellung: wie in Abschnitt 2 (zuerst `auth`, dann `public` mit `pg_restore`).
+
+## GlobeMoney (Guthaben pro Kauf)
+`drizzle/migrations/0033_globemoney.sql` im SQL Editor ausführen (zwei neue Spalten in `orders`, zwei Funktionen nur für service_role). Optional `0034_globemoney_page.sql`: legt die Seite „GlobeMoney: Teilnahmebedingungen“ als **unveröffentlichten Entwurf** an (im Admin unter Rechtstexte prüfen und veröffentlichen). Stufen und Prozente stehen in `src/lib/loyalty.ts`.
+

@@ -53,6 +53,8 @@ export const Route = createFileRoute("/api/public/payments/webhook")({
                 if (updated?.length) {
                   const { notifyAdminsNewOrder } = await import("@/lib/email.server");
                   await notifyAdminsNewOrder(orderId);
+                  const { awardLoyalty } = await import("@/lib/loyalty.server");
+                  await awardLoyalty(orderId);
                   await fulfillOrderById(orderId);
                 }
               } else if (decision.action === "mismatch") {

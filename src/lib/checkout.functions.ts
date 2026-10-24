@@ -178,13 +178,35 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
       .single();
     if (error || !order) { await releaseDiscount(); return { ok: false, error: "payment_unavailable" }; }
 
+    // GlobeMoney: Guthaben nur für Konten und echte Bestellungen. Die Datenbank reserviert es atomar (sie kennt Kontostand
+    // und offene Bestellungen); der Betrag kommt nie aus dem Browser. Storniert oder läuft die Bestellung ab, ist es wieder frei.
+    let payTotals = totals;
+    if (parsed.data.useCredit && caller.userId && env === "live") {
+      const { maxRedeemCents, toCents, toEuro } = await import("./loyalty");
+      const maxCents = maxRedeemCents(toCents(totals.gross), Number.MAX_SAFE_INTEGER);
+      if (maxCents > 0) {
+        const { data: granted, error: creditError } = await db.rpc("claim_loyalty_credit", { _order: order.id, _requested: toEuro(maxCents), _max: toEuro(maxCents) });
+        if (creditError) {
+          await db.from("orders").update({ status: "cancelled", last_error: "credit_unavailable" }).eq("id", order.id);
+          await releaseDiscount();
+          return { ok: false, error: "credit_unavailable" };
+        }
+        const creditUsed = Number(granted ?? 0);
+        if (creditUsed > 0) {
+          payTotals = discountedTotals(totals.gross, creditUsed, r.vatRate);
+          const snap = { provider_plan_id: r.plan.provider_plan_id, type: r.plan.type, data_mb: r.plan.data_mb, validity_days: r.plan.validity_days, destination: r.plan.destination!.name_de, throttle_claim: r.plan.throttle_claim, discount: discount ? { code: discount.code, type: discount.type, value: discount.value, amount: discount.amount } : null, credit: creditUsed };
+          await db.from("orders").update({ amount: payTotals.gross, net: payTotals.net, tax: payTotals.vat, plan_snapshot: snap }).eq("id", order.id);
+        }
+      }
+    }
+
     const { signGuestToken } = await import("./guest-token");
     const token = await signGuestToken(order.id, process.env["GUEST_TOKEN_SECRET"]!);
     const dest = r.plan.destination!.name_de;
     const description = `GlobeSIM eSIM ${dest} · ${r.plan.type === "unlimited" ? "Unlimited" : `${Math.round((r.plan.data_mb ?? 0) / 102.4) / 10} GB`} · ${r.plan.validity_days} Tage`;
     try {
       const pay = await createPayment({
-        env, orderId: order.id, amountCents: Math.round(totals.gross * 100), currency: r.price.currency, email: parsed.data.email, userId: caller.userId, description,
+        env, orderId: order.id, amountCents: Math.round(payTotals.gross * 100), currency: r.price.currency, email: parsed.data.email, userId: caller.userId, description,
         // The redirect only shows the order page; it never marks the order paid (only the verified webhook does).
         returnUrl: `${parsed.data.returnOrigin}/order/${order.id}?t=${encodeURIComponent(token)}`,
       });

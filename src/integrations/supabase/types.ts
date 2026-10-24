@@ -751,6 +751,8 @@ export type Database = {
       }
       orders: {
         Row: {
+          credit_earned: number | null
+          credit_used: number
           amount: number
           anonymized_at: string | null
           cost_amount: number | null
@@ -790,6 +792,8 @@ export type Database = {
           withdrawal_consent_at: string | null
         }
         Insert: {
+          credit_earned?: number | null
+          credit_used?: number
           amount: number
           anonymized_at?: string | null
           cost_amount?: number | null
@@ -829,6 +833,8 @@ export type Database = {
           withdrawal_consent_at?: string | null
         }
         Update: {
+          credit_earned?: number | null
+          credit_used?: number
           amount?: number
           anonymized_at?: string | null
           cost_amount?: number | null
@@ -1501,6 +1507,14 @@ export type Database = {
         }
       }
       disarm_fulfillment_retry_if_drained: { Args: never; Returns: boolean }
+      loyalty_balance: {
+        Args: { _exclude_order?: string; _user: string }
+        Returns: number
+      }
+      claim_loyalty_credit: {
+        Args: { _max: number; _order: string; _requested: number }
+        Returns: number
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

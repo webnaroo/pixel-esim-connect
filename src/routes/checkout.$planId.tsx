@@ -1,7 +1,7 @@
 import { CompatCheck } from "@/components/compat-check";
 import { UnlimitedLabel, UnlimitedNote } from "@/components/unlimited-claim";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useSuspenseQuery, useQueryClient } from "@tanstack/react-query";
+import { useSuspenseQuery, useQueryClient, useQuery } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
 import { cartDiscount } from "@/lib/cart";
 import { EmbeddedCheckoutProvider, EmbeddedCheckout } from "@stripe/react-stripe-js";
@@ -18,6 +18,9 @@ import { formatData, formatDays, formatPrice, USE_FIXTURES } from "@/lib/format"
 import { FIXTURE_ORDER_ID } from "@/lib/fixtures/order";
 import { isEmail } from "@/components/auth-shell";
 import { trackOncePerPage } from "@/lib/meta-pixel";
+import { useAuth } from "@/hooks/use-auth";
+import { myLoyaltyQuery } from "@/lib/loyalty.functions";
+import { LOYALTY_NAME, cashbackCents, maxRedeemCents, tierForSpend, toCents, toEuro } from "@/lib/loyalty";
 
 export const Route = createFileRoute("/checkout/$planId")({
   loader: ({ context, params }) => context.queryClient.ensureQueryData(checkoutPlanQuery(params.planId)),
@@ -46,6 +49,7 @@ const MESSAGES: Record<CheckoutError, string> = {
   rate_limited: "Zu viele Versuche. Bitte warte eine Minute.",
   discount_invalid: "Dieser Rabattcode existiert nicht. Bitte prüfe die Schreibweise.",
   discount_rejected: "Dieser Rabattcode ist nicht mehr gültig – entweder abgelaufen, ausgeschaltet oder das Nutzungslimit ist erreicht.",
+  credit_unavailable: "Das Guthaben konnte gerade nicht angerechnet werden. Bitte versuche es ohne Guthaben oder später noch einmal.",
   discount_minimum: "Mit diesem Rabattcode läge der Endpreis unter dem erlaubten Mindestbetrag. Bitte kontaktiere support@globesim.de.",
   real_payment_consent_required: "Admin-Probekauf: Diese Kasse verwendet echte Zahlungen. Es wird der angezeigte Betrag berechnet. Bitte bestätige dies unten.",
 };
@@ -104,6 +108,20 @@ function CheckoutPage() {
     return { ...discountedTotals(plan.price.gross, amount, plan.price.vatRate), discountAmount: amount };
   }, [plan?.price, discount]);
 
+  // GlobeMoney: nur mit Konto und echter Zahlung. Der Server bestimmt den Betrag; hier steht nur die Vorschau.
+  const { user } = useAuth();
+  const loyalty = useQuery({ ...myLoyaltyQuery(), enabled: Boolean(user), retry: false });
+  const [useCredit, setUseCredit] = useState(false);
+  const liveEnv = useMemo(() => { try { return getStripeEnvironment() === "live"; } catch { return false; } }, []);
+  const creditCents = useMemo(() => (user && liveEnv && useCredit && totals && loyalty.data ? maxRedeemCents(toCents(totals.gross), loyalty.data.balanceCents) : 0), [user, liveEnv, useCredit, totals, loyalty.data]);
+  const payable = useMemo(() => {
+    if (!totals || !plan?.price) return null;
+    return creditCents > 0 ? discountedTotals(totals.gross, toEuro(creditCents), plan.price.vatRate) : { gross: totals.gross, net: totals.net, vat: totals.vat };
+  }, [totals, creditCents, plan?.price]);
+  const balanceCents = loyalty.data?.balanceCents ?? 0;
+  const maxUsableCents = totals ? maxRedeemCents(toCents(totals.gross), balanceCents) : 0;
+  const earnCents = payable && loyalty.data ? cashbackCents(toCents(payable.gross), tierForSpend(loyalty.data.spendCents).rate) : 0;
+
   const applyCode = async (raw: string = codeInput) => {
     setCodeMessage(null);
     if (!raw.trim()) return;
@@ -154,7 +172,7 @@ function CheckoutPage() {
     setBusy(true);
     try {
       // Only plan, email and consent are sent. The price is calculated on the server.
-      const r = await submit({ data: { planId, email, withdrawalConsent: true, environment, realPaymentConsent, returnOrigin: window.location.origin, discountCode: discount?.code, displayedGross: plan.price?.gross } });
+      const r = await submit({ data: { planId, email, withdrawalConsent: true, environment, realPaymentConsent, returnOrigin: window.location.origin, discountCode: discount?.code, useCredit: creditCents > 0 ? true : undefined, displayedGross: plan.price?.gross } });
       if (!r.ok) {
         setError(MESSAGES[r.error]);
         if (r.error === "price_changed") await qc.invalidateQueries({ queryKey: ["checkout-plan", planId] });
@@ -164,7 +182,7 @@ function CheckoutPage() {
       else {
         setClientSecret(r.clientSecret);
         // InitiateCheckout only once the server accepted the order and opened the payment step.
-        if (totals && plan.price) trackOncePerPage("InitiateCheckout", planId, { content_ids: [planId], content_type: "product", num_items: 1, value: totals.gross, currency: plan.price.currency });
+        if (totals && plan.price) trackOncePerPage("InitiateCheckout", planId, { content_ids: [planId], content_type: "product", num_items: 1, value: payable?.gross ?? totals.gross, currency: plan.price.currency });
       }
     } catch {
       setError("Etwas ist schiefgelaufen. Bitte versuche es erneut.");
@@ -193,7 +211,10 @@ function CheckoutPage() {
             {totals.discountAmount > 0 && (
               <div className="flex justify-between text-primary"><dt>Rabatt ({discount!.code})</dt><dd className="tabular">−{formatPrice(totals.discountAmount, plan.price.currency)}</dd></div>
             )}
-            <div className="flex items-baseline justify-between border-t border-line pt-3 text-ink"><dt className="font-semibold">Gesamt</dt><dd className="tabular text-2xl font-semibold">{formatPrice(totals.gross, plan.price.currency)}</dd></div>
+            {creditCents > 0 && (
+              <div className="flex justify-between text-primary"><dt>{LOYALTY_NAME}</dt><dd className="tabular">−{formatPrice(toEuro(creditCents), plan.price.currency)}</dd></div>
+            )}
+            <div className="flex items-baseline justify-between border-t border-line pt-3 text-ink"><dt className="font-semibold">Gesamt</dt><dd className="tabular text-2xl font-semibold">{formatPrice((payable ?? totals).gross, plan.price.currency)}</dd></div>
             <p className="text-xs text-ink-muted">inkl. MwSt. · einmalige Zahlung, kein Abo</p>
           </>
         ) : (
@@ -260,6 +281,27 @@ function CheckoutPage() {
                     {codeMessage && !discount && <p className="mt-2 text-sm text-danger">{codeMessage}</p>}
                   </div>
 
+                  {liveEnv && (
+                    <div className="rounded-xl border border-line bg-surface p-4">
+                      <span className="text-sm font-medium text-ink">{LOYALTY_NAME}</span>
+                      {!user ? (
+                        <p className="mt-2 text-sm text-ink-muted"><Link to="/login" className="font-medium text-primary">Melde dich an</Link>, um bei diesem Kauf {LOYALTY_NAME} zu sammeln und Guthaben einzusetzen.</p>
+                      ) : loyalty.data ? (
+                        <>
+                          {maxUsableCents > 0 ? (
+                            <label className="mt-2 flex cursor-pointer items-start gap-3 text-sm text-ink">
+                              <input type="checkbox" checked={useCredit} onChange={(e) => setUseCredit(e.target.checked)} className="mt-1 size-5 shrink-0 accent-[var(--color-primary)]" />
+                              <span>Guthaben einsetzen: −{formatPrice(toEuro(maxUsableCents), plan.price?.currency ?? "EUR")} <span className="text-ink-muted">(Kontostand {formatPrice(toEuro(balanceCents), plan.price?.currency ?? "EUR")}, höchstens die Hälfte der Bestellung)</span></span>
+                            </label>
+                          ) : (
+                            <p className="mt-2 text-sm text-ink-muted">Dein Guthaben: {formatPrice(toEuro(balanceCents), plan.price?.currency ?? "EUR")}.</p>
+                          )}
+                          {earnCents > 0 && <p className="mt-2 text-sm text-ink-muted">Für diesen Kauf erhältst du etwa {formatPrice(toEuro(earnCents), plan.price?.currency ?? "EUR")} {LOYALTY_NAME} ({Math.round(tierForSpend(loyalty.data.spendCents).rate * 100)} %).</p>}
+                        </>
+                      ) : null}
+                    </div>
+                  )}
+
                   {error && <ErrorBox message={error} />}
                   {needsRealPaymentConsent && (
                     <label className="flex items-start gap-3 text-sm text-ink">
@@ -268,7 +310,7 @@ function CheckoutPage() {
                     </label>
                   )}
                   <Button type="submit" loading={busy} className="h-12 w-full text-base" disabled={!totals}>
-                    <ShieldCheck className="mr-2 size-5" aria-hidden />Weiter zur Zahlung{totals ? ` · ${formatPrice(totals.gross, plan.price?.currency ?? "EUR")}` : ""}
+                    <ShieldCheck className="mr-2 size-5" aria-hidden />Weiter zur Zahlung{totals ? ` · ${formatPrice((payable ?? totals).gross, plan.price?.currency ?? "EUR")}` : ""}
                   </Button>
                 </form>
               </>

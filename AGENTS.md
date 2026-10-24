@@ -39,3 +39,5 @@
 - Meta Pixel only via src/lib/meta-pixel.ts after consent; Purchase only for server-paid non-test orders, once per order — no duplicate purchases.
 - Subdirectories have their own AGENTS.md — read it before changing files there.
 - Android-App-Funktionen (Push, Fingerabdruck-Sperre, Offline-eSIMs): Push nur über src/lib/push.server.ts (Texte aus push.ts, nie Aktivierungsdaten), Gerätetabelle push_devices nur über Serverfunktionen; Offline-Daten nur auf dem Gerät, beim Abmelden gelöscht (native-app.ts).
+- GlobeMoney (Guthaben pro Kauf, src/lib/loyalty.ts): alles wird aus orders abgeleitet (credit_earned, credit_used), kein zweites Konto. Gutschrift nur über awardLoyalty() nach bestätigter Zahlung (Webhook), nur Konten, nie Testbestellungen. Einsetzen nur über die DB-Funktion claim_loyalty_credit (service_role, Sperre pro Konto); der Betrag kommt nie aus dem Browser. Stornierte, abgelaufene und erstattete Bestellungen geben Guthaben frei. Statuslisten in loyalty.ts und in drizzle/migrations/0033_globemoney.sql immer gemeinsam ändern.
+

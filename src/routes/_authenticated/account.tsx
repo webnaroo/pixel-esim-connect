@@ -13,6 +13,7 @@ import { formatPrice } from "@/lib/format";
 import { DELETE_CONFIRM_WORD } from "@/lib/anonymize";
 import { supabase } from "@/integrations/supabase/client";
 import { AppSettingsCard } from "@/components/app-settings-card";
+import { GlobeMoneyCard } from "@/components/globemoney-card";
 import { useOfflineAutoSync } from "@/lib/app-offline-sync";
 
 export const Route = createFileRoute("/_authenticated/account")({
@@ -48,6 +49,7 @@ function Account() {
     <SiteLayout>
       <section className="container-page max-w-3xl pb-20 pt-8">
         <h1 className="text-3xl">Mein Konto</h1>
+        <div className="mt-6 empty:hidden"><GlobeMoneyCard /></div>
         <div className="mt-6">
           <SegmentedControl label="Kontobereich" value={tab} onChange={setTab} options={[{ value: "esims", label: "Meine eSIMs" }, { value: "orders", label: "Bestellungen" }, { value: "settings", label: "Einstellungen" }]} />
         </div>
