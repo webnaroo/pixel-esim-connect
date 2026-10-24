@@ -12,7 +12,7 @@ export async function loadSitemapPaths(): Promise<{ paths: string[]; posts: { sl
   ]);
   const ids = new Set(plans.map((p) => p.destination_id));
   const dest = destinations.filter((d) => ids.has(d.id)).map((d) => (d.type === "country" ? `/countries/${d.slug}` : `/regions/${d.slug}`));
-  const paths = ["/", "/destinations", "/how-it-works", "/faq", "/help", ...(posts.length ? ["/ratgeber"] : []), ...dest, ...legal.map((l) => `/legal/${l.slug}`), ...posts.map((p) => `/ratgeber/${p.slug}`)];
+  const paths = ["/", "/destinations", "/how-it-works", "/device-compatibility", "/faq", "/help", ...(posts.length ? ["/ratgeber"] : []), ...dest, ...legal.map((l) => `/legal/${l.slug}`), ...posts.map((p) => `/ratgeber/${p.slug}`)];
   return { paths, posts: posts.map((p) => ({ slug: p.slug, updated_at: p.updated_at })) };
 }
 

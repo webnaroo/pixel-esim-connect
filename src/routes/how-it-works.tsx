@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { SiteLayout } from "@/components/layout";
 import { LinkButton } from "@/components/ui-kit";
 import { CompatCheck } from "@/components/compat-check";
-import { ArrowDown, Compass, DeviceMobile, GlobeHemisphereWest, Lightning, QrCode, ArrowsDownUp, Receipt, ShieldCheck } from "@phosphor-icons/react";
+import { ArrowDown, Laptop, MapTrifold, Stack, DownloadSimple, Compass, DeviceMobile, GlobeHemisphereWest, Lightning, QrCode, ArrowsDownUp, Receipt, ShieldCheck } from "@phosphor-icons/react";
 import { pageIdentity } from "@/lib/seo";
 
 export const Route = createFileRoute("/how-it-works")({
@@ -71,10 +71,23 @@ function HowItWorks() {
         </div>
       </section>
 
+
+      {/* So verwendest du */}
+      <section className="container-page mt-16">
+        <h2 className="text-3xl lg:text-4xl">So verwendest du GlobeSIM</h2>
+        <ul className="mt-6 grid gap-4 md:grid-cols-3">
+          <UseCard icon={<MapTrifold size={24} aria-hidden />} tone="bg-mint/30" title="Ein Reiseziel auswählen">Suche dein Land oder eine ganze Region. Bei Reisen durch mehrere Länder lohnt sich oft ein Regionstarif.</UseCard>
+          <UseCard icon={<Stack size={24} aria-hidden />} tone="bg-primary/15" title="Ein Paket auswählen">Jedes Paket hat ein festes Datenvolumen, das für eine bestimmte Zeit gilt. Den Preis siehst du inkl. MwSt.</UseCard>
+          <UseCard icon={<DownloadSimple size={24} aria-hidden />} tone="bg-[oklch(0.86_0.09_60)]" title="Installieren und verbinden">Wenn du bereit bist, installierst du deine eSIM. Das dauert nur wenige Minuten und braucht eine Internetverbindung.</UseCard>
+        </ul>
+      </section>
+
       {/* Was ist eine eSIM */}
       <section id="was-ist-esim" className="container-page mt-16 scroll-mt-24">
         <div className="mx-auto max-w-4xl rounded-[2rem] border border-line bg-surface p-6 shadow-sm lg:p-10">
-          <h2 className="border-b border-line pb-4 text-2xl">Was ist eine eSIM?</h2>
+          <h2 className="text-3xl lg:text-4xl">Was ist eine eSIM?</h2>
+          <p className="mt-3 text-lg font-semibold text-ink">Sie funktioniert wie eine normale SIM-Karte, nur digital.</p>
+          <div className="mt-4 border-b border-line" />
           <div className="mt-6 grid items-start gap-8 md:grid-cols-[200px_1fr]">
             <ImageSlot icon={<DeviceMobile size={72} weight="duotone" aria-hidden />} label="Bild folgt" className="min-h-44" tone="sand" />
             <div className="space-y-4 text-ink-muted">
@@ -96,7 +109,13 @@ function HowItWorks() {
 
       {/* Warum GlobeSIM */}
       <section id="warum-globesim" className="container-page mt-20 scroll-mt-24 space-y-20">
-        <Feature icon={<GlobeHemisphereWest size={88} weight="duotone" aria-hidden />} tone="mint" title="Bleib im Ausland in Verbindung" sub="Mobile Daten ab der Landung">
+        <Feature icon={<DeviceMobile size={88} weight="duotone" aria-hidden />} tone="mint" title="Was sind die Vorteile von eSIMs?" sub="Flexibel, bequem und schnell eingerichtet">
+          Du kaufst und installierst eine eSIM in wenigen Minuten. Du brauchst dafür nur eine Internetverbindung, keine Plastikkarte und keinen Gang in den Laden.
+        </Feature>
+        <Feature flip icon={<Laptop size={88} weight="duotone" aria-hidden />} tone="sand" title="Was brauche ich für eine eSIM?" sub="Ein Gerät, das eSIMs unterstützt">
+          Viele Smartphones und Tablets unterstützen eSIMs, teils auch Laptops und Smartwatches. Wichtig ist, dass dein Gerät nicht an einen bestimmten Anbieter oder ein bestimmtes Netz gebunden ist.
+        </Feature>
+        <Feature flip icon={<GlobeHemisphereWest size={88} weight="duotone" aria-hidden />} tone="mint" title="Bleib im Ausland in Verbindung" sub="Mobile Daten ab der Landung">
           Mit GlobeSIM nutzt du am Reiseziel lokale Mobilfunknetze. Karten, Nachrichten und Tickets funktionieren, ohne dass du nach WLAN suchst.
         </Feature>
         <Feature flip icon={<Receipt size={88} weight="duotone" aria-hidden />} tone="sand" title="Weniger Roaming-Ärger" sub="Du weißt vorher, was es kostet">
@@ -108,6 +127,24 @@ function HowItWorks() {
         <Feature flip icon={<ShieldCheck size={88} weight="duotone" aria-hidden />} tone="sand" title="Guthaben bei jedem Kauf" sub="GlobeMoney">
           Bei jedem Kauf sammelst du GlobeMoney und steigst Stufe für Stufe auf. Das Guthaben kannst du bei deiner nächsten Bestellung einsetzen.
         </Feature>
+      </section>
+
+      {/* Gerätekompatibilität */}
+      <section id="kompatibilitaet" className="container-page mt-20 scroll-mt-24">
+        <div className="rounded-[2rem] bg-mint/20 px-6 py-12 lg:px-12">
+          <div className="grid items-center gap-8 md:grid-cols-2">
+            <div>
+              <h2 className="text-3xl lg:text-4xl">Gerätekompatibilität</h2>
+              <p className="mt-4 text-lg font-semibold text-ink">Jedes GlobeSIM-Paket ist eine eSIM.</p>
+              <p className="mt-3 text-ink-muted">Dein Gerät muss eSIMs unterstützen und darf keine Netzbetreiber-Sperre haben. Prüfe das am besten vor dem Kauf.</p>
+              <div className="mt-6 flex flex-wrap items-center gap-3">
+                <CompatCheck />
+                <LinkButton to="/device-compatibility" variant="secondary">Alle Geräte anzeigen</LinkButton>
+              </div>
+            </div>
+            <ImageSlot icon={<ShieldCheck size={80} weight="duotone" aria-hidden />} label="Bild folgt" tone="sand" className="min-h-52" />
+          </div>
+        </div>
       </section>
 
       {/* Installieren */}
@@ -137,6 +174,16 @@ function ImageSlot({ icon, label, className = "", tone, src }: { icon: React.Rea
     <div aria-hidden className={`grid place-items-center rounded-3xl text-primary ${tone === "mint" ? "bg-mint/25" : "bg-[oklch(0.93_0.04_80)]"} ${className}`}>
       <div className="flex flex-col items-center gap-2">{icon}<span className="text-xs uppercase tracking-wide text-ink-muted">{label}</span></div>
     </div>
+  );
+}
+
+function UseCard({ icon, tone, title, children }: { icon: React.ReactNode; tone: string; title: string; children: React.ReactNode }) {
+  return (
+    <li className="rounded-2xl border border-line bg-surface p-6 shadow-sm">
+      <span className={`grid size-12 place-items-center rounded-full text-ink ${tone}`}>{icon}</span>
+      <h3 className="mt-5 text-lg font-semibold">{title}</h3>
+      <p className="mt-2 text-sm leading-relaxed text-ink-muted">{children}</p>
+    </li>
   );
 }
 

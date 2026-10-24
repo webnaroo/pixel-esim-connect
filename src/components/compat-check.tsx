@@ -38,7 +38,7 @@ export function CompatCheck({ hint = false, className }: { hint?: boolean; class
   );
 }
 
-function CompatBody() {
+export function DeviceFinder() {
   const { data, isLoading, isError } = useQuery({ queryKey: ["esim-devices"], queryFn: loadDevices, staleTime: 5 * 60_000 });
   const [q, setQ] = useState("");
   const [open, setOpen] = useState<Set<string>>(new Set());
@@ -58,6 +58,60 @@ function CompatBody() {
 
   return (
     <>
+      {empty ? (
+        <p className="mt-5 rounded-[14px] border border-line p-4 text-sm">Die Geräteliste wird gerade aufgebaut. Frag im Zweifel den Hersteller.</p>
+      ) : isError ? (
+        <p className="mt-5 rounded-[14px] border border-line p-4 text-sm">Die Geräteliste konnte gerade nicht geladen werden. Frag im Zweifel den Hersteller.</p>
+      ) : isLoading ? (
+        <p className="mt-5 text-sm text-ink-muted">Geräteliste wird geladen …</p>
+      ) : (
+        <section className="mt-6" aria-label="Finde dein Gerät">
+          <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+            <h3 className="text-base font-semibold">Finde dein Gerät</h3>
+            <span className="text-xs text-ink-muted">{count} Modelle von {groups.length} Herstellern</span>
+          </div>
+          <label className="mt-3 flex items-center gap-2 rounded-md border border-line-strong bg-surface px-3">
+            <MagnifyingGlass size={18} aria-hidden className="shrink-0 text-ink-muted" />
+            <input value={q} onChange={(e) => setQ(e.target.value)} type="search" aria-label="Gerät suchen"
+              placeholder="Hersteller oder Modell suchen" className="h-11 min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-ink-muted" />
+          </label>
+          {searching && !filtered.length ? (
+            <p className="mt-4 text-sm">Kein Treffer. Frag bitte beim Hersteller nach eSIM-Unterstützung.</p>
+          ) : (
+            <ul className="mt-4 divide-y divide-line rounded-[14px] border border-line">
+              {filtered.map((g) => {
+                const isOpen = searching ? true : open.has(g.manufacturer);
+                return (
+                  <li key={g.manufacturer}>
+                    <button type="button" aria-expanded={isOpen} onClick={() => setOpen((s) => { const n = new Set(s); if (n.has(g.manufacturer)) n.delete(g.manufacturer); else n.add(g.manufacturer); return n; })}
+                      className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left">
+                      <span className="font-medium">{g.manufacturer}</span>
+                      <span className="flex items-center gap-2 text-xs text-ink-muted">{g.models.length} {g.models.length === 1 ? "Modell" : "Modelle"}<CaretDown size={14} aria-hidden className={isOpen ? "rotate-180" : ""} /></span>
+                    </button>
+                    {isOpen && (
+                      <ul className="space-y-1 px-4 pb-3 text-sm">
+                        {g.models.map((m) => (
+                          <li key={m.id} className={g.hits.has(m.id) ? "rounded bg-primary/10 px-2 py-1 font-medium" : "px-2 py-1"}>
+                            {m.model}{m.release_year ? <span className="text-ink-muted"> · {m.release_year}</span> : null}
+                            {m.notes && <span className="block text-xs text-ink-muted">{m.notes}</span>}
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </section>
+      )}
+    </>
+  );
+}
+
+function CompatBody() {
+  return (
+    <>
       <div className="flex items-start justify-between gap-4 px-5 pb-2 pt-5 sm:px-6">
         <D.Title className="text-xl font-semibold">Kompatibilität prüfen</D.Title>
         <D.Close aria-label="Schließen" className="grid size-9 shrink-0 place-items-center rounded-full border border-line bg-surface text-ink hover:border-ink-muted">
@@ -73,53 +127,7 @@ function CompatBody() {
         </ul>
         <p className="mt-4 text-sm text-ink-muted">Mit unserer Liste kannst du prüfen, ob dein Gerät eSIM-fähig ist. Beachte: Einige regionale Modelle unterstützen möglicherweise kein eSIM. Dein Gerät ist nicht dabei? Unsere Liste wird regelmäßig aktualisiert, ist aber nicht vollständig. Frag den Gerätehersteller nach eSIM-Unterstützung.</p>
 
-        {empty ? (
-          <p className="mt-5 rounded-[14px] border border-line p-4 text-sm">Die Geräteliste wird gerade aufgebaut. Frag im Zweifel den Hersteller.</p>
-        ) : isError ? (
-          <p className="mt-5 rounded-[14px] border border-line p-4 text-sm">Die Geräteliste konnte gerade nicht geladen werden. Frag im Zweifel den Hersteller.</p>
-        ) : isLoading ? (
-          <p className="mt-5 text-sm text-ink-muted">Geräteliste wird geladen …</p>
-        ) : (
-          <section className="mt-6" aria-label="Finde dein Gerät">
-            <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
-              <h3 className="text-base font-semibold">Finde dein Gerät</h3>
-              <span className="text-xs text-ink-muted">{count} Modelle von {groups.length} Herstellern</span>
-            </div>
-            <label className="mt-3 flex items-center gap-2 rounded-md border border-line-strong bg-surface px-3">
-              <MagnifyingGlass size={18} aria-hidden className="shrink-0 text-ink-muted" />
-              <input value={q} onChange={(e) => setQ(e.target.value)} type="search" aria-label="Gerät suchen"
-                placeholder="Hersteller oder Modell suchen" className="h-11 min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-ink-muted" />
-            </label>
-            {searching && !filtered.length ? (
-              <p className="mt-4 text-sm">Kein Treffer. Frag bitte beim Hersteller nach eSIM-Unterstützung.</p>
-            ) : (
-              <ul className="mt-4 divide-y divide-line rounded-[14px] border border-line">
-                {filtered.map((g) => {
-                  const isOpen = searching ? true : open.has(g.manufacturer);
-                  return (
-                    <li key={g.manufacturer}>
-                      <button type="button" aria-expanded={isOpen} onClick={() => setOpen((s) => { const n = new Set(s); if (n.has(g.manufacturer)) n.delete(g.manufacturer); else n.add(g.manufacturer); return n; })}
-                        className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left">
-                        <span className="font-medium">{g.manufacturer}</span>
-                        <span className="flex items-center gap-2 text-xs text-ink-muted">{g.models.length} {g.models.length === 1 ? "Modell" : "Modelle"}<CaretDown size={14} aria-hidden className={isOpen ? "rotate-180" : ""} /></span>
-                      </button>
-                      {isOpen && (
-                        <ul className="space-y-1 px-4 pb-3 text-sm">
-                          {g.models.map((m) => (
-                            <li key={m.id} className={g.hits.has(m.id) ? "rounded bg-primary/10 px-2 py-1 font-medium" : "px-2 py-1"}>
-                              {m.model}{m.release_year ? <span className="text-ink-muted"> · {m.release_year}</span> : null}
-                              {m.notes && <span className="block text-xs text-ink-muted">{m.notes}</span>}
-                            </li>
-                          ))}
-                        </ul>
-                      )}
-                    </li>
-                  );
-                })}
-              </ul>
-            )}
-          </section>
-        )}
+        <DeviceFinder />
       </div>
     </>
   );

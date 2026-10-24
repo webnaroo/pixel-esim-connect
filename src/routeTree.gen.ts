@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as CartRouteImport } from './routes/cart'
 import { Route as DestinationsRouteImport } from './routes/destinations'
+import { Route as DeviceCompatibilityRouteImport } from './routes/device-compatibility'
 import { Route as FaqRouteImport } from './routes/faq'
 import { Route as HelpRouteImport } from './routes/help'
 import { Route as HowItWorksRouteImport } from './routes/how-it-works'
@@ -77,6 +78,11 @@ const CartRoute = CartRouteImport.update({
 const DestinationsRoute = DestinationsRouteImport.update({
   id: '/destinations',
   path: '/destinations',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DeviceCompatibilityRoute = DeviceCompatibilityRouteImport.update({
+  id: '/device-compatibility',
+  path: '/device-compatibility',
   getParentRoute: () => rootRouteImport,
 } as any)
 const FaqRoute = FaqRouteImport.update({
@@ -330,6 +336,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/cart': typeof CartRoute
   '/destinations': typeof DestinationsRoute
+  '/device-compatibility': typeof DeviceCompatibilityRoute
   '/faq': typeof FaqRoute
   '/help': typeof HelpRoute
   '/how-it-works': typeof HowItWorksRoute
@@ -381,6 +388,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/cart': typeof CartRoute
   '/destinations': typeof DestinationsRoute
+  '/device-compatibility': typeof DeviceCompatibilityRoute
   '/faq': typeof FaqRoute
   '/help': typeof HelpRoute
   '/how-it-works': typeof HowItWorksRoute
@@ -433,6 +441,7 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/cart': typeof CartRoute
   '/destinations': typeof DestinationsRoute
+  '/device-compatibility': typeof DeviceCompatibilityRoute
   '/faq': typeof FaqRoute
   '/help': typeof HelpRoute
   '/how-it-works': typeof HowItWorksRoute
@@ -486,6 +495,7 @@ export interface FileRouteTypes {
     | '/'
     | '/cart'
     | '/destinations'
+    | '/device-compatibility'
     | '/faq'
     | '/help'
     | '/how-it-works'
@@ -537,6 +547,7 @@ export interface FileRouteTypes {
     | '/'
     | '/cart'
     | '/destinations'
+    | '/device-compatibility'
     | '/faq'
     | '/help'
     | '/how-it-works'
@@ -588,6 +599,7 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/cart'
     | '/destinations'
+    | '/device-compatibility'
     | '/faq'
     | '/help'
     | '/how-it-works'
@@ -641,6 +653,7 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   CartRoute: typeof CartRoute
   DestinationsRoute: typeof DestinationsRoute
+  DeviceCompatibilityRoute: typeof DeviceCompatibilityRoute
   FaqRoute: typeof FaqRoute
   HelpRoute: typeof HelpRoute
   HowItWorksRoute: typeof HowItWorksRoute
@@ -700,6 +713,13 @@ declare module '@tanstack/react-router' {
       path: '/destinations'
       fullPath: '/destinations'
       preLoaderRoute: typeof DestinationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/device-compatibility': {
+      id: '/device-compatibility'
+      path: '/device-compatibility'
+      fullPath: '/device-compatibility'
+      preLoaderRoute: typeof DeviceCompatibilityRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/faq': {
@@ -1084,6 +1104,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   CartRoute: CartRoute,
   DestinationsRoute: DestinationsRoute,
+  DeviceCompatibilityRoute: DeviceCompatibilityRoute,
   FaqRoute: FaqRoute,
   HelpRoute: HelpRoute,
   HowItWorksRoute: HowItWorksRoute,

@@ -143,7 +143,7 @@ export function Footer() {
           <p className="mt-3 max-w-xs text-sm text-ink-muted">eSIM für deine Reise. Online, sobald du landest.</p>
         </div>
         <FooterCol title="Reiseziele" links={[{ to: "/destinations", label: "Alle Reiseziele" }, { to: "/regions/europe", label: "Europa" }, { to: "/regions/asia", label: "Asien" }, { to: "/regions/global", label: "Weltweit" }]} />
-        <FooterCol title="Service" links={[{ to: "/how-it-works", label: "So funktioniert's" }, { to: "/faq", label: "FAQ" }, { to: "/help", label: "Hilfe & Kontakt" }]} />
+        <FooterCol title="Service" links={[{ to: "/how-it-works", label: "So funktioniert's" }, { to: "/device-compatibility", label: "Gerätekompatibilität" }, { to: "/faq", label: "FAQ" }, { to: "/help", label: "Hilfe & Kontakt" }]} />
         <LegalLinks />
         <FooterCol title="Konto" links={[{ to: user ? "/account" : "/login", label: user ? "Mein Konto" : "Anmelden" }, { to: "/ratgeber", label: "Ratgeber" }]} />
       </div>
