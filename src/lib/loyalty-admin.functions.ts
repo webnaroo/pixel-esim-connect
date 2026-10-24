@@ -56,8 +56,8 @@ export const adjustLoyaltyCredit = createServerFn({ method: "POST" })
     const before = await loyaltySummary(c.id);
     if (!deductionAllowed(before.balanceCents, data.amount)) throw new Error("Abziehen ist höchstens bis zum aktuellen Guthaben möglich.");
     const amount = Math.round(data.amount * 100) / 100;
-    const { data: row, error } = await db.from("loyalty_adjustments").insert({ user_id: c.id, amount, reason: data.reason, created_by: context.userId }).select("id").single();
+    const { data: row, error } = await db.from("loyalty_adjustments").insert({ user_id: c.id, amount, reason: data.reason, created_by: context.userId, counts_for_tier: amount > 0 && data.countsForTier }).select("id").single();
     if (error || !row) throw new Error("Die Buchung konnte nicht gespeichert werden.");
-    await db.from("audit_log").insert({ actor_id: context.userId, action: "loyalty_adjusted", entity: "loyalty_adjustment", entity_id: row.id, meta: { user_id: c.id, amount, reason: data.reason } });
+    await db.from("audit_log").insert({ actor_id: context.userId, action: "loyalty_adjusted", entity: "loyalty_adjustment", entity_id: row.id, meta: { user_id: c.id, amount, reason: data.reason, counts_for_tier: amount > 0 && data.countsForTier } });
     return customerView(c.id, c.email, c.name);
   });

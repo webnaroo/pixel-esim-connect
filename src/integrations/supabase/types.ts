@@ -751,6 +751,7 @@ export type Database = {
       }
       loyalty_adjustments: {
         Row: {
+          counts_for_tier: boolean
           amount: number
           created_at: string
           created_by: string | null
@@ -759,6 +760,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          counts_for_tier?: boolean
           amount: number
           created_at?: string
           created_by?: string | null
@@ -767,6 +769,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          counts_for_tier?: boolean
           amount?: number
           created_at?: string
           created_by?: string | null

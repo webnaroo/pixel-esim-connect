@@ -83,9 +83,19 @@ export const adminOrdersQuery = () => queryOptions({ queryKey: ["admin", "orders
 
 async function refundOrderNow(orderId: string, actorId: string) {
   const { supabaseAdmin: db } = await import("@/integrations/supabase/client.server");
-  const { data: o } = await db.from("orders").select("status,stripe_payment_intent_id,stripe_env").eq("id", orderId).single();
+  const { data: o } = await db.from("orders").select("status,stripe_payment_intent_id,stripe_env,amount,credit_used").eq("id", orderId).single();
   if (!o || !["paid", "fulfilling", "fulfilled", "fulfillment_failed", "payment_mismatch", "needs_review"].includes(o.status)) throw new Error("Nur bezahlte Bestellungen können erstattet werden.");
-  if (!o.stripe_payment_intent_id) throw new Error("Keine Zahlung zu dieser Bestellung gefunden.");
+  if (!o.stripe_payment_intent_id) {
+    // Komplett mit GlobeMoney bezahlt: es gibt keine Stripe-Zahlung. Die Erstattung ist die Statusänderung; das Guthaben wird
+    // dadurch automatisch wieder frei (erstattete Bestellungen zählen nicht als ausgegeben).
+    if (Number(o.amount) === 0 && Number(o.credit_used) > 0) {
+      await db.from("orders").update({ status: "refunded", refunded_at: new Date().toISOString(), refund_started_at: new Date().toISOString() }).eq("id", orderId);
+      await db.from("audit_log").insert({ actor_id: actorId, action: "order_refunded", entity: "order", entity_id: orderId, meta: { refund_id: null, credit_returned: Number(o.credit_used) } });
+      await db.from("support_tickets").update({ status: "closed" }).eq("order_id", orderId).like("subject", "Erstattung beantragt:%").neq("status", "closed");
+      return;
+    }
+    throw new Error("Keine Zahlung zu dieser Bestellung gefunden.");
+  }
   const { refundPayment } = await import("./payments.server");
   const { refundIdempotencyKey } = await import("./auto-refund");
   // Same key as the automatic refund: a manual and an automatic refund can never both go through.

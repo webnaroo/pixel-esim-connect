@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { cashbackCents, LOYALTY_TIERS, maxRedeemCents, nextTier, tierForSpend } from "./loyalty";
+import { cashbackCents, LOYALTY_TIERS, maxRedeemCents, nextTier, paidFullyWithCredit, tierForSpend } from "./loyalty";
 
 describe("GlobeMoney Stufen", () => {
   it("5 %, 6 %, 7 % und 10 % ab 0, 18, 60 und 140 €", () => {
@@ -32,18 +32,28 @@ describe("GlobeMoney Gutschrift", () => {
 });
 
 describe("GlobeMoney Einlösen", () => {
-  it("höchstens die Hälfte der Bestellung und nie mehr als der Kontostand", () => {
-    expect(maxRedeemCents(1000, 10_000)).toBe(500);
+  it("reicht das Guthaben, wird die ganze Bestellung damit bezahlt", () => {
+    expect(maxRedeemCents(1000, 10_000)).toBe(1000);
+    expect(maxRedeemCents(1000, 1000)).toBe(1000);
+    expect(maxRedeemCents(199, 199)).toBe(199);
+  });
+  it("sonst bleibt mindestens 0,50 € in bar (Stripe-Minimum), nie mehr als der Kontostand", () => {
+    expect(maxRedeemCents(1000, 999)).toBe(950);
     expect(maxRedeemCents(1000, 120)).toBe(120);
+    expect(maxRedeemCents(199, 190)).toBe(149);
+    expect(maxRedeemCents(80, 79)).toBe(30);
+    expect(maxRedeemCents(60, 55)).toBe(10);
+    expect(maxRedeemCents(50, 49)).toBe(0);
+    expect(maxRedeemCents(40, 39)).toBe(0);
+  });
+  it("kein Guthaben oder ungültige Werte ergeben 0", () => {
     expect(maxRedeemCents(1000, 0)).toBe(0);
-  });
-  it("lässt mindestens 0,50 € in bar übrig (Stripe-Minimum)", () => {
-    expect(maxRedeemCents(80, 10_000)).toBe(30);
-    expect(maxRedeemCents(50, 10_000)).toBe(0);
-    expect(maxRedeemCents(40, 10_000)).toBe(0);
-  });
-  it("ungültige Werte ergeben 0", () => {
     expect(maxRedeemCents(Number.NaN, 100)).toBe(0);
     expect(maxRedeemCents(1000, -5)).toBe(0);
+  });
+  it("erkennt die vollständige Zahlung mit Guthaben", () => {
+    expect(paidFullyWithCredit(199, 199)).toBe(true);
+    expect(paidFullyWithCredit(199, 198)).toBe(false);
+    expect(paidFullyWithCredit(0, 0)).toBe(false);
   });
 });

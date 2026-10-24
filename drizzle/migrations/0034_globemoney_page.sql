@@ -21,7 +21,7 @@ Die Gutschrift wird vergeben, sobald die Zahlung bestätigt ist. Für den Teil e
 
 ## Guthaben einsetzen
 
-Du kannst im Bezahlvorgang bis zu 50 % einer Bestellung mit Guthaben bezahlen. Mindestens 0,50 € müssen immer in bar bezahlt werden. Das Guthaben gilt nur im GlobeSIM-Shop. Es kann nicht ausgezahlt, übertragen oder gegen Bargeld getauscht werden.
+Du kannst im Bezahlvorgang mit Guthaben bezahlen, auch eine ganze Bestellung, wenn dein Guthaben reicht. Wird nur ein Teil mit Guthaben bezahlt, müssen mindestens 0,50 € in bar bezahlt werden. Das Guthaben gilt nur im GlobeSIM-Shop. Es kann nicht ausgezahlt, übertragen oder gegen Bargeld getauscht werden.
 
 ## Stornierung und Erstattung
 

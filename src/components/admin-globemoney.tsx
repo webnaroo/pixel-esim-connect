@@ -15,6 +15,7 @@ export function AdminGlobeMoney() {
   const [customer, setCustomer] = useState<Customer | null>(null);
   const [amount, setAmount] = useState("");
   const [reason, setReason] = useState("");
+  const [countsForTier, setCountsForTier] = useState(true);
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
 
@@ -30,7 +31,7 @@ export function AdminGlobeMoney() {
     if (!Number.isFinite(value) || value === 0) throw new Error("Bitte einen Betrag in Euro eingeben (zum Beispiel 5 oder -2,50).");
     const verb = value > 0 ? "gutschreiben" : "abziehen";
     if (!confirm(`${formatPrice(Math.abs(value), "EUR")} ${LOYALTY_NAME} ${verb} bei ${customer?.email}?`)) return;
-    const next = await adjust({ data: { email: customer!.email!, amount: value, reason } });
+    const next = await adjust({ data: { email: customer!.email!, amount: value, reason, countsForTier } });
     setCustomer(next); setAmount(""); setReason("");
     setMsg({ ok: true, text: `Gebucht. Neues Guthaben: ${formatPrice(next.balanceCents / 100, "EUR")}.` });
   });
@@ -56,6 +57,10 @@ export function AdminGlobeMoney() {
             <label><span className="sr-only">Grund</span><Input placeholder="Grund (z. B. Kulanz nach Verzögerung)" value={reason} maxLength={200} onChange={(e) => setReason(e.target.value)} /></label>
             <Button type="submit" loading={busy} disabled={!amount.trim() || reason.trim().length < 3}>Buchen</Button>
           </form>
+          <label className="flex cursor-pointer items-start gap-3 text-sm text-ink">
+            <input type="checkbox" checked={countsForTier} onChange={(e) => setCountsForTier(e.target.checked)} className="mt-0.5 size-5 shrink-0 accent-[var(--color-primary)]" />
+            <span>Gutschrift zählt für die Stufe (der Kunde steigt damit wie bei einem Kauf auf). Gilt nur bei Gutschriften, Abzüge senken die Stufe nie.</span>
+          </label>
           {customer.history.length > 0 && (
             <div>
               <h3 className="text-sm font-medium text-ink">Letzte Buchungen von Hand</h3>

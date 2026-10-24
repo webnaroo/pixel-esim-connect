@@ -1,7 +1,7 @@
 // GlobeMoney-Karte im Konto: Guthaben, Stufe, Fortschritt zur nächsten Stufe.
 import { useQuery } from "@tanstack/react-query";
 import { myLoyaltyQuery } from "@/lib/loyalty.functions";
-import { LOYALTY_NAME, LOYALTY_TIERS, MAX_REDEEM_SHARE, toEuro } from "@/lib/loyalty";
+import { LOYALTY_NAME, LOYALTY_TIERS, toEuro } from "@/lib/loyalty";
 import { formatPrice } from "@/lib/format";
 
 export function GlobeMoneyCard() {
@@ -40,7 +40,7 @@ export function GlobeMoneyCard() {
           </li>
         ))}
       </ul>
-      <p className="mt-4 text-xs text-ink-muted">Bei jedem Kauf bekommst du Guthaben, sobald die Zahlung bestätigt ist. Im Bezahlvorgang kannst du damit bis zur Hälfte einer Bestellung bezahlen ({Math.round(MAX_REDEEM_SHARE * 100)} %). Das Guthaben gilt nur im Shop und wird nicht ausgezahlt. Bei Erstattung oder Stornierung entfällt die Gutschrift der Bestellung.</p>
+      <p className="mt-4 text-xs text-ink-muted">Bei jedem Kauf bekommst du Guthaben, sobald die Zahlung bestätigt ist. Im Bezahlvorgang kannst du damit bezahlen, auch eine ganze Bestellung, wenn dein Guthaben reicht. Wird nur ein Teil damit bezahlt, bleiben mindestens 0,50 € in bar. Das Guthaben gilt nur im Shop und wird nicht ausgezahlt. Bei Erstattung oder Stornierung entfällt die Gutschrift der Bestellung.</p>
     </section>
   );
 }

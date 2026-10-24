@@ -12,9 +12,7 @@ export const LOYALTY_TIERS: readonly LoyaltyTier[] = [
   { id: "platinum", label: "Platin-Reisender", fromCents: 14000, rate: 0.1 },
 ];
 
-/** Höchstens so viel einer Bestellung darf mit Guthaben bezahlt werden. */
-export const MAX_REDEEM_SHARE = 0.5;
-/** Stripe nimmt keine Zahlungen unter 0,50 €: so viel bleibt immer in bar zu zahlen. */
+/** Stripe nimmt keine Zahlungen unter 0,50 €: Wird nur ein Teil mit Guthaben bezahlt, bleiben mindestens so viel in bar. */
 export const MIN_CASH_CENTS = 50;
 
 /** Bestellungen, die Gutschrift und Stufe zählen lassen (bezahlt, nicht erstattet, nicht storniert). */
@@ -41,12 +39,20 @@ export function cashbackCents(cashCents: number, rate: number): number {
   return Math.floor(cashCents * rate);
 }
 
-/** Wie viel Guthaben bei einer Bestellung eingesetzt werden darf: Kontostand, Anteil und Mindestbetrag in bar. */
+/**
+ * Wie viel Guthaben bei einer Bestellung eingesetzt werden darf.
+ * Reicht das Guthaben für die ganze Bestellung, wird sie komplett damit bezahlt (ohne Stripe).
+ * Sonst bleiben mindestens 0,50 € in bar, weil Stripe keine kleineren Zahlungen annimmt.
+ */
 export function maxRedeemCents(grossCents: number, balanceCents: number): number {
   if (!(grossCents > 0) || !(balanceCents > 0)) return 0;
-  const byShare = Math.floor(grossCents * MAX_REDEEM_SHARE);
-  const byMinimum = grossCents - MIN_CASH_CENTS;
-  return Math.max(0, Math.min(balanceCents, byShare, byMinimum));
+  if (balanceCents >= grossCents) return grossCents;
+  return Math.max(0, Math.min(balanceCents, grossCents - MIN_CASH_CENTS));
+}
+
+/** Wird die Bestellung vollständig mit Guthaben bezahlt? */
+export function paidFullyWithCredit(grossCents: number, creditCents: number): boolean {
+  return grossCents > 0 && creditCents >= grossCents;
 }
 
 export const toCents = (euro: number) => Math.round(euro * 100);

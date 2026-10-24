@@ -10,6 +10,8 @@ export const adjustInputSchema = z.object({
     .refine((v) => Math.abs(v) <= ADJUST_MAX_EURO, `Höchstens ${ADJUST_MAX_EURO} € pro Buchung`)
     .refine((v) => Math.abs(Math.round(v * 100) - v * 100) < 1e-6, "Höchstens zwei Nachkommastellen"),
   reason: z.string().trim().min(3, "Bitte einen Grund angeben").max(200),
+  /** Nur bei Gutschriften: zählt der Betrag für die Stufe (Aufstieg)? Abzüge senken die Stufe nie. */
+  countsForTier: z.boolean().default(true),
 });
 
 export const findInputSchema = z.object({ email: z.string().trim().toLowerCase().email().max(254) });

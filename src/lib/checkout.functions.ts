@@ -79,7 +79,7 @@ async function callerIdentity(): Promise<{ userId: string | null; isAdmin: boole
   return { userId: u.user.id, isAdmin: Boolean(isAdmin) };
 }
 
-type CheckoutResult = { ok: true; orderId: string; clientSecret: string; token: string; isTest: boolean } | { ok: false; error: CheckoutError; detail?: string };
+type CheckoutResult = { ok: true; orderId: string; clientSecret: string | null; token: string; isTest: boolean; paidWithCredit?: boolean } | { ok: false; error: CheckoutError; detail?: string };
 
 export const createCheckoutSession = createServerFn({ method: "POST" })
   .inputValidator((i: unknown) => i)
@@ -182,8 +182,10 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
     // und offene Bestellungen); der Betrag kommt nie aus dem Browser. Storniert oder läuft die Bestellung ab, ist es wieder frei.
     let payTotals = totals;
     if (parsed.data.useCredit && caller.userId && env === "live") {
-      const { maxRedeemCents, toCents, toEuro } = await import("./loyalty");
-      const maxCents = maxRedeemCents(toCents(totals.gross), Number.MAX_SAFE_INTEGER);
+      const { MIN_CASH_CENTS, maxRedeemCents, paidFullyWithCredit, toCents, toEuro } = await import("./loyalty");
+      const grossCents = toCents(totals.gross);
+      const { data: bal } = await db.rpc("loyalty_balance", { _user: caller.userId });
+      const maxCents = maxRedeemCents(grossCents, toCents(Number(bal ?? 0)));
       if (maxCents > 0) {
         const { data: granted, error: creditError } = await db.rpc("claim_loyalty_credit", { _order: order.id, _requested: toEuro(maxCents), _max: toEuro(maxCents) });
         if (creditError) {
@@ -191,10 +193,35 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
           await releaseDiscount();
           return { ok: false, error: "credit_unavailable" };
         }
-        const creditUsed = Number(granted ?? 0);
-        if (creditUsed > 0) {
-          payTotals = discountedTotals(totals.gross, creditUsed, r.vatRate);
+        let creditCents = toCents(Number(granted ?? 0));
+        // Sank das Guthaben zwischen Lesen und Reservieren, darf trotzdem kein Rest unter dem Stripe-Minimum übrig bleiben.
+        if (creditCents > 0 && !paidFullyWithCredit(grossCents, creditCents) && grossCents - creditCents < MIN_CASH_CENTS) {
+          creditCents = Math.max(0, grossCents - MIN_CASH_CENTS);
+          await db.from("orders").update({ credit_used: toEuro(creditCents) }).eq("id", order.id);
+        }
+        if (creditCents > 0) {
+          const creditUsed = toEuro(creditCents);
           const snap = { provider_plan_id: r.plan.provider_plan_id, type: r.plan.type, data_mb: r.plan.data_mb, validity_days: r.plan.validity_days, destination: r.plan.destination!.name_de, throttle_claim: r.plan.throttle_claim, discount: discount ? { code: discount.code, type: discount.type, value: discount.value, amount: discount.amount } : null, credit: creditUsed };
+          if (paidFullyWithCredit(grossCents, creditCents)) {
+            // Komplett mit GlobeMoney bezahlt: keine Stripe-Zahlung. Der Server markiert die Bestellung selbst als bezahlt
+            // (das Guthaben ist vorher atomar reserviert) und liefert wie nach einer bestätigten Zahlung aus.
+            await db.from("orders").update({ amount: 0, net: 0, tax: 0, plan_snapshot: snap }).eq("id", order.id);
+            const { data: marked } = await db.from("orders").update({ status: "paid" }).eq("id", order.id).eq("status", "pending").select("id");
+            if (!marked?.length) {
+              await db.from("orders").update({ status: "cancelled", last_error: "credit_payment_failed" }).eq("id", order.id).eq("status", "pending");
+              await releaseDiscount();
+              return { ok: false, error: "credit_unavailable" };
+            }
+            await db.from("audit_log").insert({ action: "paid_with_credit", entity: "order", entity_id: order.id, meta: { credit: creditUsed } });
+            const { signGuestToken: sign } = await import("./guest-token");
+            const creditToken = await sign(order.id, process.env["GUEST_TOKEN_SECRET"]!);
+            const { notifyAdminsNewOrder } = await import("./email.server");
+            await notifyAdminsNewOrder(order.id);
+            const { fulfillOrderById } = await import("./fulfillment.server");
+            await fulfillOrderById(order.id);
+            return { ok: true, orderId: order.id, clientSecret: null, token: creditToken, isTest: false, paidWithCredit: true };
+          }
+          payTotals = discountedTotals(totals.gross, creditUsed, r.vatRate);
           await db.from("orders").update({ amount: payTotals.gross, net: payTotals.net, tax: payTotals.vat, plan_snapshot: snap }).eq("id", order.id);
         }
       }

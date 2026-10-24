@@ -8,6 +8,10 @@ describe("GlobeMoney Buchung: Eingabe", () => {
     const r = adjustInputSchema.parse(ok);
     expect(r.email).toBe("kunde@example.com");
   });
+  it("zählt Gutschriften standardmäßig für die Stufe", () => {
+    expect(adjustInputSchema.parse(ok).countsForTier).toBe(true);
+    expect(adjustInputSchema.parse({ ...ok, countsForTier: false }).countsForTier).toBe(false);
+  });
   it("lehnt 0, zu große Beträge und halbe Cent ab", () => {
     expect(adjustInputSchema.safeParse({ ...ok, amount: 0 }).success).toBe(false);
     expect(adjustInputSchema.safeParse({ ...ok, amount: 500.01 }).success).toBe(false);

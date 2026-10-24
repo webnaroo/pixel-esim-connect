@@ -180,6 +180,10 @@ function CheckoutPage() {
         if (r.error.startsWith("discount_")) { setDiscount(null); setCodeMessage(null); }
       }
       else {
+        if (r.paidWithCredit) {
+          window.location.assign(`/order/${r.orderId}?t=${encodeURIComponent(r.token)}`);
+          return;
+        }
         setClientSecret(r.clientSecret);
         // InitiateCheckout only once the server accepted the order and opened the payment step.
         if (totals && plan.price) trackOncePerPage("InitiateCheckout", planId, { content_ids: [planId], content_type: "product", num_items: 1, value: payable?.gross ?? totals.gross, currency: plan.price.currency });
@@ -291,7 +295,7 @@ function CheckoutPage() {
                           {maxUsableCents > 0 ? (
                             <label className="mt-2 flex cursor-pointer items-start gap-3 text-sm text-ink">
                               <input type="checkbox" checked={useCredit} onChange={(e) => setUseCredit(e.target.checked)} className="mt-1 size-5 shrink-0 accent-[var(--color-primary)]" />
-                              <span>Guthaben einsetzen: −{formatPrice(toEuro(maxUsableCents), plan.price?.currency ?? "EUR")} <span className="text-ink-muted">(Kontostand {formatPrice(toEuro(balanceCents), plan.price?.currency ?? "EUR")}, höchstens die Hälfte der Bestellung)</span></span>
+                              <span>Guthaben einsetzen: −{formatPrice(toEuro(maxUsableCents), plan.price?.currency ?? "EUR")} <span className="text-ink-muted">(Kontostand {formatPrice(toEuro(balanceCents), plan.price?.currency ?? "EUR")})</span></span>
                             </label>
                           ) : (
                             <p className="mt-2 text-sm text-ink-muted">Dein Guthaben: {formatPrice(toEuro(balanceCents), plan.price?.currency ?? "EUR")}.</p>
@@ -310,7 +314,7 @@ function CheckoutPage() {
                     </label>
                   )}
                   <Button type="submit" loading={busy} className="h-12 w-full text-base" disabled={!totals}>
-                    <ShieldCheck className="mr-2 size-5" aria-hidden />Weiter zur Zahlung{totals ? ` · ${formatPrice((payable ?? totals).gross, plan.price?.currency ?? "EUR")}` : ""}
+                    <ShieldCheck className="mr-2 size-5" aria-hidden />{payable && payable.gross === 0 ? "Jetzt mit GlobeMoney bezahlen" : "Weiter zur Zahlung"}{totals ? ` · ${formatPrice((payable ?? totals).gross, plan.price?.currency ?? "EUR")}` : ""}
                   </Button>
                 </form>
               </>
