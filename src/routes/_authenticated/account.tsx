@@ -5,7 +5,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
 import { SiteLayout, signOut } from "@/components/layout";
 import { Chip, EmptyState, ErrorBox } from "@/components/brand";
-import { Button, Input, SegmentedControl } from "@/components/ui-kit";
+import { Button, Input } from "@/components/ui-kit";
 import { UnlimitedLabel, UnlimitedNote } from "@/components/unlimited-claim";
 import { deleteMyAccount, getMyInstallData, requestMyRefund, myAccountQuery, updateMyProfile } from "@/lib/account.functions";
 import { getEsimUsage } from "@/lib/usage.functions";
@@ -14,13 +14,24 @@ import { DELETE_CONFIRM_WORD } from "@/lib/anonymize";
 import { supabase } from "@/integrations/supabase/client";
 import { AppSettingsCard } from "@/components/app-settings-card";
 import { GlobeMoneyCard } from "@/components/globemoney-card";
+import { myLoyaltyQuery } from "@/lib/loyalty.functions";
 import { ReferralCard } from "@/components/referral-card";
 import { useOfflineAutoSync } from "@/lib/app-offline-sync";
 
+const TABS = ["esims", "orders", "globemoney", "referral", "settings"] as const;
+type Tab = (typeof TABS)[number];
+const NAV: { value: Tab; label: string }[] = [
+  { value: "esims", label: "Meine eSIMs" },
+  { value: "orders", label: "Bestellungen" },
+  { value: "globemoney", label: "Treue und GlobeMoney" },
+  { value: "referral", label: "Empfehlen & Verdienen" },
+  { value: "settings", label: "Kontoinformationen" },
+];
+
 export const Route = createFileRoute("/_authenticated/account")({
-  validateSearch: (search: Record<string, unknown>): { tab?: "esims" | "orders" | "settings" } => {
+  validateSearch: (search: Record<string, unknown>): { tab?: Tab } => {
     const tab = search["tab"];
-    return tab === "orders" || tab === "settings" || tab === "esims" ? { tab } : {};
+    return typeof tab === "string" && (TABS as readonly string[]).includes(tab) ? { tab: tab as Tab } : {};
   },
   head: () => ({
     meta: [
@@ -36,7 +47,6 @@ export const Route = createFileRoute("/_authenticated/account")({
   component: Account,
 });
 
-type Tab = "esims" | "orders" | "settings";
 type Data = Awaited<ReturnType<typeof import("@/lib/account.functions").getMyAccount>>;
 
 const STATUS_DE: Record<string, string> = { pending: "Offen", paid: "Bezahlt", fulfilling: "Wird eingerichtet", fulfilled: "Geliefert", fulfillment_failed: "Fehlgeschlagen", refunded: "Erstattet", cancelled: "Abgebrochen", payment_mismatch: "In Prüfung", needs_review: "In Prüfung" };
@@ -45,18 +55,47 @@ function Account() {
   const { tab: initialTab } = Route.useSearch();
   const [tab, setTab] = useState<Tab>(initialTab ?? "esims");
   const q = useQuery(myAccountQuery());
+  const loyalty = useQuery({ ...myLoyaltyQuery(), retry: false });
   useOfflineAutoSync(q.data);
+  const name = q.data?.profile.name?.trim() || q.data?.profile.email || "Mein Konto";
   return (
     <SiteLayout>
-      <section className="container-page max-w-3xl pb-20 pt-8">
-        <h1 className="text-3xl">Mein Konto</h1>
-        <div className="mt-6 empty:hidden"><GlobeMoneyCard /></div>
-        <div className="mt-6 empty:hidden"><ReferralCard /></div>
-        <div className="mt-6">
-          <SegmentedControl label="Kontobereich" value={tab} onChange={setTab} options={[{ value: "esims", label: "Meine eSIMs" }, { value: "orders", label: "Bestellungen" }, { value: "settings", label: "Einstellungen" }]} />
-        </div>
-        <div className="mt-8">
-          {q.error ? <ErrorBox message="Konto konnte nicht geladen werden." onRetry={() => q.refetch()} /> : !q.data ? <p className="text-ink-muted">Wird geladen …</p> : tab === "esims" ? <Esims data={q.data} /> : tab === "orders" ? <Orders data={q.data} /> : <Settings data={q.data} />}
+      <section className="container-page max-w-5xl pb-20 pt-8">
+        <div className="grid gap-8 md:grid-cols-[250px_1fr]">
+          <aside>
+            <div className="flex items-center gap-3">
+              <div aria-hidden className="grid size-12 shrink-0 place-items-center rounded-full bg-primary text-lg font-semibold text-primary-foreground">{name.charAt(0).toUpperCase()}</div>
+              <div className="min-w-0">
+                <div className="truncate text-lg font-semibold text-ink">{name}</div>
+                {loyalty.data && <div className="text-sm text-ink-muted"><span className="font-semibold text-ink">{loyalty.data.tier.label}:</span> {Math.round(loyalty.data.tier.rate * 100)} % Cashback</div>}
+              </div>
+            </div>
+            <nav aria-label="Kontobereich" className="mt-5 flex gap-1 overflow-x-auto md:flex-col md:overflow-visible">
+              {NAV.map((n) => (
+                <button
+                  key={n.value}
+                  type="button"
+                  aria-current={tab === n.value ? "page" : undefined}
+                  onClick={() => setTab(n.value)}
+                  className={`shrink-0 whitespace-nowrap rounded-md border-b-2 px-3 py-2.5 text-left text-sm transition-colors md:border-b-0 md:border-l-4 md:rounded-none md:rounded-r-md ${tab === n.value ? "border-primary bg-muted font-semibold text-ink" : "border-transparent text-ink-muted hover:text-ink"}`}
+                >
+                  {n.label}
+                </button>
+              ))}
+            </nav>
+          </aside>
+          <div className="min-w-0">
+            <h1 className="text-3xl">{NAV.find((n) => n.value === tab)!.label}</h1>
+            <div className="mt-6">
+              {tab === "globemoney" ? <GlobeMoneyCard />
+                : tab === "referral" ? <ReferralCard />
+                : q.error ? <ErrorBox message="Konto konnte nicht geladen werden." onRetry={() => q.refetch()} />
+                : !q.data ? <p className="text-ink-muted">Wird geladen …</p>
+                : tab === "esims" ? <Esims data={q.data} />
+                : tab === "orders" ? <Orders data={q.data} />
+                : <Settings data={q.data} />}
+            </div>
+          </div>
         </div>
       </section>
     </SiteLayout>
