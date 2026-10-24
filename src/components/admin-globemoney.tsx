@@ -27,7 +27,7 @@ export function AdminGlobeMoney() {
 
   const search = () => run(async () => { setCustomer(await find({ data: { email } })); });
   const book = () => run(async () => {
-    const value = Number(amount.replace(",", "."));
+    const value = Number(amount.trim().replace(/[\u2212\u2013\u2014\u2012]/g, "-").replace(/\s/g, "").replace(",", "."));
     if (!Number.isFinite(value) || value === 0) throw new Error("Bitte einen Betrag in Euro eingeben (zum Beispiel 5 oder -2,50).");
     const verb = value > 0 ? "gutschreiben" : "abziehen";
     if (!confirm(`${formatPrice(Math.abs(value), "EUR")} ${LOYALTY_NAME} ${verb} bei ${customer?.email}?`)) return;
