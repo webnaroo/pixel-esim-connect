@@ -1,7 +1,5 @@
 // Empfehlen & Verdienen: reine Regeln, ohne Datenbank. Die Tabellen stehen in drizzle/migrations/0037_referrals.sql.
 export const REFERRAL_REWARD_CENTS = 200;
-/** Erst ab diesem in bar bezahlten Betrag zählt der erste Kauf (gegen Mini-Bestellungen mit Fake-Konten). */
-export const REFERRAL_MIN_ORDER_CENTS = 500;
 /** Höchstens so viele belohnte Empfehlungen pro Werber (50 €). */
 export const REFERRAL_MAX_REWARDS = 25;
 
@@ -20,7 +18,7 @@ export function referralLink(origin: string, code: string): string {
   return `${origin}/register?ref=${encodeURIComponent(code)}`;
 }
 
-/** Belohnung nur beim ersten bezahlten Kauf, in bar mindestens REFERRAL_MIN_ORDER_CENTS und solange das Limit nicht erreicht ist. */
+/** Belohnung nur beim ersten bezahlten Kauf (egal wie hoch, aber in bar bezahlt) und solange das Limit nicht erreicht ist. */
 export function rewardAllowed(o: { cashCents: number; alreadyRewarded: boolean; referrerRewardCount: number }): boolean {
-  return !o.alreadyRewarded && o.cashCents >= REFERRAL_MIN_ORDER_CENTS && o.referrerRewardCount < REFERRAL_MAX_REWARDS;
+  return !o.alreadyRewarded && o.cashCents > 0 && o.referrerRewardCount < REFERRAL_MAX_REWARDS;
 }

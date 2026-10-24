@@ -13,8 +13,8 @@ describe("referral rules", () => {
   });
   it("builds a link", () => expect(referralLink("https://globesim.de", "ABCD2345")).toBe("https://globesim.de/register?ref=ABCD2345"));
   it("rewards only real first purchases within the limit", () => {
-    expect(rewardAllowed({ cashCents: 500, alreadyRewarded: false, referrerRewardCount: 0 })).toBe(true);
-    expect(rewardAllowed({ cashCents: 499, alreadyRewarded: false, referrerRewardCount: 0 })).toBe(false);
+    expect(rewardAllowed({ cashCents: 1, alreadyRewarded: false, referrerRewardCount: 0 })).toBe(true);
+    expect(rewardAllowed({ cashCents: 0, alreadyRewarded: false, referrerRewardCount: 0 })).toBe(false);
     expect(rewardAllowed({ cashCents: 900, alreadyRewarded: true, referrerRewardCount: 0 })).toBe(false);
     expect(rewardAllowed({ cashCents: 900, alreadyRewarded: false, referrerRewardCount: REFERRAL_MAX_REWARDS })).toBe(false);
   });

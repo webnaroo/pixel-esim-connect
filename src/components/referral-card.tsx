@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { myReferralQuery } from "@/lib/referral.functions";
-import { REFERRAL_MAX_REWARDS, REFERRAL_MIN_ORDER_CENTS, REFERRAL_REWARD_CENTS, referralLink } from "@/lib/referral";
+import { REFERRAL_MAX_REWARDS, REFERRAL_REWARD_CENTS, referralLink } from "@/lib/referral";
 import { LOYALTY_NAME, toEuro } from "@/lib/loyalty";
 import { formatPrice } from "@/lib/format";
 import { Button } from "@/components/ui-kit";
@@ -35,7 +35,7 @@ export function ReferralCard() {
         <a className="rounded-full border border-line px-4 py-2 font-medium text-ink" href={`mailto:?subject=${encodeURIComponent("Deine eSIM für die Reise")}&body=${text}`}>E-Mail</a>
       </div>
       <p className="mt-4 text-sm text-ink">Eingeladen: <span className="tabular font-medium">{d.invited}</span> · Belohnt: <span className="tabular font-medium">{d.rewarded}</span> · Verdient: <span className="tabular font-medium">{formatPrice(toEuro(d.earnedCents), "EUR")}</span></p>
-      <p className="mt-3 text-xs text-ink-muted">Die Belohnung gibt es, sobald dein Freund mit einem neuen Konto zum ersten Mal mindestens {formatPrice(toEuro(REFERRAL_MIN_ORDER_CENTS), "EUR")} in bar bezahlt hat. Höchstens {REFERRAL_MAX_REWARDS} belohnte Empfehlungen pro Konto. Eigene Konten zählen nicht. Das Guthaben gilt nur im Shop und wird nicht ausgezahlt.</p>
+      <p className="mt-3 text-xs text-ink-muted">Die Belohnung gibt es, sobald dein Freund mit einem neuen Konto zum ersten Mal etwas bezahlt hat, egal wie viel. Höchstens {REFERRAL_MAX_REWARDS} belohnte Empfehlungen pro Konto. Eigene Konten zählen nicht. Das Guthaben gilt nur im Shop und wird nicht ausgezahlt.</p>
     </section>
   );
 }
