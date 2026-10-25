@@ -57,7 +57,8 @@ export const Route = createFileRoute("/api/public/payments/webhook")({
                   await awardLoyalty(orderId);
                   const { rewardReferral } = await import("@/lib/referral.server");
                   await rewardReferral(orderId);
-                  await fulfillOrderById(orderId);
+                  // Stripe gibt nach kurzer Zeit auf: nur eine Abfrage, die Installationsdaten liefern eSIMerge-Webhook und Statusabfrage nach.
+                  await fulfillOrderById(orderId, { pollMs: 0 });
                 }
               } else if (decision.action === "mismatch") {
                 await db.from("orders").update({ status: "payment_mismatch", stripe_payment_intent_id: obj.payment_intent ?? null, last_error: decision.reason }).eq("id", orderId).eq("status", "pending");

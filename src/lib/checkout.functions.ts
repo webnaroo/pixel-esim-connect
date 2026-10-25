@@ -218,7 +218,7 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
             const { notifyAdminsNewOrder } = await import("./email.server");
             await notifyAdminsNewOrder(order.id);
             const { fulfillOrderById } = await import("./fulfillment.server");
-            await fulfillOrderById(order.id);
+            await fulfillOrderById(order.id, { pollMs: 10_000 });
             return { ok: true, orderId: order.id, clientSecret: null, token: creditToken, isTest: false, paidWithCredit: true };
           }
           payTotals = discountedTotals(totals.gross, creditUsed, r.vatRate);

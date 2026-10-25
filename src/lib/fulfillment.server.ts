@@ -118,11 +118,12 @@ export async function forgetWebhook(source: "stripe" | "provider", eventId: stri
   await db.from("webhook_events").delete().eq("source", source).eq("event_id", eventId).is("processed_at", null);
 }
 
-export async function fulfillOrderById(orderId: string): Promise<FulfillOutcome> {
+export async function fulfillOrderById(orderId: string, opts: { pollMs?: number } = {}): Promise<FulfillOutcome> {
   const { getProvider } = await import("./providers/index.server");
   const provider = getProvider();
   const outcome = await fulfillOrder({ store: dbFulfillmentStore, createOrder: (i) => provider.createOrder(i) }, orderId);
-  if (outcome === "fulfilled") await pollPendingInstallData(orderId);
+  // Aufrufer mit Zeitlimit (Stripe-Webhook, Kasse) begrenzen das Warten; den Rest holen eSIMerge-Webhook und Statusabfrage nach.
+  if (outcome === "fulfilled") await pollPendingInstallData(orderId, opts.pollMs === undefined ? {} : { maxMs: opts.pollMs });
   return outcome;
 }
 
