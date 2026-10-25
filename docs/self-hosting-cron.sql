@@ -6,8 +6,8 @@
 -- 1) Adresse der App (ohne Schrägstrich am Ende). Die alte Lovable-Adresse muss ersetzt werden.
 update public.internal_secrets set value = 'https://globesim.de' where name = 'cron_url';
 
--- 2) eSIM-Status alle 5 Minuten (Fallback, eSIMerge hat keine Webhooks).
-select cron.schedule('esim-status-poll', '*/5 * * * *', $job$
+-- 2) eSIM-Status jede Minute (Lieferung dauert oft 6-8 Minuten; Fallback zum eSIMerge-Webhook).
+select cron.schedule('esim-status-poll', '* * * * *', $job$
   select net.http_post(
     url := (select value from public.internal_secrets where name = 'cron_url') || '/api/public/cron/esim-status-poll',
     headers := jsonb_build_object('Content-Type','application/json','Authorization','Bearer ' || (select value from public.internal_secrets where name = 'cron')),
