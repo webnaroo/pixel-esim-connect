@@ -217,8 +217,9 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
             const creditToken = await sign(order.id, process.env["GUEST_TOKEN_SECRET"]!);
             const { notifyAdminsNewOrder } = await import("./email.server");
             await notifyAdminsNewOrder(order.id);
-            const { fulfillOrderById } = await import("./fulfillment.server");
-            await fulfillOrderById(order.id, { pollMs: 10_000 });
+            // Nicht in dieser Anfrage ausliefern (die Bestellung beim Anbieter kann lange dauern): Der Auftrag wird fällig gestellt,
+            // der Job fulfillment-retry (alle 30 s, per Trigger geweckt) liefert aus. Die Bestellseite aktualisiert sich selbst.
+            await db.from("orders").update({ next_attempt_at: new Date().toISOString() }).eq("id", order.id);
             return { ok: true, orderId: order.id, clientSecret: null, token: creditToken, isTest: false, paidWithCredit: true };
           }
           payTotals = discountedTotals(totals.gross, creditUsed, r.vatRate);
