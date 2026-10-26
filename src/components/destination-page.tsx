@@ -17,6 +17,8 @@ import { destinationQuery, shopStateQuery, type PlanItem } from "@/lib/catalog.f
 import { formatDays, formatPrice, formatData } from "@/lib/format";
 import { Flag, Chip, EmptyState } from "./brand";
 import { DestinationRow, PlanList } from "./catalog";
+import { DestinationSeoText } from "./destination-seo-text";
+import { metaDescription, metaTitle, planStats } from "@/lib/destination-seo";
 import { SegmentedControl, Button, LinkButton } from "./ui-kit";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerTrigger } from "@/components/ui/drawer";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
@@ -163,6 +165,8 @@ export function DestinationPage({ slug }: { slug: string }) {
         </section>
       )}
 
+      <DestinationSeoText d={d} />
+
       {Array.isArray(d.content?.faq) && (d.content.faq as { q: string; a: string }[]).length > 0 && (
         <section className="container-page mt-14 max-w-3xl">
           <h2>Fragen zu {d.name}</h2>
@@ -279,12 +283,13 @@ function FilterChip({ active, onClick, children }: { active: boolean; onClick: (
   );
 }
 
-export function destinationHead(d: { name: string; plans: { price: number }[]; fixturePlans?: boolean; content?: { seoTitle?: string | null; seoDescription?: string | null } | null } | null | undefined, path: string) {
+export function destinationHead(d: { name: string; plans: { price: number; type?: "data" | "unlimited"; dataMb?: number | null; validityDays?: number }[]; fixturePlans?: boolean; content?: { seoTitle?: string | null; seoDescription?: string | null } | null } | null | undefined, path: string) {
   const identity = pageIdentity(path);
   const prices = d && !d.fixturePlans ? d.plans.map((p) => p.price).filter((p) => Number.isFinite(p) && p > 0) : [];
   const from = prices.length ? Math.min(...prices) : null;
-  const title = d ? d.content?.seoTitle?.trim() || (from != null ? `eSIM für ${d.name} – ab ${formatPrice(from)} | GlobeSIM` : `eSIM für ${d.name} | GlobeSIM`) : "Reiseziel nicht gefunden | GlobeSIM";
-  const description = d ? d.content?.seoDescription?.trim() || `Vergleiche GlobeSIM eSIM-Tarife für ${d.name} nach Datenvolumen, Laufzeit und Preis inkl. MwSt. Prüfe die Kompatibilität und Installation per QR-Code.` : "Dieses Reiseziel ist bei GlobeSIM nicht verfügbar.";
+  const stats = d && !d.fixturePlans ? planStats(d.plans.map((p) => ({ type: p.type ?? "data", dataMb: p.dataMb ?? null, validityDays: p.validityDays ?? 0, price: p.price, networks: null, networkType: null, hotspot: null, topUpable: null }))) : null;
+  const title = d ? d.content?.seoTitle?.trim() || (stats ? metaTitle(d.name, stats) : from != null ? `eSIM für ${d.name} – ab ${formatPrice(from)} | GlobeSIM` : `eSIM für ${d.name} | GlobeSIM`) : "Reiseziel nicht gefunden | GlobeSIM";
+  const description = d ? d.content?.seoDescription?.trim() || (stats ? metaDescription(d.name, stats) : `Vergleiche GlobeSIM eSIM-Tarife für ${d.name} nach Datenvolumen, Laufzeit und Preis inkl. MwSt. Prüfe die Kompatibilität und Installation per QR-Code.`) : "Dieses Reiseziel ist bei GlobeSIM nicht verfügbar.";
   return {
     meta: [
       { title },
