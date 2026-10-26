@@ -15,6 +15,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { comparisonQuery } from "@/lib/comparison.functions";
 import { destinationsQuery, faqsQuery, popularQuery } from "@/lib/catalog.functions";
 import { CompatCheck } from "@/components/compat-check";
+import { HomeKnowledge } from "@/components/home-knowledge";
 import { isCompatFaq } from "@/lib/faq-rules";
 import airportBanner from "@/assets/home-airport.jpg";
 import mobileAirportBanner from "@/assets/home-airport-mobile.jpg";
@@ -34,9 +35,9 @@ export const Route = createFileRoute("/")({
     ]),
   head: () => ({
     meta: [
-      { title: "GlobeSIM – Reise-eSIM für mobiles Internet im Ausland" },
-      { name: "description", content: "Finde deine GlobeSIM Reise-eSIM: Tarife nach Reiseziel, Datenvolumen und Laufzeit vergleichen. Preise inkl. MwSt., eSIM-Kompatibilität und Installation prüfen." },
-      { property: "og:title", content: "GlobeSIM – Reise-eSIM für mobiles Internet im Ausland" },
+      { title: "eSIM kaufen: Reise-eSIM für Daten im Ausland | GlobeSIM" },
+      { name: "description", content: "eSIM kaufen für mobile Daten im Ausland: Reise-eSIM nach Reiseziel, Datenvolumen und Laufzeit vergleichen, Gerät prüfen und per QR-Code installieren." },
+      { property: "og:title", content: "eSIM kaufen: Reise-eSIM für Daten im Ausland | GlobeSIM" },
       { property: "og:description", content: "Vergleiche Reise-eSIMs für dein Reiseziel nach Datenvolumen, Laufzeit und Preis inkl. MwSt." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -55,6 +56,7 @@ function Home() {
       <HowItWorks />
       <ComparisonSection />
       <Compatibility />
+      <HomeKnowledge />
       <HomeFaq />
     </SiteLayout>
   );
