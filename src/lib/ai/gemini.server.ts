@@ -9,7 +9,7 @@ export const geminiModelId = () => process.env["GEMINI_MODEL"]?.trim() || GEMINI
 export const AI_BLOCKING_STATUSES = [401, 402, 403, 404];
 
 /** Tried in order when Google answers "high demand" (503) or a rate limit (429) for the main model. */
-export const GEMINI_FALLBACK_DEFAULT = "gemini-2.5-flash,gemini-flash-latest";
+export const GEMINI_FALLBACK_DEFAULT = "gemini-flash-latest,gemini-flash-lite-latest";
 export const geminiFallbackIds = () =>
   (process.env["GEMINI_FALLBACK_MODELS"] ?? GEMINI_FALLBACK_DEFAULT)
     .split(",").map((id) => id.trim()).filter(Boolean);
@@ -22,15 +22,18 @@ export function createGeminiModel(apiKey: string, onError?: (response: Response)
   const provider = createGoogleGenerativeAI({
     apiKey,
     fetch: async (input, init) => {
-      let response = await fetch(input, init);
-      if (OVERLOAD_STATUSES.includes(response.status)) {
+      const first = await fetch(input, init);
+      let response = first;
+      if (OVERLOAD_STATUSES.includes(first.status)) {
         const url = String(input instanceof Request ? input.url : input);
         for (const id of geminiFallbackIds().filter((id) => id !== mainId)) {
-          if (!OVERLOAD_STATUSES.includes(response.status)) break;
           const swapped = url.replace(/\/models\/[^/:?]+/, `/models/${id}`);
           if (swapped === url) break;
-          response = await fetch(swapped, init);
+          const attempt = await fetch(swapped, init);
+          if (attempt.ok) { response = attempt; break; }
         }
+        // No fallback worked (overloaded, or retired model): report the main model's error, not a fallback's.
+        response = response.ok ? response : first;
       }
       if (!response.ok && onError) await onError(response.clone());
       return response;
