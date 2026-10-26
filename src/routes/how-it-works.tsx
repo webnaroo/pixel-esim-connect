@@ -8,8 +8,8 @@ import { pageIdentity } from "@/lib/seo";
 export const Route = createFileRoute("/how-it-works")({
   head: () => ({
     meta: [
-      { title: "eSIM installieren: Anleitung für iPhone & Android | GlobeSIM" },
-      { name: "description", content: "So installierst du deine GlobeSIM eSIM: Reiseziel wählen, bezahlen, QR-Code scannen. Anleitung für iPhone und Android." },
+      { title: "eSIM kaufen und installieren: so funktioniert's | GlobeSIM" },
+      { name: "description", content: "So funktioniert GlobeSIM: Reiseziel wählen, bezahlen, QR-Code scannen und die eSIM auf iPhone oder Android einrichten. Mit Gerätecheck." },
       { property: "og:title", content: "So funktioniert GlobeSIM" },
       { property: "og:description", content: "Reiseziel wählen, bezahlen, QR-Code scannen." },
       { property: "og:type", content: "article" },
