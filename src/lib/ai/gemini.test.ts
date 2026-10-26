@@ -43,6 +43,26 @@ describe("gemini model", () => {
     expect(await upstreamErrorMessage(new Response("not json", { status: 500 }), "fallback")).toBe("fallback");
   });
 
+  it("falls back to another model when Google is overloaded (503)", async () => {
+    vi.stubEnv("GEMINI_MODEL", "");
+    vi.stubEnv("GEMINI_FALLBACK_MODELS", "fallback-a,fallback-b");
+    const overloaded = () => new Response(JSON.stringify({ error: { code: 503, message: "high demand" } }), { status: 503, headers: { "content-type": "application/json" } });
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce(overloaded())
+      .mockResolvedValueOnce(overloaded())
+      .mockResolvedValueOnce(okResponse("Hallo"));
+    vi.stubGlobal("fetch", fetchMock);
+    const errors: number[] = [];
+    const { text } = await generateText({ model: createGeminiModel("k", async (res) => { errors.push(res.status); }), prompt: "x", maxRetries: 0 });
+    expect(text).toBe("Hallo");
+    expect(errors).toEqual([]);
+    expect(fetchMock.mock.calls.map((c) => String(c[0]))).toEqual([
+      expect.stringContaining(GEMINI_MODEL_DEFAULT),
+      expect.stringContaining("/models/fallback-a"),
+      expect.stringContaining("/models/fallback-b"),
+    ]);
+  });
+
   it("builds a structured-output request for every schema the admin AI uses", async () => {
     const schemas: Record<string, z.ZodType<unknown>> = { draftOut, sectionOut, faqOut, suggestOut, seoAnalysisSchema };
     for (const [name, schema] of Object.entries(schemas)) {

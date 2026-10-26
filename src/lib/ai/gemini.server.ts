@@ -8,17 +8,35 @@ export const geminiModelId = () => process.env["GEMINI_MODEL"]?.trim() || GEMINI
 /** Upstream statuses that pause the AI until an admin releases it: bad/forbidden key, exhausted plan, unknown model. */
 export const AI_BLOCKING_STATUSES = [401, 402, 403, 404];
 
-/** `onError` gets a clone of every non-2xx upstream response (status and body for the admin message). */
+/** Tried in order when Google answers "high demand" (503) or a rate limit (429) for the main model. */
+export const GEMINI_FALLBACK_DEFAULT = "gemini-2.5-flash,gemini-flash-latest";
+export const geminiFallbackIds = () =>
+  (process.env["GEMINI_FALLBACK_MODELS"] ?? GEMINI_FALLBACK_DEFAULT)
+    .split(",").map((id) => id.trim()).filter(Boolean);
+
+const OVERLOAD_STATUSES = [429, 500, 503];
+
+/** `onError` gets a clone of the final non-2xx upstream response (status and body for the admin message). */
 export function createGeminiModel(apiKey: string, onError?: (response: Response) => Promise<void>) {
+  const mainId = geminiModelId();
   const provider = createGoogleGenerativeAI({
     apiKey,
     fetch: async (input, init) => {
-      const response = await fetch(input, init);
+      let response = await fetch(input, init);
+      if (OVERLOAD_STATUSES.includes(response.status)) {
+        const url = String(input instanceof Request ? input.url : input);
+        for (const id of geminiFallbackIds().filter((id) => id !== mainId)) {
+          if (!OVERLOAD_STATUSES.includes(response.status)) break;
+          const swapped = url.replace(/\/models\/[^/:?]+/, `/models/${id}`);
+          if (swapped === url) break;
+          response = await fetch(swapped, init);
+        }
+      }
       if (!response.ok && onError) await onError(response.clone());
       return response;
     },
   });
-  return provider(geminiModelId());
+  return provider(mainId);
 }
 
 export async function upstreamErrorMessage(response: Response, fallback: string): Promise<string> {
