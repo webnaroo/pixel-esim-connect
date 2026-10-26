@@ -62,6 +62,19 @@ export type CompanyProfile = { company_name?: string | undefined; street?: strin
 const DE = new Set(["deutschland", "germany", "de"]);
 
 /** Organization-Markup. Firmendaten kommen aus app_settings.company_info (nie hier eingetippt); fehlende Felder fehlen im Markup. */
+/** WebSite-Markup für die Startseite; bewusst ohne SearchAction (es gibt keine URL-basierte Suche). */
+export function websiteJsonLd() {
+  return {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "@id": `${SITE_URL}/#website`,
+    name: "GlobeSIM",
+    url: `${SITE_URL}/`,
+    inLanguage: "de",
+    publisher: { "@id": `${SITE_URL}/#organization` },
+  };
+}
+
 export function organizationJsonLd(company: CompanyProfile | null | undefined) {
   const c = company ?? {};
   const address = c.street || c.zip || c.city || c.country

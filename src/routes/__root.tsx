@@ -21,7 +21,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { ReferralCapture } from "@/components/referral-capture";
 import { SearchBox } from "@/components/search-box";
 import { companyProfileQuery, legalIndexQuery } from "@/lib/content.functions";
-import { OG_IMAGE, organizationJsonLd } from "@/lib/seo";
+import { OG_IMAGE, organizationJsonLd, websiteJsonLd } from "@/lib/seo";
 import { trackPageView } from "@/lib/meta-pixel";
 
 function NotFoundComponent() {
@@ -107,6 +107,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         type: "application/ld+json",
         children: JSON.stringify(organizationJsonLd(loaderData?.company ? { company_name: loaderData.company.company_name ?? undefined, street: loaderData.company.street ?? undefined, zip: loaderData.company.zip ?? undefined, city: loaderData.company.city ?? undefined, country: loaderData.company.country ?? undefined, email: loaderData.company.email ?? undefined, vat_id: loaderData.company.vat_id ?? undefined } : null)),
       },
+      { type: "application/ld+json", children: JSON.stringify(websiteJsonLd()) },
     ],
   }),
   shellComponent: RootShell,
