@@ -11,7 +11,7 @@ export const Route = createFileRoute("/ratgeber/")({
   head: ({ loaderData }) => ({
     meta: [
       { title: "Ratgeber: eSIM auf Reisen | GlobeSIM" },
-      { name: "description", content: "Ratgeber zu eSIM, mobilem Internet im Ausland, Einrichtung und Datenbedarf für deine Reiseziele." },
+      { name: "description", content: "Ratgeber zu eSIM, mobilem Internet im Ausland, Einrichtung und Datenbedarf: Anleitungen und Tipps für iPhone, Android und deine Reiseziele." },
       { property: "og:title", content: "GlobeSIM Ratgeber" },
       { property: "og:description", content: "Praktische Anleitungen rund um eSIM und Reisen." },
       { property: "og:type", content: "website" },
