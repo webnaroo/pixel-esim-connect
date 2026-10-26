@@ -85,7 +85,8 @@ export async function handleRatgeberAi(request: Request, config: { apiKey: strin
   });
   const result = streamText({
     model,
-    maxRetries: 0,
+    // Zwei Wiederholungen bei kurzer Überlastung des Modells (503/429). Schlüssel- und Kontofehler (401 bis 404) werden nicht wiederholt.
+    maxRetries: 2,
     abortSignal: request.signal,
     output: Output.object({ schema }),
     instructions: AI_RULES,
