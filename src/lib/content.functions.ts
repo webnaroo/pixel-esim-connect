@@ -28,6 +28,14 @@ export const getLegalIndex = createServerFn({ method: "GET" }).handler(async () 
   const order = LEGAL_SLUGS as readonly string[];
   return (data ?? []).sort((a, b) => order.indexOf(a.slug) - order.indexOf(b.slug));
 });
+/** Öffentliche Firmendaten (wie im Impressum) für das Organization-Markup. Nur die Felder, die ohnehin öffentlich stehen. */
+export const getCompanyProfile = createServerFn({ method: "GET" }).handler(async () => {
+  const { data } = await publicDb().from("app_settings").select("value").eq("key", "company_info").maybeSingle();
+  const c = parseCompanyInfo(data?.value);
+  return { company_name: c.company_name ?? null, street: c.street ?? null, zip: c.zip ?? null, city: c.city ?? null, country: c.country ?? null, email: c.email ?? null, vat_id: c.vat_id ?? null };
+});
+export const companyProfileQuery = () => queryOptions({ queryKey: ["company-profile"], queryFn: () => getCompanyProfile(), staleTime: 10 * 60_000 });
+
 export const legalIndexQuery = () => queryOptions({ queryKey: ["legal-index"], queryFn: () => getLegalIndex(), staleTime: 10 * 60_000 });
 
 async function renderLegal(db: ReturnType<typeof publicDb>, slug: string, onlyPublished: boolean) {

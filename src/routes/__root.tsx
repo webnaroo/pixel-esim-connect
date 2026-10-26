@@ -20,7 +20,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Toaster } from "@/components/ui/sonner";
 import { ReferralCapture } from "@/components/referral-capture";
 import { SearchBox } from "@/components/search-box";
-import { legalIndexQuery } from "@/lib/content.functions";
+import { companyProfileQuery, legalIndexQuery } from "@/lib/content.functions";
+import { OG_IMAGE, organizationJsonLd } from "@/lib/seo";
 import { trackPageView } from "@/lib/meta-pixel";
 
 function NotFoundComponent() {
@@ -71,14 +72,25 @@ function ErrorComponent({ error, reset }: ErrorComponentProps) {
 }
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
-  loader: ({ context }) => context.queryClient.ensureQueryData(legalIndexQuery()),
-  head: () => ({
+  loader: async ({ context }) => {
+    // Parallel, damit die zusätzliche Abfrage die Antwortzeit nicht verlängert. Fehlen die Firmendaten, bleibt das Markup minimal.
+    const [, company] = await Promise.all([
+      context.queryClient.ensureQueryData(legalIndexQuery()),
+      context.queryClient.ensureQueryData(companyProfileQuery()).catch(() => null),
+    ]);
+    return { company };
+  },
+  head: ({ loaderData }) => ({
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { property: "og:site_name", content: "GlobeSIM" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
+      { property: "og:image", content: OG_IMAGE },
+      { property: "og:image:width", content: "1200" },
+      { property: "og:image:height", content: "630" },
+      { name: "twitter:image", content: OG_IMAGE },
       { name: "theme-color", content: "#F6F3EE" },
     ],
     links: [
@@ -93,7 +105,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     scripts: [
       {
         type: "application/ld+json",
-        children: JSON.stringify({ "@context": "https://schema.org", "@type": "Organization", "@id": "https://globesim.de/#organization", name: "GlobeSIM", url: "https://globesim.de/", logo: "https://globesim.de/globesim-logo.png" }),
+        children: JSON.stringify(organizationJsonLd(loaderData?.company ? { company_name: loaderData.company.company_name ?? undefined, street: loaderData.company.street ?? undefined, zip: loaderData.company.zip ?? undefined, city: loaderData.company.city ?? undefined, country: loaderData.company.country ?? undefined, email: loaderData.company.email ?? undefined, vat_id: loaderData.company.vat_id ?? undefined } : null)),
       },
     ],
   }),

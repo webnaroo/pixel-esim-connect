@@ -57,3 +57,35 @@ export function productScript(d: { name: string; plans: { price: number }[]; fix
     }),
   }];
 }
+export type CompanyProfile = { company_name?: string | undefined; street?: string | undefined; zip?: string | undefined; city?: string | undefined; country?: string | undefined; email?: string | undefined; vat_id?: string | undefined };
+
+const DE = new Set(["deutschland", "germany", "de"]);
+
+/** Organization-Markup. Firmendaten kommen aus app_settings.company_info (nie hier eingetippt); fehlende Felder fehlen im Markup. */
+export function organizationJsonLd(company: CompanyProfile | null | undefined) {
+  const c = company ?? {};
+  const address = c.street || c.zip || c.city || c.country
+    ? {
+        "@type": "PostalAddress",
+        ...(c.street ? { streetAddress: c.street } : {}),
+        ...(c.zip ? { postalCode: c.zip } : {}),
+        ...(c.city ? { addressLocality: c.city } : {}),
+        ...(c.country ? { addressCountry: DE.has(c.country.toLowerCase()) ? "DE" : c.country } : {}),
+      }
+    : null;
+  return {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "@id": `${SITE_URL}/#organization`,
+    name: "GlobeSIM",
+    url: `${SITE_URL}/`,
+    logo: `${SITE_URL}/globesim-logo.png`,
+    description: "Reise-eSIM für mobiles Internet im Ausland",
+    ...(c.company_name && c.company_name !== "GlobeSIM" ? { legalName: c.company_name } : {}),
+    ...(c.email ? { email: c.email, contactPoint: { "@type": "ContactPoint", contactType: "customer support", email: c.email, availableLanguage: "de" } } : {}),
+    ...(address ? { address } : {}),
+    ...(c.vat_id ? { vatID: c.vat_id } : {}),
+  };
+}
+
+export const OG_IMAGE = `${SITE_URL}/og-globesim-1200x630.png`;

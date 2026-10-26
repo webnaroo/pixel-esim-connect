@@ -37,7 +37,7 @@ function Faq() {
           {data.map((f) => (
             <AccordionItem key={f.id} value={f.id}>
               <AccordionTrigger className="text-left text-base">{f.question}</AccordionTrigger>
-              <AccordionContent className="text-ink-muted">{f.answer}{isCompatFaq(f.question) && <CompatCheck hint className="mt-4" />}</AccordionContent>
+              <AccordionContent forceMount className="text-ink-muted">{f.answer}{isCompatFaq(f.question) && <CompatCheck hint className="mt-4" />}</AccordionContent>
             </AccordionItem>
           ))}
         </Accordion>
