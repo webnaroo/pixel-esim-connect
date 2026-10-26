@@ -70,14 +70,18 @@ async function store(edge: Cache, key: string, response: Response): Promise<void
     copy.headers.set(CACHED_AT, String(Date.now()));
     copy.headers.set("Cache-Control", "public, max-age=600");
     await edge.put(new Request(key), copy);
-  } catch {
-    /* Cache nicht verfügbar */
+  } catch (e) {
+    lastStoreError = String((e as Error)?.message ?? e).slice(0, 120);
   }
 }
+
+/** Letzter Fehler beim Speichern, sichtbar im Header x-edge-cache-note (Diagnose, enthält keine Nutzerdaten). */
+let lastStoreError = "";
 
 function tag(response: Response, state: "HIT" | "STALE" | "MISS" | "BYPASS"): Response {
   const out = new Response(response.body, response);
   out.headers.set("x-edge-cache", state);
+  if (state === "MISS" && lastStoreError) out.headers.set("x-edge-cache-note", lastStoreError);
   out.headers.delete(CACHED_AT);
   // Browser und Zwischenserver halten die Seite nicht fest; der Cache sitzt nur hier im Worker. Nicht gespeicherte Antworten (Fehler, 404) bleiben unverändert.
   if (state !== "BYPASS") out.headers.set("Cache-Control", "public, max-age=0, must-revalidate");

@@ -9,12 +9,13 @@ export const Route = createFileRoute("/llms.txt")({
         try {
           const { publicDb } = await import("@/lib/public-db.server");
           const { parseCompanyInfo } = await import("@/lib/legal");
-          const db = publicDb();
-          const [{ data: info }, { data: plans }] = await Promise.all([
-            db.from("app_settings").select("value").eq("key", "company_info").maybeSingle(),
-            db.from("public_plans").select("destination_id").limit(20000),
+          const { loadSitemapPaths } = await import("@/lib/sitemap.server");
+          // Dieselbe Zählung wie die Sitemap (vollständig paginiert). Ein einfaches Limit würde bei 13.000 Tarifen zu wenige Ziele zählen.
+          const [{ data: info }, { paths }] = await Promise.all([
+            publicDb().from("app_settings").select("value").eq("key", "company_info").maybeSingle(),
+            loadSitemapPaths(),
           ]);
-          const count = new Set((plans ?? []).map((p) => p.destination_id)).size;
+          const count = paths.filter((p) => p.startsWith("/countries/") || p.startsWith("/regions/")).length;
           return new Response(llmsTxt(parseCompanyInfo(info?.value), count || null), {
             headers: { "Content-Type": "text/plain; charset=utf-8", "Cache-Control": "public, max-age=300, s-maxage=3600" },
           });
