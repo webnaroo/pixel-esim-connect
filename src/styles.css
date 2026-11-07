@@ -2,6 +2,12 @@
 @source "../src";
 @import "tw-animate-css";
 
+/*
+ * DEPRECATED, remove in Phase 1: no .dark tokens exist and dark mode is not planned.
+ * Kept only because src/components/ui/alert.tsx still contains a `dark:` class.
+ * Removing the variant before that class is gone would make Tailwind fall back to
+ * prefers-color-scheme and change the alert border for users with a dark OS theme.
+ */
 @custom-variant dark (&:is(.dark *));
 
 /*
@@ -30,6 +36,30 @@
   --color-warning: var(--warning);
   --color-success: var(--success);
   --color-mobile-action: var(--mobile-action);
+
+  /*
+   * Phase 0 design tokens (additive, nothing uses them yet). New names only,
+   * so no existing Tailwind utility changes meaning.
+   */
+  --color-line-control: var(--line-control);
+  --color-warning-text: var(--warning-text);
+
+  --radius-chip: 8px;
+  --radius-control: 12px;
+  --radius-panel: 16px;
+
+  --shadow-raised: var(--shadow-raised);
+  --shadow-overlay: var(--shadow-overlay);
+
+  --ease-ui-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-ui-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --ease-ui-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+
+  --text-display: 36px;
+  --text-display--line-height: 38px;
+  --text-caption: 12px;
+  --text-caption--line-height: 16px;
+  --tracking-display: -0.03em;
 
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -81,7 +111,10 @@
   --danger: oklch(0.52 0.18 27);         /* #B3261E */
   --warning: oklch(0.6 0.12 70);         /* #B7791F */
   --success: oklch(0.5 0.1 155);         /* #1F7A4D */
-  --mobile-action: oklch(0.57 0.23 259);
+  /* DEPRECATED, remove in Phase 4: the extra blue is abolished. Aliased to petrol so the
+     brand is one colour on every screen size. Still referenced by the .home-* rules below
+     and by text-mobile-action in src/routes/index.tsx. */
+  --mobile-action: var(--primary);
   --mobile-action-foreground: oklch(1 0 0);
   --mobile-benefit: oklch(0.96 0.018 250);
 
@@ -116,6 +149,32 @@
   --sidebar-accent-foreground: var(--ink);
   --sidebar-border: var(--line);
   --sidebar-ring: var(--primary);
+
+  /* ---- Phase 0 design tokens (not yet used by any component) ---- */
+  /* Form-control borders: >= 3:1 on paper (3.56), surface (3.93) and muted (3.29), WCAG 1.4.11.
+     --line stays for cards and dividers. */
+  --line-control: oklch(0.6 0.016 225);
+  /* Warning as text: 5.61:1 on surface, 5.08:1 on paper. --warning stays for borders/icons. */
+  --warning-text: oklch(0.52 0.09 70);
+
+  /* Elevation: 0 = border only. 1 = raised/selected. 2 = overlays only. */
+  --shadow-raised: 0 1px 2px oklch(0.335 0.055 215 / 0.08);
+  --shadow-overlay: 0 8px 24px oklch(0.205 0.016 230 / 0.12), 0 1px 3px oklch(0.205 0.016 230 / 0.08);
+
+  /* Motion: UI stays under 300ms, never ease-in. */
+  --dur-press: 120ms;
+  --dur-hover: 160ms;
+  --dur-pop: 180ms;
+  --dur-sheet: 280ms;
+
+  /* Sticky header after scroll: translucent paper, no gradient, no strong shadow. */
+  --header-bg-scrolled: color-mix(in oklab, var(--paper) 85%, transparent);
+  --header-blur: 12px;
+
+  /* Section rhythm (mobile / tablet / desktop), 4px grid. */
+  --section-gap-sm: 48px;
+  --section-gap-md: 64px;
+  --section-gap-lg: 96px;
 }
 
 @layer base {
