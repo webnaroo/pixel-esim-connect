@@ -14,7 +14,7 @@ export function DestinationRow({ d }: { d: { type: string; slug: string; name: s
       className="flex min-h-16 min-w-0 items-center gap-3 rounded-lg border border-line bg-surface px-4 py-3 transition-[border-color,transform] duration-(--dur-hover) ease-ui-out hover:border-line-strong active:scale-[0.99] sm:gap-4"
     >
       <Flag code={isCountry ? d.flagCode : null} size={32} />
-      <span className="min-w-0 flex-1 truncate text-base font-medium text-ink">{d.name}</span>
+      <span className="min-w-0 flex-1 hyphens-auto break-words text-base font-medium leading-5 text-ink">{d.name}</span>
       {d.fromPrice != null && <span className="shrink-0 whitespace-nowrap tabular text-sm font-semibold text-ink">ab {formatPrice(d.fromPrice)}</span>}
       <CaretRight aria-hidden size={18} className="shrink-0 text-ink-muted" />
     </Link>

@@ -27,20 +27,23 @@ function DestinationTile({ d, index }: { d: DestinationListItem; index: number }
     >
       <div className="relative aspect-[4/3] overflow-hidden bg-primary/5">
         {panel != null ? (
-          <div className="absolute inset-0 transition-transform duration-(--dur-sheet) ease-ui-out group-hover:scale-[1.04]">
-            <img src={destinationPhotos} alt="" loading="lazy" width={1600} height={800} className="absolute top-0 h-full max-w-none object-cover" style={{ width: "400%", left: `${-panel * 100}%` }} />
-          </div>
+          <>
+            <div className="absolute inset-0 transition-transform duration-(--dur-sheet) ease-ui-out group-hover:scale-[1.04]">
+              <img src={destinationPhotos} alt="" loading="lazy" width={1600} height={800} className="absolute top-0 h-full max-w-none object-cover" style={{ width: "400%", left: `${-panel * 100}%` }} />
+            </div>
+            {/* The flag sits on the photo so the name below gets the full card width. */}
+            <Flag code={d.flagCode} size={28} className="absolute bottom-2 left-2 ring-2 ring-white" />
+          </>
         ) : (
           <div className="grid h-full place-items-center"><Flag code={d.flagCode} size={32} /></div>
         )}
       </div>
-      <div className="flex items-center gap-3 p-3 sm:p-4">
-        <Flag code={d.flagCode} size={24} className="shrink-0" />
+      <div className="flex items-start gap-3 p-3 sm:p-4">
         <div className="min-w-0 flex-1">
-          <p className="line-clamp-2 text-base font-semibold leading-5 text-ink [overflow-wrap:anywhere]">{name}</p>
-          {d.fromPrice != null && <p className="tabular mt-0.5 whitespace-nowrap text-sm text-ink-muted">ab {formatPrice(d.fromPrice)}</p>}
+          <p className="hyphens-auto break-words text-base font-semibold leading-5 text-ink">{name}</p>
+          {d.fromPrice != null && <p className="tabular mt-1 whitespace-nowrap text-sm text-ink-muted">ab {formatPrice(d.fromPrice)}</p>}
         </div>
-        <CaretRight aria-hidden size={16} className="hidden shrink-0 text-ink-muted transition-transform duration-(--dur-hover) ease-ui-out group-hover:translate-x-0.5 sm:block" />
+        <CaretRight aria-hidden size={16} className="mt-0.5 hidden shrink-0 text-ink-muted transition-transform duration-(--dur-hover) ease-ui-out group-hover:translate-x-0.5 sm:block" />
       </div>
     </Link>
   );

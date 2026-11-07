@@ -20,8 +20,9 @@ const TRUST = [
 export function Hero() {
   return (
     <section className="border-b border-line" aria-labelledby="home-title">
-      <div className="relative isolate">
-        <picture className="block lg:absolute lg:inset-0 lg:-z-10">
+      {/* lg:bg matches the photo's own left edge (#F5F1E8), so the capped photo on very wide screens has no visible seam. */}
+      <div className="relative isolate lg:bg-[#F5F1E8]">
+        <picture className="block lg:absolute lg:inset-y-0 lg:right-0 lg:-z-10 lg:w-full lg:max-w-[1600px]">
           <source media="(max-width: 1023px)" srcSet={mobileAirportBanner.url} />
           <img
             src={airportBanner}
@@ -29,7 +30,7 @@ export function Hero() {
             width={1920}
             height={960}
             fetchPriority="high"
-            className="h-[132px] w-full object-cover object-[center_30%] sm:h-[280px] lg:h-full lg:object-center"
+            className="h-[132px] w-full object-cover object-[center_15%] min-[480px]:h-[200px] sm:h-[280px] lg:h-full lg:object-[center_20%]"
           />
         </picture>
         <div className="container-page relative">

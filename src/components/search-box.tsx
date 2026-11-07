@@ -295,7 +295,7 @@ function ResultItem({ d, active, onSelect, id }: { d: { name: string; type: stri
     >
       <Flag code={d.type === "country" ? d.flagCode : null} size={28} className="shrink-0" />
       <div className="min-w-0 flex-1">
-        <div className="line-clamp-2 text-base font-medium leading-5 text-ink [overflow-wrap:anywhere] lg:text-[15px]">{d.name}</div>
+        <div className="hyphens-auto break-words text-base font-medium leading-5 text-ink lg:text-[15px]">{d.name}</div>
         <div className="mt-0.5 text-xs text-ink-muted">{d.type === "country" ? "Land" : d.type === "global" ? "Weltweit" : "Region"}</div>
       </div>
       {d.fromPrice != null && <span className="tabular shrink-0 whitespace-nowrap text-sm font-semibold text-ink">ab {formatPrice(d.fromPrice)}</span>}
