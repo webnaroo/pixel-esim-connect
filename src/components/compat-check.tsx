@@ -26,9 +26,9 @@ export function CompatCheck({ hint = false, className }: { hint?: boolean; class
           <CheckCircle size={18} weight="bold" aria-hidden className="text-primary" /> Kompatibilität prüfen
         </D.Trigger>
         <D.Portal>
-          <D.Overlay className="fixed inset-0 z-[110] bg-ink/40" />
+          <D.Overlay className="fixed inset-0 z-[110] bg-ink/40 ease-ui-out data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:duration-(--dur-pop) data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:duration-(--dur-press)" />
           <D.Content aria-label="Kompatibilität prüfen" aria-describedby={undefined}
-            className="fixed inset-x-0 bottom-0 z-[110] flex max-h-[90dvh] w-full flex-col rounded-t-2xl bg-background text-ink outline-none sm:inset-auto sm:left-1/2 sm:top-1/2 sm:max-h-[85vh] sm:w-[min(640px,calc(100vw-2rem))] sm:-translate-x-1/2 sm:-translate-y-1/2 sm:rounded-2xl">
+            className="fixed inset-x-0 bottom-0 z-[110] flex max-h-[90dvh] w-full flex-col rounded-t-2xl bg-background text-ink outline-none ease-ui-drawer data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:slide-in-from-bottom data-[state=open]:duration-(--dur-sheet) data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:slide-out-to-bottom data-[state=closed]:fill-mode-forwards data-[state=closed]:duration-(--dur-pop) sm:ease-ui-out sm:data-[state=open]:slide-in-from-bottom-0 sm:data-[state=open]:zoom-in-95 sm:data-[state=open]:duration-(--dur-pop) sm:data-[state=closed]:slide-out-to-bottom-0 sm:data-[state=closed]:zoom-out-95 sm:inset-auto sm:left-1/2 sm:top-1/2 sm:max-h-[85vh] sm:w-[min(640px,calc(100vw-2rem))] sm:-translate-x-1/2 sm:-translate-y-1/2 sm:rounded-2xl">
             <CompatBody />
           </D.Content>
         </D.Portal>

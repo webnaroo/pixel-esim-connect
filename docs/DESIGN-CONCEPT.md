@@ -140,7 +140,7 @@ Regeln:
 | --- | --- | --- | --- |
 | 0 ✅ | Neue Tokens additiv in `styles.css` (Motion, `line-control`, Radius-Skala), nichts verwendet | keins | `bun run build` |
 | 1 ✅ | Primitives vereinheitlichen: Button, Card, Input; `transition-all` raus; Press-Zustand; Hover-Gating | niedrig, wirkt auch im Admin | `bun run test`, Screenshots Shop und Admin |
-| 2 | Motion: Overlays, Sheet-Dauer, Menü-Exit | niedrig | Slow-Motion-Prüfung, Reduced-Motion-Test |
+| 2 ✅ | Motion: Overlays, Sheet-Dauer, Menü-Exit | niedrig | Slow-Motion-Prüfung, Reduced-Motion-Test |
 | 3 | Header/Footer/Navigation | mittel (Legal-Links, SSR-Hydration laut `AGENTS.md`) | Hydration ohne Warnung, Tastatur-Test |
 | 4 | Startseite entflechten (`.home-*` → Komponenten) | mittel | Visueller Vergleich 375/768/1280px |
 | 5 | Kategorie-, Detail-, Checkout-, Konto-Seiten | je Seite | Checkout nur visuell, Logik unberührt |

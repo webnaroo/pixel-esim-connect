@@ -201,11 +201,32 @@
     outline: 2px solid var(--color-primary);
     outline-offset: 2px;
   }
+  /*
+   * Reduced motion = fewer and gentler, not zero: opacity and colour changes stay (they aid
+   * comprehension); movement, scaling and blur from tw-animate-css enter/exit animations go.
+   */
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after {
+      --tw-enter-translate-x: 0 !important;
+      --tw-enter-translate-y: 0 !important;
+      --tw-enter-scale: 1 !important;
+      --tw-enter-rotate: 0 !important;
+      --tw-enter-blur: 0 !important;
+      --tw-exit-translate-x: 0 !important;
+      --tw-exit-translate-y: 0 !important;
+      --tw-exit-scale: 1 !important;
+      --tw-exit-rotate: 0 !important;
+      --tw-exit-blur: 0 !important;
+      animation-delay: 0s !important;
+      scroll-behavior: auto !important;
+    }
+    :active { scale: none !important; }
+    [class*="animate-accordion"], [class*="transition-transform"] {
       animation-duration: 0.01ms !important;
       transition-duration: 0.01ms !important;
     }
+    .animate-pulse { animation: none !important; }
+    .animate-spin { animation-duration: 1.6s !important; }
   }
 }
 

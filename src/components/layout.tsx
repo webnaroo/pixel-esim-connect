@@ -13,7 +13,7 @@ import { useCart } from "@/lib/cart";
 function CartLink() {
   const items = useCart();
   return (
-    <Link to="/cart" aria-label={`Warenkorb (${items.length})`} className="relative flex size-12 items-center justify-center rounded-md text-ink hover:bg-muted lg:size-10">
+    <Link to="/cart" aria-label={`Warenkorb (${items.length})`} className="relative flex size-12 items-center justify-center rounded-md text-ink transition-[background-color,color,transform] duration-(--dur-hover) ease-ui-out hover:bg-muted active:scale-[0.96] lg:size-10">
       <ShoppingCart size={22} aria-hidden />
       {items.length > 0 && (
         <span className="absolute right-1 top-1 flex min-w-[18px] items-center justify-center rounded-full bg-primary px-1 text-[11px] font-semibold leading-[18px] text-primary-foreground">{items.length}</span>
@@ -32,6 +32,8 @@ const NAV = [
 
 export function Header() {
   const [menu, setMenu] = useState(false);
+  // Keeps the overlay mounted for the exit animation. Opening renders immediately (menu || menuMounted).
+  const [menuMounted, setMenuMounted] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [mobileSearch, setMobileSearch] = useState(false);
   const { user } = useAuth();
@@ -49,6 +51,15 @@ export function Header() {
   }, [path]);
   useEffect(() => {
     document.body.style.overflow = menu ? "hidden" : "";
+  }, [menu]);
+  useEffect(() => {
+    if (menu) {
+      setMenuMounted(true);
+      return undefined;
+    }
+    // Exit animation is 120ms; unmount shortly after so nothing lingers (also covers reduced motion).
+    const t = setTimeout(() => setMenuMounted(false), 200);
+    return () => clearTimeout(t);
   }, [menu]);
   // "/" focuses the header search on desktop
   useEffect(() => {
@@ -74,7 +85,7 @@ export function Header() {
         <Wordmark />
         <nav aria-label="Hauptnavigation" className="hidden shrink-0 items-center gap-0 lg:flex xl:gap-1">
           {NAV.map((n) => (
-            <Link key={n.to} to={n.to} className="shrink-0 rounded-md px-2 py-2 text-[15px] text-ink-muted hover:text-ink xl:px-3" activeProps={{ className: "text-ink font-medium" }}>
+            <Link key={n.to} to={n.to} className="shrink-0 rounded-md px-2 py-2 text-[15px] text-ink-muted transition-colors duration-(--dur-hover) ease-ui-out hover:text-ink xl:px-3" activeProps={{ className: "text-ink font-medium" }}>
               {n.label}
             </Link>
           ))}
@@ -86,37 +97,44 @@ export function Header() {
           <CartLink />
           <Link
             to={user ? "/account" : "/login"}
-            className="hidden h-10 items-center gap-2 rounded-md px-3 text-[15px] font-medium text-ink hover:bg-muted lg:inline-flex"
+            className="hidden h-10 items-center gap-2 rounded-md px-3 text-[15px] font-medium text-ink transition-[background-color,color,transform] duration-(--dur-hover) ease-ui-out hover:bg-muted active:scale-[0.96] lg:inline-flex"
           >
             <UserCircle size={20} aria-hidden />
             {user ? "Konto" : "Anmelden"}
           </Link>
-          {user && <SignOutButton className="hidden h-10 items-center gap-2 rounded-md px-3 text-[15px] font-medium text-ink-muted hover:bg-muted hover:text-ink lg:inline-flex" />}
-          <button aria-label="Suche öffnen" onClick={() => setMobileSearch((v) => !v)} className="flex size-12 items-center justify-center rounded-md text-ink lg:hidden">
+          {user && <SignOutButton className="hidden h-10 items-center gap-2 rounded-md px-3 text-[15px] font-medium text-ink-muted transition-[background-color,color,transform] duration-(--dur-hover) ease-ui-out hover:bg-muted active:scale-[0.96] hover:text-ink lg:inline-flex" />}
+          <button aria-label="Suche öffnen" onClick={() => setMobileSearch((v) => !v)} className="flex size-12 items-center justify-center rounded-md text-ink transition-[background-color,transform] duration-(--dur-press) ease-ui-out active:scale-[0.94] active:bg-muted lg:hidden">
             <MagnifyingGlass size={22} />
           </button>
-          <button aria-label="Menü öffnen" aria-expanded={menu} onClick={() => setMenu(true)} className="flex size-12 items-center justify-center rounded-md text-ink lg:hidden">
+          <button aria-label="Menü öffnen" aria-expanded={menu} onClick={() => setMenu(true)} className="flex size-12 items-center justify-center rounded-md text-ink transition-[background-color,transform] duration-(--dur-press) ease-ui-out active:scale-[0.94] active:bg-muted lg:hidden">
             <List size={24} />
           </button>
         </div>
       </div>
       {mobileSearch && (
-        <div className="container-page py-3 lg:hidden">
+        <div className="container-page py-3 animate-in fade-in-0 slide-in-from-top-1 duration-(--dur-pop) ease-ui-out lg:hidden">
           <SearchBox size="sm" autoFocus />
         </div>
       )}
 
-      {menu && (
-        <div className="fixed inset-0 z-50 flex flex-col overflow-y-auto bg-paper animate-in fade-in duration-(--dur-hover) lg:hidden" role="dialog" aria-modal="true" aria-label="Menü">
+      {(menu || menuMounted) && (
+        <div
+          data-state={menu ? "open" : "closed"}
+          inert={!menu}
+          className="group/menu fixed inset-0 z-50 flex flex-col overflow-y-auto bg-paper ease-ui-out data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:slide-in-from-top-2 data-[state=open]:duration-(--dur-pop) data-[state=closed]:pointer-events-none data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:slide-out-to-top-2 data-[state=closed]:fill-mode-forwards data-[state=closed]:duration-(--dur-press) lg:hidden"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Menü"
+        >
           <div className="container-page flex h-14 shrink-0 items-center justify-between border-b border-line">
             <Wordmark />
-            <button aria-label="Menü schließen" onClick={() => setMenu(false)} className="flex size-12 items-center justify-center rounded-md text-ink">
+            <button aria-label="Menü schließen" onClick={() => setMenu(false)} className="flex size-12 items-center justify-center rounded-md text-ink transition-[background-color,transform] duration-(--dur-press) ease-ui-out active:scale-[0.94] active:bg-muted">
               <X size={24} />
             </button>
           </div>
           <nav aria-label="Mobile Navigation" className="container-page flex flex-col py-4">
-            {NAV.map((n) => (
-              <Link key={n.to} to={n.to} className="border-b border-line py-4 font-display text-2xl font-semibold tracking-[-0.02em] text-ink">
+            {NAV.map((n, i) => (
+              <Link key={n.to} to={n.to} style={{ animationDelay: `${40 + i * 30}ms` }} className="border-b border-line py-4 font-display text-2xl font-semibold tracking-[-0.02em] text-ink transition-colors duration-(--dur-hover) ease-ui-out fill-mode-backwards group-data-[state=open]/menu:animate-in group-data-[state=open]/menu:fade-in-0 group-data-[state=open]/menu:slide-in-from-bottom-2 group-data-[state=open]/menu:duration-(--dur-pop) active:text-primary">
                 {n.label}
               </Link>
             ))}
@@ -151,7 +169,7 @@ export function Footer() {
         <span>© {new Date().getFullYear()} GlobeSIM · Alle Preise inkl. MwSt.</span>
         <span aria-hidden>·</span>
         <a href="#" data-cc="c-settings" onClick={(e) => e.preventDefault()} className="underline-offset-4 hover:text-ink hover:underline">Cookie-Einstellungen</a>
-        <Link to="/admin" aria-label="Admin-Login" title="Admin-Login" className="inline-flex size-9 shrink-0 items-center justify-center rounded-md text-ink-muted hover:bg-muted hover:text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary">
+        <Link to="/admin" aria-label="Admin-Login" title="Admin-Login" className="inline-flex size-9 shrink-0 items-center justify-center rounded-md text-ink-muted transition-[background-color,color,transform] duration-(--dur-hover) ease-ui-out hover:bg-muted active:scale-[0.96] hover:text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary">
           <LockSimple size={16} aria-hidden />
         </Link>
       </div>
@@ -167,7 +185,7 @@ function FooterCol({ title, links }: { title: string; links: { to: string; label
         {links.map((l) => (
           <li key={l.to}>
             {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-            <Link to={l.to as any} className="text-sm text-ink-muted hover:text-ink">
+            <Link to={l.to as any} className="text-sm text-ink-muted transition-colors duration-(--dur-hover) ease-ui-out hover:text-ink">
               {l.label}
             </Link>
           </li>

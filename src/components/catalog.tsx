@@ -11,7 +11,7 @@ export function DestinationRow({ d }: { d: { type: string; slug: string; name: s
     <Link
       to={isCountry ? "/countries/$slug" : "/regions/$slug"}
       params={{ slug: d.slug }}
-      className="flex min-h-16 min-w-0 items-center gap-3 rounded-lg border border-line bg-surface px-4 py-3 transition-colors duration-(--dur-hover) ease-ui-out hover:border-line-strong sm:gap-4"
+      className="flex min-h-16 min-w-0 items-center gap-3 rounded-lg border border-line bg-surface px-4 py-3 transition-[border-color,transform] duration-(--dur-hover) ease-ui-out hover:border-line-strong active:scale-[0.99] sm:gap-4"
     >
       <Flag code={isCountry ? d.flagCode : null} size={32} />
       <span className="min-w-0 flex-1 truncate text-base font-medium text-ink">{d.name}</span>
@@ -52,7 +52,7 @@ function PlanCardButton({ plan, selected, onSelect, disabled }: { plan: PlanItem
       disabled={disabled}
       aria-pressed={selected}
       className={cn(
-        "relative flex min-h-[72px] w-full flex-col gap-2 rounded-lg bg-surface p-4 text-left transition-colors duration-(--dur-hover) ease-ui-out disabled:opacity-50",
+        "relative flex min-h-[72px] w-full flex-col gap-2 rounded-lg bg-surface p-4 text-left transition-[border-color,transform] duration-(--dur-hover) ease-ui-out active:scale-[0.99] disabled:opacity-50",
         selected ? "border-2 border-primary p-[15px]" : "border border-line hover:border-line-strong",
       )}
     >
