@@ -44,7 +44,7 @@ const LIGHT: Record<FactLight, { cls: string; label: string }> = {
   red: { cls: "bg-danger", label: "Abgelaufen, wird ausgeblendet" },
 };
 const today = () => new Date().toISOString().slice(0, 10);
-const sel = "h-12 rounded-md border border-line-strong bg-surface px-3 text-base";
+const sel = "h-12 rounded-md border border-line-control bg-surface px-3 text-base";
 
 async function run(p: PromiseLike<{ error: { message: string } | null }>, ok: string, done: () => void) {
   const { error } = await p;

@@ -67,7 +67,7 @@ export function CompetitorPicker({ items, value, onChange }: { items: ViewCompet
 }
 
 export function ComparisonRow({ row, competitor }: { row: ViewRow; competitor: string }) {
-  const cell = "rounded-[14px] border p-3 sm:p-4 text-sm text-ink";
+  const cell = "rounded-lg border p-3 sm:p-4 text-sm text-ink";
   return (
     <li className="py-4">
       <h3 className="text-sm font-semibold text-ink-muted">{row.question}</h3>

@@ -42,9 +42,9 @@ function RatgeberIndex() {
         ) : (
           <>
             <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-              <input type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Ratgeber durchsuchen" aria-label="Ratgeber durchsuchen" className="h-11 min-w-0 flex-1 rounded-full border border-line bg-surface px-4 text-base sm:text-sm" />
+              <input type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Ratgeber durchsuchen" aria-label="Ratgeber durchsuchen" className="h-11 min-w-0 flex-1 rounded-full border border-line-control bg-surface px-4 text-base sm:text-sm" />
               {countries.length > 0 && (
-                <select value={country} onChange={(e) => setCountry(e.target.value)} aria-label="Nach Land filtern" className="h-11 rounded-full border border-line bg-surface px-4 text-sm">
+                <select value={country} onChange={(e) => setCountry(e.target.value)} aria-label="Nach Land filtern" className="h-11 rounded-full border border-line-control bg-surface px-4 text-sm">
                   <option value="">Alle Länder</option>
                   {countries.map((c) => <option key={c} value={c}>{names.of(c) ?? c}</option>)}
                 </select>
@@ -53,7 +53,7 @@ function RatgeberIndex() {
             {list.length === 0 ? <p className="mt-8 text-ink-muted">Keine Beiträge gefunden.</p> : (
               <ul className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
                 {list.map((p) => (
-                  <li key={p.slug} className="min-w-0 overflow-hidden rounded-[14px] border border-line">
+                  <li key={p.slug} className="min-w-0 overflow-hidden rounded-lg border border-line">
                     <Link to="/ratgeber/$slug" params={{ slug: p.slug }} className="block h-full hover:border-primary">
                       {p.cover && <img src={p.cover} alt={p.coverAlt ?? ""} className="aspect-[16/9] w-full object-cover" loading="lazy" width={800} height={450} />}
                       <div className="p-4">

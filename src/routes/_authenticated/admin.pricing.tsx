@@ -26,7 +26,7 @@ const SCOPES = [
   { v: "plan_type", l: "Tariftyp (data/unlimited)" },
   { v: "global", l: "Global" },
 ] as const;
-const sel = "h-12 w-full rounded-md border border-line-strong bg-surface px-3 text-base";
+const sel = "h-12 w-full rounded-md border border-line-control bg-surface px-3 text-base";
 
 function Pricing() {
   const { data } = useSuspenseQuery(pricingQuery());

@@ -46,7 +46,7 @@ Außerdem: `@custom-variant dark` ist deklariert, aber es gibt keine `.dark`-Tok
 
 ### Buttons und Karten
 - Kein `:active`-Zustand (0 Treffer für `active:scale`). Klicks haben kein taktiles Feedback.
-- Hover nirgends mit `@media (hover: hover)` abgesichert (0 Treffer): auf Touch bleibt Hover nach Tap hängen (Karten, Chips, Links).
+- Korrektur (Phase 1): Der Quelltext enthält kein `@media (hover: hover)`, aber Tailwind v4 erzeugt es für jede `hover:`-Utility selbst (im kompilierten CSS geprüft). Sticky-Hover auf Touch ist deshalb kein Problem; nur handgeschriebenes CSS müsste es selbst absichern.
 - Primär-Button hat nur `transition-colors 150ms`. Funktioniert, hat aber keinen Charakter.
 - Plan-Karte: gute Detaillösung (`border-2` mit `p-[15px]`-Ausgleich verhindert Layout-Sprung). Bleibt als Muster.
 - `Card` (shadcn) ist `rounded-xl … shadow`, die Shop-Karten sind `rounded-lg border` ohne Schatten. Zwei Kartenarten.
@@ -125,7 +125,7 @@ Regeln:
 4. UI-Animationen < 300ms. Sheet von 500 auf 280ms.
 5. Tastaturgetriebene Aktionen (Suche mit `/`, Navigation per Pfeile) bleiben ohne Animation.
 6. Listen: Stagger 40ms, max. 6 Elemente, nur beim ersten Erscheinen.
-7. Hover nur hinter `@media (hover: hover) and (pointer: fine)`.
+7. Hover über `hover:`-Utilities (Tailwind v4 gated sie bereits auf hover-fähige Geräte); eigenes CSS selbst mit `@media (hover: hover)` absichern.
 8. Reduced Motion: Bewegung entfällt, Opacity bleibt.
 
 ### 3.7 Mobile
@@ -138,8 +138,8 @@ Regeln:
 
 | Phase | Inhalt | Risiko | Prüfung |
 | --- | --- | --- | --- |
-| 0 | Neue Tokens additiv in `styles.css` (Motion, `line-control`, Radius-Skala), nichts verwendet | keins | `bun run build` |
-| 1 | Primitives vereinheitlichen: Button, Card, Input; `transition-all` raus; Press-Zustand; Hover-Gating | niedrig, wirkt auch im Admin | `bun run test`, Screenshots Shop und Admin |
+| 0 ✅ | Neue Tokens additiv in `styles.css` (Motion, `line-control`, Radius-Skala), nichts verwendet | keins | `bun run build` |
+| 1 ✅ | Primitives vereinheitlichen: Button, Card, Input; `transition-all` raus; Press-Zustand; Hover-Gating | niedrig, wirkt auch im Admin | `bun run test`, Screenshots Shop und Admin |
 | 2 | Motion: Overlays, Sheet-Dauer, Menü-Exit | niedrig | Slow-Motion-Prüfung, Reduced-Motion-Test |
 | 3 | Header/Footer/Navigation | mittel (Legal-Links, SSR-Hydration laut `AGENTS.md`) | Hydration ohne Warnung, Tastatur-Test |
 | 4 | Startseite entflechten (`.home-*` → Komponenten) | mittel | Visueller Vergleich 375/768/1280px |

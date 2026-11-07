@@ -73,7 +73,7 @@ function Help() {
             <Field label="E-Mail" name="email" error={errors['email']}><Input id="email" name="email" type="email" autoComplete="email" /></Field>
             <Field label="Betreff" name="subject" error={errors['subject']}><Input id="subject" name="subject" defaultValue={subject} /></Field>
             <Field label="Nachricht" name="message" error={errors['message']}>
-              <textarea id="message" name="message" rows={6} className="w-full rounded-md border border-line-strong bg-surface p-4 text-base focus:border-primary focus:outline-none" />
+              <textarea id="message" name="message" rows={6} className="w-full rounded-md border border-line-control bg-surface p-4 text-base focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/20" />
             </Field>
             <Button type="submit" loading={sending} className="w-full sm:w-auto">Nachricht senden</Button>
           </form>

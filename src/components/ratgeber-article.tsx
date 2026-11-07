@@ -26,14 +26,14 @@ export function RatgeberArticle({ a, prices, sectionPrices, breadcrumb, cta }: {
         {a.author_name ? `Von ${a.author_name} · ` : ""}{a.published_at ? `Veröffentlicht: ${fmt(a.published_at)} · ` : ""}Zuletzt aktualisiert: {fmt(a.updated_at)}
       </p>
       {a.answer_summary && (
-        <aside className="mt-6 rounded-[14px] border border-primary p-4" aria-label="Kurz erklärt">
+        <aside className="mt-6 rounded-lg border border-primary p-4" aria-label="Kurz erklärt">
           <p className="text-sm font-semibold">Kurz erklärt</p>
           <p className="mt-1">{a.answer_summary}</p>
         </aside>
       )}
-      {a.cover_url && <img src={a.cover_url} alt={a.cover_image_alt ?? ""} className="mt-6 aspect-[16/9] w-full rounded-[14px] object-cover" loading="eager" width={1600} height={900} />}
+      {a.cover_url && <img src={a.cover_url} alt={a.cover_image_alt ?? ""} className="mt-6 aspect-[16/9] w-full rounded-lg object-cover" loading="eager" width={1600} height={900} />}
       {toc && (
-        <nav aria-label="Inhaltsverzeichnis" className="mt-6 rounded-[14px] border border-line p-4">
+        <nav aria-label="Inhaltsverzeichnis" className="mt-6 rounded-lg border border-line p-4">
           <p className="text-sm font-semibold">Inhalt</p>
           <ol className="mt-2 list-decimal space-y-1 pl-5 text-sm">
             {a.sections.map((s, i) => <li key={i} className={s.level === "h3" ? "ml-4" : ""}><a href={`#abschnitt-${i + 1}`} className="text-primary underline [overflow-wrap:anywhere]">{s.heading}</a></li>)}

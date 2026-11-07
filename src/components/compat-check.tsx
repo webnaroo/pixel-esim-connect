@@ -74,9 +74,9 @@ function CompatBody() {
         <p className="mt-4 text-sm text-ink-muted">Mit unserer Liste kannst du prüfen, ob dein Gerät eSIM-fähig ist. Beachte: Einige regionale Modelle unterstützen möglicherweise kein eSIM. Dein Gerät ist nicht dabei? Unsere Liste wird regelmäßig aktualisiert, ist aber nicht vollständig. Frag den Gerätehersteller nach eSIM-Unterstützung.</p>
 
         {empty ? (
-          <p className="mt-5 rounded-[14px] border border-line p-4 text-sm">Die Geräteliste wird gerade aufgebaut. Frag im Zweifel den Hersteller.</p>
+          <p className="mt-5 rounded-lg border border-line p-4 text-sm">Die Geräteliste wird gerade aufgebaut. Frag im Zweifel den Hersteller.</p>
         ) : isError ? (
-          <p className="mt-5 rounded-[14px] border border-line p-4 text-sm">Die Geräteliste konnte gerade nicht geladen werden. Frag im Zweifel den Hersteller.</p>
+          <p className="mt-5 rounded-lg border border-line p-4 text-sm">Die Geräteliste konnte gerade nicht geladen werden. Frag im Zweifel den Hersteller.</p>
         ) : isLoading ? (
           <p className="mt-5 text-sm text-ink-muted">Geräteliste wird geladen …</p>
         ) : (
@@ -85,7 +85,7 @@ function CompatBody() {
               <h3 className="text-base font-semibold">Finde dein Gerät</h3>
               <span className="text-xs text-ink-muted">{count} Modelle von {groups.length} Herstellern</span>
             </div>
-            <label className="mt-3 flex items-center gap-2 rounded-md border border-line-strong bg-surface px-3">
+            <label className="mt-3 flex items-center gap-2 rounded-md border border-line-control bg-surface px-3">
               <MagnifyingGlass size={18} aria-hidden className="shrink-0 text-ink-muted" />
               <input value={q} onChange={(e) => setQ(e.target.value)} type="search" aria-label="Gerät suchen"
                 placeholder="Hersteller oder Modell suchen" className="h-11 min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-ink-muted" />
@@ -93,7 +93,7 @@ function CompatBody() {
             {searching && !filtered.length ? (
               <p className="mt-4 text-sm">Kein Treffer. Frag bitte beim Hersteller nach eSIM-Unterstützung.</p>
             ) : (
-              <ul className="mt-4 divide-y divide-line rounded-[14px] border border-line">
+              <ul className="mt-4 divide-y divide-line rounded-lg border border-line">
                 {filtered.map((g) => {
                   const isOpen = searching ? true : open.has(g.manufacturer);
                   return (

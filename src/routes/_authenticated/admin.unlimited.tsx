@@ -134,7 +134,7 @@ function UnlimitedReview() {
           <label className="block text-sm font-medium">Aussage<Input value={texts.label} onChange={(e) => setTexts({ ...texts, label: e.target.value })} /></label>
           <label className="block text-sm font-medium">Zusatz<Input value={texts.qualifier} onChange={(e) => setTexts({ ...texts, qualifier: e.target.value })} /></label>
           <label className="block text-sm font-medium">Erläuterung (aufklappbar)
-            <textarea rows={3} value={texts.note} onChange={(e) => setTexts({ ...texts, note: e.target.value })} className="mt-1 w-full rounded-md border border-line-strong bg-surface p-3 text-base" />
+            <textarea rows={3} value={texts.note} onChange={(e) => setTexts({ ...texts, note: e.target.value })} className="mt-1 w-full rounded-md border border-line-control bg-surface p-3 text-base" />
           </label>
           <Button variant="secondary" onClick={async () => { try { await saveTexts({ data: texts }); toast.success("Texte gespeichert."); qc.invalidateQueries({ queryKey: ["unlimited-claim"] }); refresh(); } catch (e) { toast.error((e as Error).message); } }}>Texte speichern</Button>
         </div>

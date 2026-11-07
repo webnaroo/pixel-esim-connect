@@ -48,7 +48,7 @@ function CartPage() {
     <div className="container-page max-w-5xl py-10">
       <h1 className="text-3xl">Warenkorb</h1>
       {items.length === 0 ? (
-        <div className="mt-8 rounded-[14px] border border-line bg-surface px-6 py-14 text-center">
+        <div className="mt-8 rounded-lg border border-line bg-surface px-6 py-14 text-center">
           <span className="mx-auto flex size-16 items-center justify-center rounded-full bg-muted text-primary"><ShoppingCart size={32} /></span>
           <h2 className="mt-5 text-xl">Dein Warenkorb ist leer</h2>
           <p className="mx-auto mt-2 max-w-sm text-ink-muted">Such dir dein Reiseziel aus und leg einen passenden Tarif in den Warenkorb.</p>
@@ -60,7 +60,7 @@ function CartPage() {
             <p className="text-sm text-ink-muted">{items.length} Tarif{items.length === 1 ? "" : "e"} · Jede eSIM wird einzeln bezahlt.</p>
             <ul className="mt-4 space-y-3">
               {items.map((i) => (
-                <li key={i.planId} className="rounded-[14px] border border-line bg-surface p-4 sm:p-5">
+                <li key={i.planId} className="rounded-lg border border-line bg-surface p-4 sm:p-5">
                   <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-4">
                     <span className="flex size-12 shrink-0 items-center justify-center rounded-full bg-muted text-primary"><SimCard size={24} /></span>
                     <div className="min-w-0">
@@ -81,7 +81,7 @@ function CartPage() {
             </ul>
             <Link to="/destinations" className="mt-5 inline-block text-sm font-medium text-primary">+ Weiteres Reiseziel hinzufügen</Link>
           </div>
-          <aside className="h-fit rounded-[14px] border border-line bg-surface p-5 lg:sticky lg:top-24">
+          <aside className="h-fit rounded-lg border border-line bg-surface p-5 lg:sticky lg:top-24">
             <h2 className="text-lg font-semibold">Übersicht</h2>
             <CodeBox />
             {discount && Object.values(savings).some((v) => v > 0) && <div className="mt-4 flex items-baseline justify-between text-sm text-primary"><span>Rabatt ({discount.code})</span><span className="tabular">−{fmt(savings)}</span></div>}

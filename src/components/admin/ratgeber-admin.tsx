@@ -91,22 +91,22 @@ function Generator({ countries, onCreated }: { countries: AdminData["countries"]
     } catch (e) { setErr(errText(e)); } finally { setBusy(false); setMsg(""); }
   };
   return (
-    <section className="space-y-3 rounded-[14px] border border-line bg-surface p-4">
+    <section className="space-y-3 rounded-lg border border-line bg-surface p-4">
       <h3 className="text-lg font-semibold">Beitrag mit KI entwerfen</h3>
       <p className="text-sm text-ink-muted">Die KI erstellt nur einen Entwurf – nie direkt veröffentlicht. Unsichere Aussagen lässt die KI einfach weg.</p>
       <div className="grid gap-3 md:grid-cols-2">
         <label className="text-sm font-medium md:col-span-2">Titel oder Thema *<Input className="mt-1" value={f.topic} onChange={(e) => setF({ ...f, topic: e.target.value })} placeholder="z. B. eSIM für Japan einrichten" /></label>
         <label className="text-sm font-medium">Fokus-Suchbegriff<Input className="mt-1" value={f.keyword} onChange={(e) => setF({ ...f, keyword: e.target.value })} placeholder="z. B. eSIM Japan" /></label>
         <label className="text-sm font-medium">Land
-          <select className="mt-1 h-11 w-full rounded-lg border border-line bg-surface px-3" value={f.country} onChange={(e) => setF({ ...f, country: e.target.value })}>
+          <select className="mt-1 h-11 w-full rounded-lg border border-line-control bg-surface px-3" value={f.country} onChange={(e) => setF({ ...f, country: e.target.value })}>
             <option value="">Kein Land</option>{countries.map((c) => <option key={c.iso} value={c.iso}>{c.name}</option>)}
           </select></label>
         <label className="text-sm font-medium">Beitragstyp
-          <select className="mt-1 h-11 w-full rounded-lg border border-line bg-surface px-3" value={f.type} onChange={(e) => setF({ ...f, type: e.target.value as PostType })}>
+          <select className="mt-1 h-11 w-full rounded-lg border border-line-control bg-surface px-3" value={f.type} onChange={(e) => setF({ ...f, type: e.target.value as PostType })}>
             {Object.entries(POST_TYPES).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
           </select></label>
         <label className="text-sm font-medium">Länge
-          <select className="mt-1 h-11 w-full rounded-lg border border-line bg-surface px-3" value={f.length} onChange={(e) => setF({ ...f, length: e.target.value as keyof typeof LENGTHS })}>
+          <select className="mt-1 h-11 w-full rounded-lg border border-line-control bg-surface px-3" value={f.length} onChange={(e) => setF({ ...f, length: e.target.value as keyof typeof LENGTHS })}>
             <option value="short">Kurz (ca. 800 Wörter)</option><option value="normal">Normal (ca. 1.400 Wörter)</option><option value="long">Lang (ca. 2.000 Wörter)</option>
           </select></label>
       </div>
@@ -126,7 +126,7 @@ function PostList({ data, onOpen }: { data: AdminData; onOpen: (id: string) => v
     .filter((p) => (!status || p.status === status) && (!country || p.country_code === country) && (!minScore || (minScore === "low" ? (p.quality_score ?? 0) < 70 : (p.quality_score ?? 0) >= Number(minScore))))
     .filter((p) => !search.trim() || `${p.title} ${p.slug}`.toLowerCase().includes(search.toLowerCase()))
     .sort((a, b) => (sort === "score" ? (b.quality_score ?? -1) - (a.quality_score ?? -1) : b.updated_at.localeCompare(a.updated_at)));
-  const sel = "h-11 rounded-lg border border-line bg-surface px-3 text-sm";
+  const sel = "h-11 rounded-lg border border-line-control bg-surface px-3 text-sm";
   return (
     <section className="space-y-3">
       <h3 className="text-lg font-semibold">Beiträge ({data.posts.length})</h3>
@@ -137,7 +137,7 @@ function PostList({ data, onOpen }: { data: AdminData; onOpen: (id: string) => v
         <select className={sel} value={minScore} onChange={(e) => setMinScore(e.target.value)} aria-label="Score"><option value="">Jeder Score</option><option value="80">ab 80</option><option value="70">ab 70</option><option value="low">unter 70</option></select>
         <select className={sel} value={sort} onChange={(e) => setSort(e.target.value)} aria-label="Sortierung"><option value="date">Neueste zuerst</option><option value="score">Bester Score zuerst</option></select>
       </div>
-      <ul className="divide-y divide-line rounded-[14px] border border-line bg-surface">
+      <ul className="divide-y divide-line rounded-lg border border-line bg-surface">
         {list.length === 0 && <li className="p-4 text-sm text-ink-muted">Keine Beiträge.</li>}
         {list.map((p) => (
           <li key={p.id} className="flex flex-wrap items-center justify-between gap-3 p-4">
@@ -161,7 +161,7 @@ function Wordlist({ words }: { words: string[] }) {
   const qc = useQueryClient(); const save = useServerFn(saveBlogWordlist);
   const [t, setT] = useState(words.join("\n")); const [msg, setMsg] = useState("");
   return (
-    <details className="rounded-[14px] border border-line bg-surface p-4">
+    <details className="rounded-lg border border-line bg-surface p-4">
       <summary className="cursor-pointer font-medium">Wortliste: Superlative und Wettbewerber ({words.length})</summary>
       <p className="mt-2 text-sm text-ink-muted">Ein Begriff pro Zeile. Treffer ziehen in der Qualitätswertung Punkte ab.</p>
       <Textarea className="mt-2" rows={8} value={t} onChange={(e) => setT(e.target.value)} />
@@ -259,7 +259,7 @@ function Editor({ p, data, onClose, onOpen }: { p: Post; data: AdminData; onClos
 
   const move = (i: number, d: -1 | 1) => { const s = [...f.sections]; const j = i + d; if (j < 0 || j >= s.length) return; [s[i], s[j]] = [s[j]!, s[i]!]; set({ sections: s }); };
   const lbl = "block text-sm font-medium";
-  const prevPrices = (iso: string) => <div className="rounded-[14px] border border-primary p-4 text-sm text-ink-muted">Live-Tarife {iso} (werden auf der Seite aus dem Tarifangebot geladen)</div>;
+  const prevPrices = (iso: string) => <div className="rounded-lg border border-primary p-4 text-sm text-ink-muted">Live-Tarife {iso} (werden auf der Seite aus dem Tarifangebot geladen)</div>;
 
   return (
     <div className="space-y-6">
@@ -269,7 +269,7 @@ function Editor({ p, data, onClose, onOpen }: { p: Post; data: AdminData; onClos
       </div>
 
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_340px]">
-        <div className="min-w-0 space-y-4 rounded-[14px] border border-line bg-surface p-4">
+        <div className="min-w-0 space-y-4 rounded-lg border border-line bg-surface p-4">
           <label className={lbl}>Titel (H1)<Input className="mt-1" value={f.title} onChange={(e) => set({ title: e.target.value })} /></label>
           <div className="grid gap-3 md:grid-cols-2">
             <label className={lbl}>Slug<Input className="mt-1" value={f.slug} onChange={(e) => set({ slug: e.target.value })} /></label>
@@ -277,13 +277,13 @@ function Editor({ p, data, onClose, onOpen }: { p: Post; data: AdminData; onClos
             <label className={lbl}>Meta-Title <span className="text-ink-muted">({f.meta_title.length}/60)</span><Input className="mt-1" value={f.meta_title} onChange={(e) => set({ meta_title: e.target.value })} /></label>
             <label className={lbl}>Autor<Input className="mt-1" value={f.author_name} onChange={(e) => set({ author_name: e.target.value })} placeholder="z. B. GlobeSIM-Team" /></label>
             <label className={lbl}>Land
-              <select className="mt-1 h-11 w-full rounded-lg border border-line bg-surface px-3" value={f.country_code} onChange={(e) => set({ country_code: e.target.value })}>
+              <select className="mt-1 h-11 w-full rounded-lg border border-line-control bg-surface px-3" value={f.country_code} onChange={(e) => set({ country_code: e.target.value })}>
                 <option value="">Kein Land</option>{data.countries.map((c) => <option key={c.iso} value={c.iso}>{c.name}</option>)}
               </select></label>
             <label className={lbl}>Typ / Zielwortzahl
               <div className="mt-1 flex gap-2">
-                <select className="h-11 min-w-0 flex-1 rounded-lg border border-line bg-surface px-3" value={f.post_type} onChange={(e) => set({ post_type: e.target.value as PostType })}>{Object.entries(POST_TYPES).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select>
-                <select className="h-11 rounded-lg border border-line bg-surface px-3" value={f.target_words} onChange={(e) => set({ target_words: Number(e.target.value) })}>{Object.values(LENGTHS).map((n) => <option key={n} value={n}>{n}</option>)}</select>
+                <select className="h-11 min-w-0 flex-1 rounded-lg border border-line-control bg-surface px-3" value={f.post_type} onChange={(e) => set({ post_type: e.target.value as PostType })}>{Object.entries(POST_TYPES).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select>
+                <select className="h-11 rounded-lg border border-line-control bg-surface px-3" value={f.target_words} onChange={(e) => set({ target_words: Number(e.target.value) })}>{Object.values(LENGTHS).map((n) => <option key={n} value={n}>{n}</option>)}</select>
               </div></label>
           </div>
           <label className={lbl}>Meta-Description <span className="text-ink-muted">({f.meta_description.length}, Ziel 120–155)</span><Textarea className="mt-1" rows={2} value={f.meta_description} onChange={(e) => set({ meta_description: e.target.value })} /></label>
@@ -305,14 +305,14 @@ function Editor({ p, data, onClose, onOpen }: { p: Post; data: AdminData; onClos
             {f.sections.map((s, i) => (
               <div key={i} className="space-y-2 rounded-lg border border-line p-3">
                 <div className="flex flex-wrap gap-2">
-                  <select aria-label="Ebene" className="h-11 rounded-lg border border-line bg-surface px-2" value={s.level} onChange={(e) => set({ sections: f.sections.map((x, j) => (j === i ? { ...x, level: e.target.value as "h2" | "h3" } : x)) })}><option value="h2">H2</option><option value="h3">H3</option></select>
+                  <select aria-label="Ebene" className="h-11 rounded-lg border border-line-control bg-surface px-2" value={s.level} onChange={(e) => set({ sections: f.sections.map((x, j) => (j === i ? { ...x, level: e.target.value as "h2" | "h3" } : x)) })}><option value="h2">H2</option><option value="h3">H3</option></select>
                   <Input className="min-w-0 flex-1" aria-label="Überschrift" value={s.heading} onChange={(e) => set({ sections: f.sections.map((x, j) => (j === i ? { ...x, heading: e.target.value } : x)) })} />
                 </div>
                 <Textarea className="font-mono text-xs" rows={6} aria-label="Text" value={s.body_md} onChange={(e) => set({ sections: f.sections.map((x, j) => (j === i ? { ...x, body_md: e.target.value } : x)) })} />
                 <div className="flex flex-wrap items-center gap-2 text-sm">
                   <Button variant="ghost" onClick={() => move(i, -1)} disabled={i === 0} aria-label="Nach oben">↑</Button>
                   <Button variant="ghost" onClick={() => move(i, 1)} disabled={i === f.sections.length - 1} aria-label="Nach unten">↓</Button>
-                  <select aria-label="Zusatzblock" className="h-11 rounded-lg border border-line bg-surface px-2" value={s.block ?? ""} onChange={(e) => set({ sections: f.sections.map((x, j) => (j === i ? { ...x, block: (e.target.value || undefined) as Section["block"] } : x)) })}><option value="">Kein Block</option><option value="plans">Tarife des Landes</option><option value="compat">Kompatibilitätsprüfung</option></select>
+                  <select aria-label="Zusatzblock" className="h-11 rounded-lg border border-line-control bg-surface px-2" value={s.block ?? ""} onChange={(e) => set({ sections: f.sections.map((x, j) => (j === i ? { ...x, block: (e.target.value || undefined) as Section["block"] } : x)) })}><option value="">Kein Block</option><option value="plans">Tarife des Landes</option><option value="compat">Kompatibilitätsprüfung</option></select>
                   <Button variant="ghost" loading={aiBusy === `s${i}`} disabled={!!aiBusy} onClick={() => regenSection(i)}>Neu generieren</Button>
                   <Button variant="ghost" onClick={() => confirm("Abschnitt entfernen?") && set({ sections: f.sections.filter((_, j) => j !== i) })}>Entfernen</Button>
                 </div>
@@ -359,13 +359,13 @@ function Editor({ p, data, onClose, onOpen }: { p: Post; data: AdminData; onClos
 
         <aside className="min-w-0 space-y-4">
           <ScorePanel r={report} />
-          <div className="space-y-2 rounded-[14px] border border-line bg-surface p-4">
+          <div className="space-y-2 rounded-lg border border-line bg-surface p-4">
             <Button variant="ghost" loading={aiBusy === "suggest"} disabled={!!aiBusy} onClick={suggest}>KI-Verbesserungsvorschläge</Button>
             <p className="text-xs text-ink-muted">Nur Vorschläge – es wird nichts automatisch geändert.</p>
             {suggestions && (suggestions.length ? <ul className="list-disc space-y-2 pl-5 text-sm">{suggestions.map((s, i) => <li key={i}><strong>{s.area}:</strong> {s.suggestion}</li>)}</ul> : <p className="text-sm">Keine Vorschläge.</p>)}
           </div>
 
-          <div className="space-y-3 rounded-[14px] border border-line bg-surface p-4">
+          <div className="space-y-3 rounded-lg border border-line bg-surface p-4">
             <h4 className="font-semibold">Aktionen</h4>
             <Button onClick={() => act(() => doSave(false), "Gespeichert (Version angelegt).")} loading={busy} disabled={busy}>Speichern</Button>
             {blockers.length > 0 && <ul className="space-y-1 text-sm text-danger">{blockers.map((b) => <li key={b}>⚠ {b}</li>)}</ul>}
@@ -395,7 +395,7 @@ function Editor({ p, data, onClose, onOpen }: { p: Post; data: AdminData; onClos
           {(["off", "desktop", "mobile"] as const).map((m) => <Button key={m} variant={preview === m ? "primary" : "ghost"} onClick={() => setPreview(m)}>{m === "off" ? "Aus" : m === "desktop" ? "Desktop" : "Mobil (360 px)"}</Button>)}
         </div>
         {preview !== "off" && (
-          <div className="overflow-x-auto rounded-[14px] border border-line bg-bg p-4">
+          <div className="overflow-x-auto rounded-lg border border-line bg-bg p-4">
             <div className={preview === "mobile" ? "mx-auto w-[360px] max-w-full" : "mx-auto max-w-3xl"}>
               <RatgeberArticle a={{ ...f, body_md: f.body, updated_at: new Date().toISOString(), published_at: p.published_at }} prices={prevPrices} sectionPrices={() => prevPrices(f.country_code || "–")} />
             </div>
@@ -414,7 +414,7 @@ function ScorePanel({ r }: { r: QualityReport }) {
       <div className="mt-1 h-2 rounded-full bg-line"><div className={`h-2 rounded-full ${toneCls[scoreTone(v)]}`} style={{ width: `${v}%` }} /></div></div>
   );
   return (
-    <div className="space-y-3 rounded-[14px] border border-line bg-surface p-4">
+    <div className="space-y-3 rounded-lg border border-line bg-surface p-4">
       <div className="flex items-center gap-3">
         <span className={`inline-flex size-14 items-center justify-center rounded-full text-xl font-bold text-primary-foreground ${toneCls[tone]}`}>{r.total}</span>
         <div><p className="font-semibold">SEO / GEO / KI-Übersicht</p><p className="text-xs text-ink-muted">Qualitätswertung, keine Platzierungsvorhersage</p></div>
@@ -430,7 +430,7 @@ function Versions({ id, onRestored }: { id: string; onRestored: () => void }) {
   const get = useServerFn(getBlogVersions); const restore = useServerFn(restoreBlogVersion);
   const q = useQuery({ queryKey: ["admin", "blog", "versions", id], queryFn: () => get({ data: { id } }) });
   return (
-    <details className="rounded-[14px] border border-line bg-surface p-4">
+    <details className="rounded-lg border border-line bg-surface p-4">
       <summary className="cursor-pointer font-semibold">Versionsverlauf ({q.data?.length ?? 0}/10)</summary>
       <ul className="mt-2 space-y-2 text-sm">
         {q.data?.length === 0 && <li className="text-ink-muted">Noch keine Versionen. Jedes manuelle Speichern legt eine an.</li>}

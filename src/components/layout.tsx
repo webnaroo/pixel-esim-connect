@@ -107,7 +107,7 @@ export function Header() {
       )}
 
       {menu && (
-        <div className="fixed inset-0 z-50 flex flex-col overflow-y-auto bg-paper animate-in fade-in duration-150 lg:hidden" role="dialog" aria-modal="true" aria-label="Menü">
+        <div className="fixed inset-0 z-50 flex flex-col overflow-y-auto bg-paper animate-in fade-in duration-(--dur-hover) lg:hidden" role="dialog" aria-modal="true" aria-label="Menü">
           <div className="container-page flex h-14 shrink-0 items-center justify-between border-b border-line">
             <Wordmark />
             <button aria-label="Menü schließen" onClick={() => setMenu(false)} className="flex size-12 items-center justify-center rounded-md text-ink">

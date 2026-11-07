@@ -27,7 +27,7 @@ export function Markdown({ text }: { text: string }) {
           const rows = lines.filter((l) => !/^\|[\s:|-]+\|$/.test(l.trim())).map((l) => l.trim().slice(1, -1).split("|").map((c) => c.trim()));
           const [head, ...body] = rows;
           return (
-            <div key={i} className="overflow-x-auto rounded-[14px] border border-line">
+            <div key={i} className="overflow-x-auto rounded-lg border border-line">
               <table className="w-full min-w-0 text-left text-sm">
                 <thead className="border-b border-line"><tr>{head!.map((c, j) => <th key={j} scope="col" className="p-2 font-semibold sm:p-3">{inline(c, `${i}-h${j}`)}</th>)}</tr></thead>
                 <tbody>{body.map((r, j) => <tr key={j} className="border-b border-line last:border-0">{r.map((c, k) => <td key={k} className="p-2 align-top sm:p-3">{inline(c, `${i}-${j}-${k}`)}</td>)}</tr>)}</tbody>

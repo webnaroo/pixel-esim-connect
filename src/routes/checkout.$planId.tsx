@@ -267,7 +267,7 @@ function CheckoutPage() {
                       <span>Ich bestätige den Admin-Probekauf mit einer echten Zahlung über {totals ? formatPrice(totals.gross, plan.price?.currency ?? "EUR") : "den angezeigten Betrag"}. Dies ist keine kostenlose Testzahlung.</span>
                     </label>
                   )}
-                  <Button type="submit" loading={busy} className="h-12 w-full text-base" disabled={!totals}>
+                  <Button type="submit" size="lg" loading={busy} className="w-full" disabled={!totals}>
                     <ShieldCheck className="mr-2 size-5" aria-hidden />Weiter zur Zahlung{totals ? ` · ${formatPrice(totals.gross, plan.price?.currency ?? "EUR")}` : ""}
                   </Button>
                 </form>

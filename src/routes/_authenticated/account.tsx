@@ -91,7 +91,7 @@ function EsimCard({ e }: { e: Data["esims"][number] }) {
   }, [e.orderId, e.usageAvailable, usageFn]);
   const pct = usage?.totalMb ? Math.min(100, Math.round((usage.usedMb / usage.totalMb) * 100)) : null;
   return (
-    <li className="rounded-[14px] border border-line bg-surface p-5">
+    <li className="rounded-lg border border-line bg-surface p-5">
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div>
           <div className="font-semibold text-ink">
@@ -154,7 +154,7 @@ function RefundRequest({ orderId }: { orderId: string }) {
 function Orders({ data }: { data: Data }) {
   if (!data.orders.length) return <EmptyState title="Noch keine Bestellungen" />;
   return (
-    <ul className="divide-y divide-line rounded-[14px] border border-line bg-surface">
+    <ul className="divide-y divide-line rounded-lg border border-line bg-surface">
       {data.orders.map((o) => (
         <li key={o.id} className="flex flex-wrap items-center justify-between gap-2 p-4">
           <div>
@@ -197,7 +197,7 @@ function Settings({ data }: { data: Data }) {
         <p className="text-sm text-ink-muted">E-Mail: {data.profile.email}</p>
         <label className="block text-sm font-medium">Name<Input className="mt-1" value={name} onChange={(e) => setName(e.target.value)} autoComplete="name" /></label>
         <label className="block text-sm font-medium">Sprache
-          <select className="mt-1 h-12 w-full rounded-md border border-line bg-surface px-3" value={locale} onChange={(e) => setLocale(e.target.value as "de" | "en")}>
+          <select className="mt-1 h-12 w-full rounded-md border border-line-control bg-surface px-3" value={locale} onChange={(e) => setLocale(e.target.value as "de" | "en")}>
             <option value="de">Deutsch</option><option value="en">English</option>
           </select>
         </label>
@@ -212,7 +212,7 @@ function Settings({ data }: { data: Data }) {
 
       <Button variant="secondary" onClick={async () => { await signOut(); nav({ to: "/" }); }}>Abmelden</Button>
 
-      <form className="space-y-3 rounded-[14px] border border-line p-5" onSubmit={(e) => { e.preventDefault(); run(async () => { const r = await del({ data: { confirm } }); if (!r.ok) throw new Error(r.error); await signOut(); nav({ to: "/" }); return "Konto gelöscht."; }); }}>
+      <form className="space-y-3 rounded-lg border border-line p-5" onSubmit={(e) => { e.preventDefault(); run(async () => { const r = await del({ data: { confirm } }); if (!r.ok) throw new Error(r.error); await signOut(); nav({ to: "/" }); return "Konto gelöscht."; }); }}>
         <h2 className="text-xl">Konto löschen</h2>
         <p className="text-sm text-ink-muted">Dein Login und deine Profildaten werden gelöscht. Bestellungen müssen wir aus steuerlichen Gründen aufbewahren. Sie werden anonymisiert und sind danach nicht mehr mit dir verknüpft. Installationsdaten deiner eSIMs werden gelöscht.</p>
         <label className="block text-sm font-medium">Tippe {DELETE_CONFIRM_WORD} zur Bestätigung<Input className="mt-1" value={confirm} onChange={(e) => setConfirm(e.target.value)} /></label>

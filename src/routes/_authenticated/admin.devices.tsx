@@ -112,7 +112,7 @@ function DevicesAdmin() {
 
       <div className="flex flex-wrap gap-2">
         <Input className="max-w-xs" placeholder="Suchen (ab 3 Zeichen)" value={q} onChange={(e) => setQ(e.target.value)} />
-        <select value={mfr} onChange={(e) => setMfr(e.target.value)} className="h-12 rounded-md border border-line-strong bg-surface px-3 text-sm" aria-label="Hersteller filtern">
+        <select value={mfr} onChange={(e) => setMfr(e.target.value)} className="h-12 rounded-md border border-line-control bg-surface px-3 text-sm" aria-label="Hersteller filtern">
           <option value="">Alle Hersteller</option>{manufacturers.map((m) => <option key={m}>{m}</option>)}
         </select>
       </div>

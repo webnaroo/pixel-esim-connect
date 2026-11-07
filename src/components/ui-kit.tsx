@@ -1,21 +1,22 @@
 import { forwardRef } from "react";
 import { Link } from "@tanstack/react-router";
 import { cn } from "@/lib/utils";
+import { buttonVariants } from "@/components/ui/button";
 
 type Variant = "primary" | "secondary" | "ghost";
+type Size = "sm" | "md" | "lg";
 
-export const btnClass = (variant: Variant = "primary", className?: string) =>
-  cn(
-    "inline-flex h-[52px] lg:h-12 items-center justify-center gap-2 rounded-md px-5 text-base font-medium transition-colors duration-150 disabled:pointer-events-none disabled:opacity-50",
-    variant === "primary" && "bg-primary text-primary-foreground hover:bg-primary-hover",
-    variant === "secondary" && "border border-line-strong bg-surface text-ink hover:border-ink-muted",
-    variant === "ghost" && "px-3 text-primary hover:bg-muted",
-    className,
-  );
+// ui-kit keeps its public API (primary/secondary/ghost, loading, LinkButton, btnClass) and renders
+// through the single button system in ui/button.tsx. md = 48px, sm = 40px, lg = 56px (hero, checkout).
+const VARIANT_MAP = { primary: "default", secondary: "secondary", ghost: "quiet" } as const;
+const SIZE_MAP = { sm: "sm", md: "default", lg: "lg" } as const;
 
-export const Button = forwardRef<HTMLButtonElement, React.ButtonHTMLAttributes<HTMLButtonElement> & { variant?: Variant; loading?: boolean }>(
-  ({ variant = "primary", loading, className, children, disabled, ...props }, ref) => (
-    <button ref={ref} className={btnClass(variant, className)} disabled={disabled || loading} {...props}>
+export const btnClass = (variant: Variant = "primary", className?: string, size: Size = "md") =>
+  cn(buttonVariants({ variant: VARIANT_MAP[variant], size: SIZE_MAP[size] }), className);
+
+export const Button = forwardRef<HTMLButtonElement, React.ButtonHTMLAttributes<HTMLButtonElement> & { variant?: Variant; size?: Size; loading?: boolean }>(
+  ({ variant = "primary", size = "md", loading, className, children, disabled, ...props }, ref) => (
+    <button ref={ref} className={btnClass(variant, className, size)} disabled={disabled || loading} {...props}>
       {loading && <span aria-hidden className="size-4 animate-spin rounded-full border-2 border-current border-r-transparent" />}
       {children}
     </button>
@@ -23,10 +24,10 @@ export const Button = forwardRef<HTMLButtonElement, React.ButtonHTMLAttributes<H
 );
 Button.displayName = "Button";
 
-export function LinkButton({ to, variant = "primary", className, children, ...rest }: { to: string; variant?: Variant; className?: string; children: React.ReactNode; params?: Record<string, string> }) {
+export function LinkButton({ to, variant = "primary", size = "md", className, children, ...rest }: { to: string; variant?: Variant; size?: Size; className?: string; children: React.ReactNode; params?: Record<string, string> }) {
   return (
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    <Link to={to as any} params={rest.params as any} className={btnClass(variant, className)}>
+    <Link to={to as any} params={rest.params as any} className={btnClass(variant, className, size)}>
       {children}
     </Link>
   );
@@ -36,7 +37,7 @@ export const Input = forwardRef<HTMLInputElement, React.InputHTMLAttributes<HTML
   <input
     ref={ref}
     className={cn(
-      "h-14 w-full rounded-md border border-line-strong bg-surface px-4 text-base text-ink placeholder:text-ink-muted focus:border-primary focus:outline-none focus-visible:outline-none",
+      "h-14 w-full rounded-md border border-line-control bg-surface px-4 text-base text-ink placeholder:text-ink-muted transition-[border-color,box-shadow] duration-(--dur-hover) ease-ui-out hover:border-ink-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/20 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50 aria-[invalid=true]:border-danger",
       className,
     )}
     {...props}
@@ -54,7 +55,7 @@ export function SegmentedControl<T extends string>({ value, onChange, options, l
           aria-selected={value === o.value}
           onClick={() => onChange(o.value)}
           className={cn(
-            "h-10 shrink-0 whitespace-nowrap rounded-[9px] px-3 text-sm font-medium transition-colors duration-150 sm:px-4",
+            "h-10 shrink-0 whitespace-nowrap rounded-[9px] px-3 text-sm font-medium transition-colors duration-(--dur-hover) ease-ui-out sm:px-4",
             value === o.value ? "bg-primary text-primary-foreground" : "text-ink-muted hover:text-ink",
           )}
         >

@@ -29,7 +29,7 @@ export function AdminList({ kind, cols, filters, searchLabel = "Suchen" }: { kin
         <label className="min-w-[220px] flex-1"><span className="sr-only">{searchLabel}</span><Input placeholder={searchLabel} value={input} onChange={(e) => setInput(e.target.value)} /></label>
         {filters && (
           <label><span className="sr-only">Filter</span>
-            <select aria-label="Filter" className="h-12 rounded-md border border-line bg-surface px-3 text-sm" value={filter} onChange={(e) => { setFilter(e.target.value); setPage(0); }}>
+            <select aria-label="Filter" className="h-12 rounded-md border border-line-control bg-surface px-3 text-sm" value={filter} onChange={(e) => { setFilter(e.target.value); setPage(0); }}>
               <option value="">Alle</option>
               {filters.map((f) => <option key={f.value} value={f.value}>{f.label}</option>)}
             </select>

@@ -15,7 +15,7 @@ export const Route = createFileRoute("/_authenticated/admin/discount")({
   component: Discounts,
 });
 
-const sel = "h-12 w-full rounded-md border border-line-strong bg-surface px-3 text-base";
+const sel = "h-12 w-full rounded-md border border-line-control bg-surface px-3 text-base";
 const eur = (n: number) => n.toLocaleString("de-DE", { style: "currency", currency: "EUR" });
 const dt = (s: string | null) => (s ? new Date(s).toLocaleString("de-DE", { dateStyle: "short", timeStyle: "short" }) : "–");
 

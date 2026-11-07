@@ -39,7 +39,7 @@ function Explorer() {
       <h2 className="text-xl">API-Explorer (nur lesend)</h2>
       <p className="mt-1 text-sm text-ink-muted">Antworten werden maskiert: Tokens, Schlüssel und Aktivierungscodes erscheinen als ***.</p>
       <div className="mt-4 grid gap-3 sm:grid-cols-[1fr_1fr_auto]">
-        <select aria-label="Endpunkt" className="h-12 rounded-md border border-line-strong bg-surface px-3" value={endpoint} onChange={(e) => setEndpoint(e.target.value as typeof endpoint)}>
+        <select aria-label="Endpunkt" className="h-12 rounded-md border border-line-control bg-surface px-3" value={endpoint} onChange={(e) => setEndpoint(e.target.value as typeof endpoint)}>
           {endpoints.map((e) => <option key={e.name} value={e.name}>{e.name}{e.configured ? "" : " (nicht konfiguriert)"}</option>)}
         </select>
         <Input value={params} onChange={(e) => setParams(e.target.value)} placeholder="Parameter: key=value, …" aria-label="Parameter" />

@@ -4,26 +4,39 @@ import { cva, type VariantProps } from "class-variance-authority";
 
 import { cn } from "@/lib/utils";
 
+/*
+ * Single button system for the whole site (shop, admin, shadcn primitives).
+ * `components/ui-kit.tsx` (Button, LinkButton, btnClass) renders through this file.
+ *
+ * Sizes: sm 40px (compact), default 48px (standard), lg 56px (hero / checkout).
+ * Hover utilities are already limited to hover-capable devices by Tailwind v4, so touch
+ * devices never keep a stuck hover state. Press feedback uses the Phase 0 motion tokens.
+ */
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
+  "inline-flex items-center justify-center gap-2 rounded-md font-medium cursor-pointer select-none transition-[background-color,border-color,color,transform] duration-(--dur-hover) ease-ui-out active:scale-[0.97] active:duration-(--dur-press) disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed [&_svg]:pointer-events-none [&_svg]:shrink-0",
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground shadow hover:bg-primary/90",
-        destructive: "bg-destructive text-destructive-foreground shadow-sm hover:bg-destructive/90",
-        outline:
-          "border border-input bg-background shadow-sm hover:bg-accent hover:text-accent-foreground",
-        secondary: "bg-secondary text-secondary-foreground shadow-sm hover:bg-secondary/80",
+        default: "bg-primary text-primary-foreground hover:bg-primary-hover",
+        destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/90",
+        outline: "border border-line-strong bg-surface text-ink hover:border-ink-muted",
+        secondary: "border border-line-strong bg-surface text-ink hover:border-ink-muted",
         ghost: "hover:bg-accent hover:text-accent-foreground",
+        // Text-style action in the brand colour (previously the ui-kit "ghost").
+        quiet: "px-3 text-primary hover:bg-muted",
         link: "text-primary underline-offset-4 hover:underline",
       },
       size: {
-        default: "h-9 px-4 py-2",
-        sm: "h-8 rounded-md px-3 text-xs",
-        lg: "h-10 rounded-md px-8",
-        icon: "h-9 w-9",
+        default: "h-12 px-5 text-base",
+        sm: "h-10 px-4 text-sm",
+        lg: "h-14 px-6 text-base",
+        icon: "size-10",
       },
     },
+    compoundVariants: [
+      // Text-style action keeps its tighter horizontal padding at every size.
+      { variant: "quiet", class: "px-3" },
+    ],
     defaultVariants: {
       variant: "default",
       size: "default",

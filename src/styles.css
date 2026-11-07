@@ -3,14 +3,6 @@
 @import "tw-animate-css";
 
 /*
- * DEPRECATED, remove in Phase 1: no .dark tokens exist and dark mode is not planned.
- * Kept only because src/components/ui/alert.tsx still contains a `dark:` class.
- * Removing the variant before that class is gone would make Tailwind fall back to
- * prefers-color-scheme and change the alert border for users with a dark OS theme.
- */
-@custom-variant dark (&:is(.dark *));
-
-/*
  * GlobeSIM design system. Calm paper surfaces, petrol primary, mint only for
  * "active/ready" status. No gradients, no large shadows, max radius 16px.
  */
@@ -21,7 +13,7 @@
 
   --radius-sm: 8px;
   --radius-md: 12px;
-  --radius-lg: 14px;
+  --radius-lg: 12px;
   --radius-xl: 16px;
 
   --color-paper: var(--paper);
@@ -48,8 +40,8 @@
   --radius-control: 12px;
   --radius-panel: 16px;
 
-  --shadow-raised: var(--shadow-raised);
-  --shadow-overlay: var(--shadow-overlay);
+  --shadow-raised: var(--elevation-1);
+  --shadow-overlay: var(--elevation-2);
 
   --ease-ui-out: cubic-bezier(0.23, 1, 0.32, 1);
   --ease-ui-in-out: cubic-bezier(0.77, 0, 0.175, 1);
@@ -97,7 +89,7 @@
 }
 
 :root {
-  --radius: 14px;
+  --radius: 12px;
   /* Brand tokens (hex values from the spec, expressed in oklch) */
   --paper: oklch(0.966 0.008 80);        /* #F6F3EE */
   --surface: oklch(1 0 0);               /* #FFFFFF */
@@ -134,7 +126,7 @@
   --destructive: var(--danger);
   --destructive-foreground: oklch(1 0 0);
   --border: var(--line);
-  --input: var(--line-strong);
+  --input: var(--line-control);
   --ring: var(--primary);
   --chart-1: var(--primary);
   --chart-2: var(--mint);
@@ -158,8 +150,8 @@
   --warning-text: oklch(0.52 0.09 70);
 
   /* Elevation: 0 = border only. 1 = raised/selected. 2 = overlays only. */
-  --shadow-raised: 0 1px 2px oklch(0.335 0.055 215 / 0.08);
-  --shadow-overlay: 0 8px 24px oklch(0.205 0.016 230 / 0.12), 0 1px 3px oklch(0.205 0.016 230 / 0.08);
+  --elevation-1: 0 1px 2px oklch(0.335 0.055 215 / 0.08);
+  --elevation-2: 0 8px 24px oklch(0.205 0.016 230 / 0.12), 0 1px 3px oklch(0.205 0.016 230 / 0.08);
 
   /* Motion: UI stays under 300ms, never ease-in. */
   --dur-press: 120ms;

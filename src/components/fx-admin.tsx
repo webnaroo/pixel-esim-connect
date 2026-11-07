@@ -65,7 +65,7 @@ export function FxSection() {
             {data.current.map((c) => {
               const e = c.effective;
               return (
-                <div key={c.currency} className="rounded-[14px] border border-line p-4 text-sm">
+                <div key={c.currency} className="rounded-lg border border-line p-4 text-sm">
                   <div className="flex items-center justify-between">
                     <span className="font-semibold">{c.currency} → EUR</span>
                     {e ? <span className="inline-flex items-center gap-2"><span aria-hidden className={`size-2.5 rounded-full ${LIGHT[e.light]?.dot}`} /> {LIGHT[e.light]?.label}</span> : <Chip tone="warning">Kein gültiger Kurs</Chip>}
@@ -116,7 +116,7 @@ function ManualForm({ busy, onSubmit }: { busy: boolean; onSubmit: (v: { from: s
   const max = new Date(Date.now() + 7 * 86_400_000).toISOString().slice(0, 10);
   const def = new Date(Date.now() + 2 * 86_400_000).toISOString().slice(0, 10);
   return (
-    <form className="grid gap-3 rounded-[14px] border border-line p-4 sm:grid-cols-2" onSubmit={(e) => {
+    <form className="grid gap-3 rounded-lg border border-line p-4 sm:grid-cols-2" onSubmit={(e) => {
       e.preventDefault();
       const f = new FormData(e.currentTarget);
       onSubmit({ from: String(f.get("from")).toUpperCase().trim(), rate: Number(String(f.get("rate")).replace(",", ".")), reason: String(f.get("reason")), expiresAt: new Date(Math.min(new Date(`${String(f.get("expires"))}T23:59:00Z`).getTime(), Date.now() + 7 * 86_400_000 - 120_000)).toISOString() });

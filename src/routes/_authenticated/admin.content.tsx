@@ -62,7 +62,7 @@ function LegalEditor({ p }: { p: Data["legal"][number] }) {
     run(async () => { await save({ data: { slug: p.slug as never, title, body, published } }); return published ? "Freigegeben." : "Gespeichert (nicht veröffentlicht)."; });
   };
   return (
-    <section className="space-y-3 rounded-[14px] border border-line bg-surface p-5">
+    <section className="space-y-3 rounded-lg border border-line bg-surface p-5">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h2 className="text-xl">{p.title}</h2>
         <div className="flex items-center gap-3">
@@ -105,7 +105,7 @@ function Faq({ d }: { d: Data }) {
       <p className="text-sm text-ink-muted">Aussagen zu Preisen, Abdeckung und Drosselung nur über Platzhalter: {FAQ_PLACEHOLDERS.join(", ")}. Fehlt der Wert in der Datenbank, wird der Eintrag ausgeblendet.</p>
       <Button onClick={() => setEditing("new")}>Neue Frage</Button>
       {editing === "new" && <FaqEditor onDone={() => setEditing(null)} sort={(d.faqs.at(-1)?.sort_order ?? 0) + 10} />}
-      <ul className="divide-y divide-line rounded-[14px] border border-line bg-surface">
+      <ul className="divide-y divide-line rounded-lg border border-line bg-surface">
         {d.faqs.map((f) => (
           <li key={f.id} className="p-4">
             {editing === f.id ? <FaqEditor f={f} onDone={() => setEditing(null)} sort={f.sort_order} /> : (

@@ -188,7 +188,7 @@ export function SearchBox({ size = "lg", autoFocus }: { size?: "lg" | "sm"; auto
           onFocus={() => setOpen(true)}
           readOnly={isMobile && open}
           className={cn(
-            "w-full rounded-md border border-line-strong bg-surface text-ink placeholder:text-ink-muted focus:border-primary focus:outline-none focus-visible:outline-none",
+            "w-full rounded-md border border-line-control bg-surface text-ink placeholder:text-ink-muted focus:border-primary focus:outline-none focus-visible:outline-none focus:ring-[3px] focus:ring-primary/20",
             big ? "h-14 pl-12 pr-12 text-[17px]" : "h-11 pl-10 pr-10 text-[15px]",
           )}
         />
@@ -206,7 +206,7 @@ export function SearchBox({ size = "lg", autoFocus }: { size?: "lg" | "sm"; auto
       )}
 
       {open && isMobile && typeof document !== "undefined" && createPortal(
-        <div className="fixed inset-0 z-[100] flex flex-col bg-surface animate-in fade-in duration-150" role="dialog" aria-modal="true" aria-label="Reiseziel suchen">
+        <div className="fixed inset-0 z-[100] flex flex-col bg-surface animate-in fade-in duration-(--dur-hover)" role="dialog" aria-modal="true" aria-label="Reiseziel suchen">
           <div className="flex items-center gap-2 border-b border-line px-3 py-3">
             <button aria-label="Suche schließen" onClick={() => setOpen(false)} className="flex size-12 items-center justify-center rounded-md text-ink">
               <ArrowLeft size={22} />
@@ -215,7 +215,7 @@ export function SearchBox({ size = "lg", autoFocus }: { size?: "lg" | "sm"; auto
               <input
                 ref={overlayInput}
                 {...inputProps}
-                className="h-12 w-full rounded-md border border-line-strong bg-surface px-4 pr-10 text-base text-ink placeholder:text-ink-muted focus:border-primary focus:outline-none"
+                className="h-12 w-full rounded-md border border-line-control bg-surface px-4 pr-10 text-base text-ink placeholder:text-ink-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/20"
               />
               {q && (
                 <button aria-label="Eingabe löschen" onClick={() => setQ("")} className="absolute right-1 top-1/2 flex size-10 -translate-y-1/2 items-center justify-center text-ink-muted">

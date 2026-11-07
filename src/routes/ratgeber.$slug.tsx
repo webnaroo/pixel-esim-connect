@@ -54,10 +54,10 @@ export const Route = createFileRoute("/ratgeber/$slug")({
 function PlansBlock({ slug }: { slug: string }) {
   const { data } = useSuspenseQuery(destinationQuery(slug));
   const state = planBlockState(data?.plans, data?.fixturePlans);
-  if (state === "preparing" || !data) return <div className="rounded-[14px] border border-line p-4 text-ink-muted">Tarife werden vorbereitet.</div>;
+  if (state === "preparing" || !data) return <div className="rounded-lg border border-line p-4 text-ink-muted">Tarife werden vorbereitet.</div>;
   const plans = [...data.plans].sort((a, b) => a.price - b.price);
   return (
-    <div className="rounded-[14px] border border-primary p-3 sm:p-4">
+    <div className="rounded-lg border border-primary p-3 sm:p-4">
       <p className="mb-3 text-sm text-ink-muted">Aktuelle Tarife für {data.name} (Bruttopreise inkl. MwSt.)</p>
       <ul className="divide-y divide-line">
         {plans.map((p) => (
@@ -82,7 +82,7 @@ function Post() {
   if (!data) return null;
   const dSlug = data.destinationSlug;
   const map = data.destinations as Record<string, string>;
-  const preparing = <div className="rounded-[14px] border border-line p-4 text-ink-muted">Tarife werden vorbereitet.</div>;
+  const preparing = <div className="rounded-lg border border-line p-4 text-ink-muted">Tarife werden vorbereitet.</div>;
   return (
     <SiteLayout>
       <div className="container-page max-w-3xl pb-16 pt-10">
