@@ -51,7 +51,7 @@ function AdminLayout() {
               key={t.to}
               to={t.to}
               activeOptions={{ exact: "exact" in t }}
-              className="whitespace-nowrap border-b-2 border-transparent px-3 py-3 text-sm font-medium text-ink-muted"
+              className="whitespace-nowrap border-b-2 border-transparent px-3 py-3 text-sm font-medium text-ink-muted transition-colors duration-(--dur-hover) ease-ui-out hover:text-ink"
               activeProps={{ className: "border-primary! text-ink!" }}
             >
               {t.label}

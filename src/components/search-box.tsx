@@ -179,8 +179,8 @@ export function SearchBox({ size = "lg", autoFocus }: { size?: "lg" | "sm"; auto
       <label className="sr-only" htmlFor={`${listId}-input`}>
         Reiseziel suchen
       </label>
-      <div className="relative">
-        <MagnifyingGlass aria-hidden size={big ? 22 : 18} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-ink-muted" />
+      <div className="group/search relative">
+        <MagnifyingGlass aria-hidden size={big ? 22 : 18} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-ink-muted transition-colors duration-(--dur-hover) ease-ui-out group-focus-within/search:text-primary" />
         <input
           id={`${listId}-input`}
           {...inputProps}
@@ -188,10 +188,13 @@ export function SearchBox({ size = "lg", autoFocus }: { size?: "lg" | "sm"; auto
           onFocus={() => setOpen(true)}
           readOnly={isMobile && open}
           className={cn(
-            "w-full rounded-md border border-line-control bg-surface text-ink placeholder:text-ink-muted focus:border-primary focus:outline-none focus-visible:outline-none focus:ring-[3px] focus:ring-primary/20",
+            "w-full rounded-md border border-line-control bg-surface text-ink placeholder:text-ink-muted transition-[border-color,box-shadow] duration-(--dur-hover) ease-ui-out hover:border-ink-muted focus:border-primary focus:outline-none focus-visible:outline-none focus:ring-[3px] focus:ring-primary/20",
             big ? "h-14 pl-12 pr-12 text-[17px]" : "h-11 pl-10 pr-10 text-[15px]",
           )}
         />
+        {!big && !q && (
+          <kbd aria-hidden className="pointer-events-none absolute right-3 top-1/2 hidden -translate-y-1/2 rounded-md border border-line px-1.5 font-sans text-xs leading-5 text-ink-muted group-focus-within/search:hidden lg:block">/</kbd>
+        )}
         {q && (
           <button aria-label="Eingabe löschen" onClick={() => setQ("")} className="absolute right-2 top-1/2 flex size-10 -translate-y-1/2 items-center justify-center rounded-md text-ink-muted hover:text-ink">
             <X size={18} />
