@@ -2,7 +2,7 @@ import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useNavigate, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { MagnifyingGlass, X, CaretRight, ArrowLeft } from "@phosphor-icons/react";
+import { MagnifyingGlass, X, CaretRight, ArrowLeft, ArrowRight } from "@phosphor-icons/react";
 import { destinationsQuery, popularQuery, type DestinationListItem } from "@/lib/catalog.functions";
 import { createSearchIndex } from "@/lib/search";
 import { formatPrice } from "@/lib/format";
@@ -25,7 +25,7 @@ export function destinationHref(d: { type: string; slug: string }) {
 }
 
 export function SearchBox({ size = "lg", autoFocus }: { size?: "lg" | "sm"; autoFocus?: boolean }) {
-  const { data: all = [] } = useQuery(destinationsQuery());
+  const { data: all = [], isLoading, isError, refetch } = useQuery(destinationsQuery());
   const { data: popularSlugs = [] } = useQuery(popularQuery());
   const [q, setQ] = useState("");
   const [debounced, setDebounced] = useState("");
@@ -136,8 +136,35 @@ export function SearchBox({ size = "lg", autoFocus }: { size?: "lg" | "sm"; auto
   };
 
   const panel = (
-    <div id={listId} role="listbox" aria-label="Suchergebnisse" className="py-2">
-      {idle ? (
+    <div id={listId} role="listbox" aria-label="Suchergebnisse" aria-busy={isLoading && all.length === 0 ? true : undefined} className="py-2">
+      {all.length === 0 && isError ? (
+        <div role="alert" className="px-4 py-6 text-sm">
+          <p className="font-medium text-ink">Die Reiseziele konnten nicht geladen werden.</p>
+          <p className="mt-1 text-ink-muted">Prüfe deine Verbindung und versuche es erneut.</p>
+          <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => refetch()} className="mt-3 inline-flex min-h-10 items-center rounded-md border border-line-strong bg-surface px-4 font-medium text-ink transition-[border-color,transform] duration-(--dur-hover) ease-ui-out hover:border-ink-muted active:scale-[0.97]">
+            Erneut versuchen
+          </button>
+        </div>
+      ) : all.length === 0 && isLoading ? (
+        <div role="status" aria-label="Reiseziele werden geladen">
+          {[0, 1, 2, 3].map((i) => (
+            <div key={i} aria-hidden className="flex min-h-14 items-center gap-3 px-4 py-2">
+              <div className="size-7 shrink-0 animate-pulse rounded-full bg-muted" />
+              <div className="flex-1 space-y-1.5">
+                <div className="h-3.5 w-1/2 animate-pulse rounded bg-muted" />
+                <div className="h-3 w-1/4 animate-pulse rounded bg-muted" />
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : idle && idleList.length === 0 ? (
+        <div className="px-4 py-6 text-sm text-ink-muted">
+          Aktuell sind keine Reiseziele verfügbar.{" "}
+          <Link to="/destinations" onClick={() => setOpen(false)} className="font-medium text-primary underline-offset-4 hover:underline">
+            Alle Reiseziele
+          </Link>
+        </div>
+      ) : idle ? (
         <>
           {recentItems.length > 0 && <GroupLabel>Zuletzt gesucht</GroupLabel>}
           {recentItems.map((d, i) => (
@@ -180,7 +207,7 @@ export function SearchBox({ size = "lg", autoFocus }: { size?: "lg" | "sm"; auto
         Reiseziel suchen
       </label>
       <div className="group/search relative">
-        <MagnifyingGlass aria-hidden size={big ? 22 : 18} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-ink-muted transition-colors duration-(--dur-hover) ease-ui-out group-focus-within/search:text-primary" />
+        <MagnifyingGlass aria-hidden size={big ? 22 : 18} className={cn("pointer-events-none absolute top-1/2 -translate-y-1/2 text-ink-muted transition-colors duration-(--dur-hover) ease-ui-out group-focus-within/search:text-primary", big ? "left-4 lg:left-5" : "left-4")} />
         <input
           id={`${listId}-input`}
           {...inputProps}
@@ -189,21 +216,38 @@ export function SearchBox({ size = "lg", autoFocus }: { size?: "lg" | "sm"; auto
           readOnly={isMobile && open}
           className={cn(
             "w-full rounded-md border border-line-control bg-surface text-ink placeholder:text-ink-muted transition-[border-color,box-shadow] duration-(--dur-hover) ease-ui-out hover:border-ink-muted focus:border-primary focus:outline-none focus-visible:outline-none focus:ring-[3px] focus:ring-primary/20",
-            big ? "h-14 pl-12 pr-12 text-[17px]" : "h-11 pl-10 pr-10 text-[15px]",
+            big ? "h-14 pl-12 pr-24 text-[17px] shadow-raised lg:h-16 lg:pl-14 lg:text-lg" : "h-11 pl-10 pr-10 text-base lg:text-[15px]",
           )}
         />
         {!big && !q && (
           <kbd aria-hidden className="pointer-events-none absolute right-3 top-1/2 hidden -translate-y-1/2 rounded-md border border-line px-1.5 font-sans text-xs leading-5 text-ink-muted group-focus-within/search:hidden lg:block">/</kbd>
         )}
         {q && (
-          <button aria-label="Eingabe löschen" onClick={() => setQ("")} className="absolute right-2 top-1/2 flex size-10 -translate-y-1/2 items-center justify-center rounded-md text-ink-muted hover:text-ink">
+          <button aria-label="Eingabe löschen" onClick={() => setQ("")} className={cn("absolute top-1/2 flex size-10 -translate-y-1/2 items-center justify-center rounded-md text-ink-muted transition-colors duration-(--dur-hover) ease-ui-out hover:text-ink", big ? "right-14 lg:right-16" : "right-2")}>
             <X size={18} />
+          </button>
+        )}
+        {big && (
+          <button
+            type="button"
+            aria-label="Reiseziel suchen"
+            onClick={() => {
+              const item = debounced.trim() ? list[active] : undefined;
+              if (item) go(item);
+              else {
+                setOpen(true);
+                (wrapRef.current?.querySelector("input") as HTMLInputElement | null)?.focus();
+              }
+            }}
+            className="absolute right-2 top-1/2 flex size-10 -translate-y-1/2 items-center justify-center rounded-md bg-primary text-primary-foreground transition-[background-color,transform] duration-(--dur-hover) ease-ui-out hover:bg-primary-hover active:scale-[0.94] lg:size-12"
+          >
+            <ArrowRight size={20} weight="bold" aria-hidden />
           </button>
         )}
       </div>
 
       {open && !isMobile && (
-        <div className="absolute inset-x-0 top-full z-40 mt-2 max-h-[70vh] origin-top overflow-auto rounded-lg border border-line bg-surface shadow-overlay animate-in fade-in-0 slide-in-from-top-1 duration-(--dur-hover) ease-ui-out">
+        <div className="absolute inset-x-0 top-full z-40 mt-2 max-h-[70dvh] origin-top overflow-auto rounded-lg border border-line bg-surface shadow-overlay animate-in fade-in-0 slide-in-from-top-1 duration-(--dur-hover) ease-ui-out">
           {panel}
         </div>
       )}
@@ -236,7 +280,7 @@ export function SearchBox({ size = "lg", autoFocus }: { size?: "lg" | "sm"; auto
 }
 
 function GroupLabel({ children }: { children: React.ReactNode }) {
-  return <div className="px-4 pb-1 pt-3 text-xs font-medium uppercase tracking-wide text-ink-muted">{children}</div>;
+  return <div className="px-4 pb-1 pt-3 text-xs font-semibold uppercase tracking-[0.06em] text-ink-muted">{children}</div>;
 }
 
 function ResultItem({ d, active, onSelect, id }: { d: { name: string; type: string; flagCode: string | null; fromPrice: number | null }; active: boolean; onSelect: () => void; id: string }) {
@@ -247,15 +291,15 @@ function ResultItem({ d, active, onSelect, id }: { d: { name: string; type: stri
       aria-selected={active}
       onMouseDown={(e) => e.preventDefault()}
       onClick={onSelect}
-      className={cn("flex min-h-14 cursor-pointer items-center gap-3 px-4 py-2", active && "bg-muted")}
+      className={cn("flex min-h-14 cursor-pointer items-center gap-3 px-4 py-2 transition-colors duration-(--dur-press) ease-ui-out active:bg-muted", active && "bg-muted")}
     >
-      <Flag code={d.type === "country" ? d.flagCode : null} size={28} />
+      <Flag code={d.type === "country" ? d.flagCode : null} size={28} className="shrink-0" />
       <div className="min-w-0 flex-1">
-        <div className="truncate text-[15px] font-medium text-ink">{d.name}</div>
-        <div className="text-xs text-ink-muted">{d.type === "country" ? "Land" : d.type === "global" ? "Weltweit" : "Region"}</div>
+        <div className="line-clamp-2 text-base font-medium leading-5 text-ink [overflow-wrap:anywhere] lg:text-[15px]">{d.name}</div>
+        <div className="mt-0.5 text-xs text-ink-muted">{d.type === "country" ? "Land" : d.type === "global" ? "Weltweit" : "Region"}</div>
       </div>
-      {d.fromPrice != null && <span className="tabular text-sm font-semibold text-ink">ab {formatPrice(d.fromPrice)}</span>}
-      <CaretRight aria-hidden size={16} className="text-ink-muted" />
+      {d.fromPrice != null && <span className="tabular shrink-0 whitespace-nowrap text-sm font-semibold text-ink">ab {formatPrice(d.fromPrice)}</span>}
+      <CaretRight aria-hidden size={16} className="shrink-0 text-ink-muted" />
     </div>
   );
 }

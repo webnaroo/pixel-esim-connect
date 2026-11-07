@@ -13,7 +13,7 @@ import { useCart } from "@/lib/cart";
 function CartLink() {
   const items = useCart();
   return (
-    <Link to="/cart" aria-label={`Warenkorb (${items.length})`} className="relative flex size-12 items-center justify-center rounded-md text-ink transition-[background-color,color,transform] duration-(--dur-hover) ease-ui-out hover:bg-muted active:scale-[0.96] lg:size-10">
+    <Link to="/cart" aria-label={`Warenkorb (${items.length})`} className="relative flex size-11 items-center justify-center rounded-md text-ink min-[360px]:size-12 transition-[background-color,color,transform] duration-(--dur-hover) ease-ui-out hover:bg-muted active:scale-[0.96] lg:size-10">
       <ShoppingCart size={22} aria-hidden />
       {items.length > 0 && (
         <span className="tabular absolute right-1 top-1 flex min-w-[18px] items-center justify-center rounded-full bg-primary px-1 text-[11px] font-semibold leading-[18px] text-primary-foreground ring-2 ring-background">{items.length}</span>
@@ -185,7 +185,7 @@ export function Header() {
           <div className="absolute inset-0 bg-paper transition-opacity duration-(--dur-pop) ease-ui-out group-data-[scrolled=true]/header:opacity-0" />
           <div className="absolute inset-0 bg-(--header-bg-scrolled) opacity-0 backdrop-blur-(--header-blur) transition-opacity duration-(--dur-pop) ease-ui-out group-data-[scrolled=true]/header:opacity-100" />
         </div>
-        <div className="container-page flex h-14 items-center gap-3 lg:h-16 xl:gap-6">
+        <div className="container-page flex h-14 items-center gap-2 min-[360px]:gap-3 lg:h-16 xl:gap-6">
           <Wordmark />
           <MainNav path={path} />
           <div className="ml-auto hidden min-w-0 flex-1 lg:block" data-header-search>
@@ -212,10 +212,10 @@ export function Header() {
               {user ? "Konto" : "Anmelden"}
             </Link>
             {user && <SignOutButton className="hidden h-10 items-center gap-2 rounded-md px-3 text-[15px] font-medium text-ink-muted transition-[background-color,color,transform] duration-(--dur-hover) ease-ui-out hover:bg-muted hover:text-ink active:scale-[0.96] lg:inline-flex" />}
-            <button aria-label="Suche öffnen" aria-expanded={mobileSearch} onClick={() => setMobileSearch((v) => !v)} className="flex size-12 items-center justify-center rounded-md text-ink transition-[background-color,transform] duration-(--dur-press) ease-ui-out active:scale-[0.94] active:bg-muted lg:hidden">
+            <button aria-label="Suche öffnen" aria-expanded={mobileSearch} onClick={() => setMobileSearch((v) => !v)} className="flex size-11 items-center justify-center rounded-md text-ink transition-[background-color,transform] duration-(--dur-press) ease-ui-out active:scale-[0.94] active:bg-muted min-[360px]:size-12 lg:hidden">
               <MagnifyingGlass size={22} />
             </button>
-            <button aria-label="Menü öffnen" aria-expanded={menu} onClick={() => setMenu(true)} className="flex size-12 items-center justify-center rounded-md text-ink transition-[background-color,transform] duration-(--dur-press) ease-ui-out active:scale-[0.94] active:bg-muted lg:hidden">
+            <button aria-label="Menü öffnen" aria-expanded={menu} onClick={() => setMenu(true)} className="flex size-11 items-center justify-center rounded-md text-ink transition-[background-color,transform] duration-(--dur-press) ease-ui-out active:scale-[0.94] active:bg-muted min-[360px]:size-12 lg:hidden">
               <List size={24} />
             </button>
           </div>

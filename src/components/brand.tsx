@@ -5,8 +5,8 @@ import logoAsset from "@/assets/globesim-logo.png.asset.json";
 
 export function Wordmark({ className }: { className?: string }) {
   return (
-    <Link to="/" aria-label="GlobeSIM Startseite" className={cn("inline-flex shrink-0 items-center gap-2 font-display text-[22px] font-semibold tracking-normal leading-none", className)}>
-      <img src={logoAsset.url} alt="" aria-hidden className="size-9 shrink-0 object-contain" />
+    <Link to="/" aria-label="GlobeSIM Startseite" className={cn("inline-flex shrink-0 items-center gap-2 font-display text-[20px] font-semibold tracking-normal leading-none min-[360px]:text-[22px]", className)}>
+      <img src={logoAsset.url} alt="" aria-hidden className="size-8 shrink-0 object-contain min-[360px]:size-9" />
       <span><span className="text-ink">Globe</span><span className="text-primary">SIM</span></span>
     </Link>
   );

@@ -27,7 +27,6 @@
   --color-danger: var(--danger);
   --color-warning: var(--warning);
   --color-success: var(--success);
-  --color-mobile-action: var(--mobile-action);
 
   /*
    * Phase 0 design tokens (additive, nothing uses them yet). New names only,
@@ -43,9 +42,9 @@
   --shadow-raised: var(--elevation-1);
   --shadow-overlay: var(--elevation-2);
 
-  --ease-ui-out: cubic-bezier(0.23, 1, 0.32, 1);
-  --ease-ui-in-out: cubic-bezier(0.77, 0, 0.175, 1);
-  --ease-ui-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+  --ease-ui-out: var(--motion-ease-out);
+  --ease-ui-in-out: var(--motion-ease-in-out);
+  --ease-ui-drawer: var(--motion-ease-drawer);
 
   --text-display: 36px;
   --text-display--line-height: 38px;
@@ -103,12 +102,6 @@
   --danger: oklch(0.52 0.18 27);         /* #B3261E */
   --warning: oklch(0.6 0.12 70);         /* #B7791F */
   --success: oklch(0.5 0.1 155);         /* #1F7A4D */
-  /* DEPRECATED, remove in Phase 4: the extra blue is abolished. Aliased to petrol so the
-     brand is one colour on every screen size. Still referenced by the .home-* rules below
-     and by text-mobile-action in src/routes/index.tsx. */
-  --mobile-action: var(--primary);
-  --mobile-action-foreground: oklch(1 0 0);
-  --mobile-benefit: oklch(0.96 0.018 250);
 
   --background: var(--paper);
   --foreground: var(--ink);
@@ -154,6 +147,9 @@
   --elevation-2: 0 8px 24px oklch(0.205 0.016 230 / 0.12), 0 1px 3px oklch(0.205 0.016 230 / 0.08);
 
   /* Motion: UI stays under 300ms, never ease-in. */
+  --motion-ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --motion-ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --motion-ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
   --dur-press: 120ms;
   --dur-hover: 160ms;
   --dur-pop: 180ms;
@@ -175,6 +171,12 @@
   }
   html {
     -webkit-text-size-adjust: 100%;
+    /* Press feedback comes from :active; the grey/blue flash would fight it. */
+    -webkit-tap-highlight-color: transparent;
+  }
+  /* No double-tap-zoom wait, so taps fire at once. */
+  a, button, [role="button"], summary, label, select {
+    touch-action: manipulation;
   }
   body {
     background-color: var(--color-background);
@@ -256,85 +258,26 @@
   flex-shrink: 0;
 }
 
-/* Live homepage text remains separate from the reference artwork. */
-.home-hero {
-  background: var(--paper);
-  display: flex;
-  flex-direction: column;
-}
-.home-hero-image {
-  display: block;
-  width: 100%;
-  height: 210px;
-  overflow: hidden;
-}
-.home-hero-image img {
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: center 30%;
-}
-.home-hero-copy {
-  max-width: 540px;
-  margin-inline: auto;
-}
-.home-search-hint, .home-search-arrow { display: none; }
-.home-destination-photo { position: relative; aspect-ratio: 4 / 3; overflow: hidden; }
-.home-destination-photo img { position: absolute; width: 400%; max-width: none; height: 100%; object-fit: cover; }
-.home-photo-turkey img { left: 0; }
-.home-photo-usa img { left: -100%; }
-.home-photo-thailand img { left: -200%; }
-.home-photo-japan img { left: -300%; }
-.home-photo-fallback { display: grid; place-items: center; background: var(--mobile-benefit); }
-@media (max-width: 639px) {
-  .home-hero-image { height: 142px; }
-  .home-hero-image img { object-position: center 24%; }
-  .home-hero-copy { padding-top: 14px; padding-bottom: 14px; }
-  .home-hero-copy > p:first-child { font-size: 12px; line-height: 18px; margin-bottom: 6px; }
-  .home-hero-copy > p:first-child img { width: 20px; height: 20px; }
-  .home-hero-copy h1 { font-size: 32px; line-height: 34px; letter-spacing: 0; }
-  .home-hero-copy h1::after { content: ""; display: block; width: 106px; height: 4px; margin-top: 7px; background: var(--mobile-action); border-radius: 2px; }
-  .home-hero-description { font-size: 14px; line-height: 20px; margin-top: 9px; }
-  .home-hero [data-hero-search] { position: relative; margin-top: 14px; }
-  .home-hero [data-hero-search] > div > div:first-of-type > input {
-    height: 62px; padding-bottom: 17px; font-size: 16px; background: var(--mobile-action); color: var(--mobile-action-foreground); border-color: var(--mobile-action);
+/*
+ * Homepage motion (Phase 4). CSS only, transform + opacity only, nothing on the LCP elements.
+ *  - .hero-in: short fade-up for the secondary hero rows (CTA, trust). Delay by --hero-i.
+ *  - .reveal: scroll-driven reveal for below-the-fold blocks. Progressive enhancement: without
+ *    animation-timeline support, or with reduced motion, the content is simply visible.
+ */
+@media (prefers-reduced-motion: no-preference) {
+  .hero-in {
+    animation: rise-in var(--dur-sheet) var(--motion-ease-out) both;
+    animation-delay: calc(60ms + var(--hero-i, 0) * 60ms);
   }
-  .home-hero [data-hero-search] > div > div:first-of-type > input::placeholder { color: var(--mobile-action-foreground); }
-  .home-hero [data-hero-search] > div > div:first-of-type > svg { color: var(--mobile-action-foreground); }
-  .home-search-hint { display: block; bottom: 9px; left: 48px; color: var(--mobile-action-foreground); opacity: .8; }
-  .home-search-arrow { display: block; right: 14px; top: 21px; color: var(--mobile-action-foreground); }
-  .home-hero-copy ul { margin-top: 16px; }
-  .home-hero-copy li { gap: 4px; }
-  .home-hero-copy li img { width: 27px; height: 27px; }
-  .home-hero-copy li p { font-size: 10px; line-height: 15px; }
-  .home-world-benefit { margin-top: 14px; padding: 12px; border: 0; border-radius: 8px; background: var(--mobile-benefit); }
-  .home-world-benefit > img { width: 30px; height: 30px; }
-  .home-world-benefit p:first-child { font-size: 12px; line-height: 17px; }
-  .home-world-benefit p:last-child { font-size: 10px; line-height: 14px; }
-  .home-popular { padding-top: 10px; padding-bottom: 24px; }
-  .home-destination-photo { height: 85px; aspect-ratio: auto; }
-}
-@media (min-width: 640px) and (max-width: 1023px) {
-  .home-hero-image {
-    height: 320px;
+  @supports (animation-timeline: view()) {
+    .reveal {
+      animation: rise-in linear both;
+      animation-timeline: view();
+      animation-range: entry calc(4% + var(--reveal-i, 0) * 7%) entry calc(38% + var(--reveal-i, 0) * 7%);
+    }
   }
 }
-@media (min-width: 1024px) {
-  .home-hero {
-    min-height: 580px;
-  }
-  .home-hero-image {
-    position: absolute;
-    inset: 0;
-    z-index: -1;
-    height: 100%;
-  }
-  .home-hero-image img {
-    object-position: center;
-  }
-  .home-hero-copy {
-    max-width: 440px;
-    margin-inline: 0;
-  }
+@keyframes rise-in {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: none; }
 }
